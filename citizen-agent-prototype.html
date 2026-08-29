@@ -381,6 +381,34 @@
       line-height: 1.55;
     }
 
+    .evidence-plan-card summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    .evidence-plan-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .evidence-plan-card summary::after {
+      content: "展開";
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .evidence-plan-card[open] summary::after {
+      content: "收合";
+    }
+
+    .evidence-plan-card[open] > p {
+      margin-top: 8px;
+    }
+
     .evidence-source-group {
       display: grid;
       gap: 8px;
@@ -1591,6 +1619,7 @@
     let backendSessionId = null;
     let currentCredentials = null;
     let credentialWalletOpen = false;
+    let evidencePlanOpen = false;
 
     const loginView = document.querySelector("#loginView");
     const appView = document.querySelector("#appView");
@@ -1858,10 +1887,32 @@
         state = mapBackendState(payload);
         if (fromWalkthrough) walkthroughStep += 1;
       } catch (error) {
-        state = CitizenServiceFlow.transition(state, {
-          type: "USER_MESSAGE",
-          text: `後端錯誤：${error.message}`
-        });
+        if (error.message === "Unknown session" && currentCredentials) {
+          await initializeBackend();
+          state = {
+            ...state,
+            messages: [
+              ...state.messages,
+              {
+                actor: "system",
+                text: "Agent 後端剛完成更新，原工作階段已失效。我已重新登入，請重新開始這次申請。"
+              }
+            ],
+            lastChange: "後端更新後已自動建立新的登入工作階段。"
+          };
+        } else {
+          state = {
+            ...state,
+            messages: [
+              ...state.messages,
+              {
+                actor: "system",
+                text: `操作失敗：${error.message}。請修正後再試一次。`
+              }
+            ],
+            lastChange: `操作失敗：${error.message}`
+          };
+        }
       } finally {
         isThinking = false;
         thinkingText = "";
@@ -2015,6 +2066,13 @@
         });
       });
 
+      const evidencePlan = chat.querySelector("#evidencePlan");
+      if (evidencePlan) {
+        evidencePlan.addEventListener("toggle", () => {
+          evidencePlanOpen = evidencePlan.open;
+        });
+      }
+
       const restartButton = chat.querySelector("#restartConversation");
       if (restartButton) {
         restartButton.addEventListener("click", reset);
@@ -2096,8 +2154,8 @@
       if (!governmentEvidence.length && !citizenEvidence.length) return "";
 
       return `
-        <div class="evidence-plan-card">
-          <h3>本次資料來源與取得方式</h3>
+        <details id="evidencePlan" class="evidence-plan-card" ${evidencePlanOpen ? "open" : ""}>
+          <summary>本次資料來源與取得方式</summary>
           <p>政府調閱與民眾上傳分開處理；只有下列政府部門會收到本次最小必要授權。</p>
           ${governmentEvidence.length ? `
             <div class="evidence-source-group">
@@ -2117,7 +2175,7 @@
                     ${canCreate ? `
                       <span>${escapeHtml(credential?.applicationInstructions || "目前錢包沒有可用憑證，請提供申請資料。")}</span>
                     ` : ""}
-                  </div>
+                  </details>
                 `;
               }).join("")}
               ${missingGovernmentEvidence.length ? `

@@ -691,10 +691,11 @@
     }
 
     .credential-wallet {
-      padding: 12px;
-      background: #fbfcfd;
-      border: 1px solid var(--line);
-      border-radius: 12px;
+      overflow: hidden;
+      padding: 0;
+      background: linear-gradient(155deg, #f7fbfa 0%, #eef5f4 100%);
+      border: 1px solid #cfe0dc;
+      border-radius: 16px;
     }
 
     .credential-wallet summary {
@@ -703,27 +704,308 @@
       justify-content: space-between;
       gap: 12px;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 800;
       list-style: none;
+      padding: 14px;
     }
 
     .credential-wallet summary::-webkit-details-marker {
       display: none;
     }
 
-    .credential-wallet summary::after {
-      content: "展開";
-      color: var(--accent);
-      font-size: 12px;
+    .wallet-summary-identity,
+    .wallet-summary-meta,
+    .wallet-pass-heading,
+    .wallet-pass-top,
+    .wallet-connection {
+      display: flex;
+      align-items: center;
     }
 
-    .credential-wallet[open] summary::after {
+    .wallet-summary-identity {
+      min-width: 0;
+      gap: 11px;
+    }
+
+    .wallet-mark {
+      position: relative;
+      display: grid;
+      flex: 0 0 42px;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: white;
+      background: linear-gradient(145deg, #10806c, #174f67);
+      border-radius: 13px;
+      box-shadow: 0 7px 16px rgba(23, 107, 91, 0.22);
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .wallet-mark::before {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.92);
+      border-radius: 4px;
+    }
+
+    .wallet-mark::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      background: #75e6bd;
+      border: 2px solid #174f67;
+      border-radius: 50%;
+    }
+
+    .wallet-summary-copy {
+      min-width: 0;
+    }
+
+    .wallet-summary-copy strong,
+    .wallet-summary-copy small {
+      display: block;
+    }
+
+    .wallet-summary-copy strong {
+      font-size: 14px;
+    }
+
+    .wallet-summary-copy small {
+      overflow: hidden;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wallet-summary-meta {
+      flex: 0 0 auto;
+      gap: 7px;
+    }
+
+    .wallet-connected,
+    .wallet-count,
+    .wallet-toggle {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .wallet-connected {
+      color: #067647;
+      background: #dcfae6;
+    }
+
+    .wallet-connected::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 5px;
+      background: #17b26a;
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(23, 178, 106, 0.13);
+    }
+
+    .wallet-count,
+    .wallet-toggle {
+      color: #344054;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid #d0d5dd;
+    }
+
+    .wallet-toggle::after {
+      content: "展開";
+    }
+
+    .credential-wallet[open] .wallet-toggle::after {
       content: "收合";
     }
 
-    .credential-wallet .facts {
-      margin-top: 12px;
+    .wallet-body {
+      padding: 0 14px 14px;
+      border-top: 1px solid rgba(23, 107, 91, 0.12);
+    }
+
+    .wallet-connection {
+      justify-content: center;
+      gap: 8px;
+      margin: 13px 0;
+      padding: 9px;
+      color: #475467;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px dashed #98bcb4;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .connection-node {
+      padding: 5px 8px;
+      color: #174f67;
+      background: white;
+      border: 1px solid #cfe0dc;
+      border-radius: 7px;
+    }
+
+    .connection-line {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #067647;
+    }
+
+    .connection-line::before,
+    .connection-line::after {
+      content: "";
+      width: 14px;
+      height: 1px;
+      background: #17b26a;
+    }
+
+    .wallet-passes {
+      display: grid;
+      gap: 10px;
+    }
+
+    .wallet-pass {
+      position: relative;
+      overflow: hidden;
+      padding: 13px;
+      background:
+        radial-gradient(circle at 100% 0, rgba(23, 107, 91, 0.13), transparent 105px),
+        white;
+      border: 1px solid #d7e4e1;
+      border-radius: 13px;
+      box-shadow: 0 5px 15px rgba(23, 32, 51, 0.05);
+    }
+
+    .wallet-pass.unavailable,
+    .wallet-pass.expired {
+      background: #f7f8fa;
+      border-style: dashed;
+      box-shadow: none;
+    }
+
+    .wallet-pass-top {
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .wallet-pass-heading {
+      min-width: 0;
+      gap: 9px;
+    }
+
+    .issuer-emblem {
+      display: grid;
+      flex: 0 0 32px;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      color: #174f67;
+      background: #e8f4f1;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .wallet-pass-title {
+      min-width: 0;
+    }
+
+    .wallet-pass-title strong,
+    .wallet-pass-title small {
+      display: block;
+    }
+
+    .wallet-pass-title strong {
+      overflow: hidden;
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wallet-pass-title small {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .wallet-pass-state {
+      flex: 0 0 auto;
+      padding: 4px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .wallet-pass-state.available,
+    .wallet-pass-state.unauthorized {
+      color: #067647;
+      background: #dcfae6;
+    }
+
+    .wallet-pass-state.expired,
+    .wallet-pass-state.unavailable {
+      color: #b42318;
+      background: #fee4e2;
+    }
+
+    .wallet-pass-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 11px;
+      color: #667085;
+      font-size: 10px;
+    }
+
+    .wallet-pass-meta span {
+      padding-top: 7px;
+      border-top: 1px solid #eaecf0;
+    }
+
+    .wallet-pass-meta strong {
+      display: block;
+      margin-top: 2px;
+      color: #344054;
+      font-size: 11px;
+    }
+
+    .agent-access {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 8px 9px;
+      background: #f8fafc;
+      border-radius: 8px;
+      color: #475467;
+      font-size: 10px;
+    }
+
+    .agent-access strong {
+      color: #344054;
+    }
+
+    .credential-wallet .credential-revoke {
+      margin: 0;
+    }
+
+    .wallet-demo-note {
+      margin-top: 11px;
+      color: #667085;
+      font-size: 10px;
+      line-height: 1.5;
     }
 
     .facts {
@@ -1007,7 +1289,7 @@
     <div class="panel login-card">
       <div class="prototype-banner">Demo 登入 · 非正式身分驗證</div>
       <h1>登入政府服務 AI Agent</h1>
-      <p>為了讓展示人員可以直接操作，本 Demo 使用固定密碼。帳號名稱會用來建立獨立的本機數位憑證皮夾檔案。</p>
+      <p>為了讓展示人員可以直接操作，本 Demo 使用固定密碼。帳號名稱會用來建立獨立的本機模擬皮夾資料。</p>
       <div class="demo-credentials" aria-label="Demo 登入帳密">
         <div class="demo-credential">
           <span>Demo 帳號</span>
@@ -2016,6 +2298,22 @@
       return labels[status] || status;
     }
 
+    function walletCredentialLabel(status) {
+      const labels = {
+        available: "憑證有效",
+        unauthorized: "憑證有效",
+        expired: "憑證過期",
+        unavailable: "尚未加入"
+      };
+      return labels[status] || statusLabel(status);
+    }
+
+    function walletAgentAccessLabel(status) {
+      if (status === "available") return "本 Agent 已取得使用授權";
+      if (status === "unauthorized") return "本 Agent 尚未取得授權";
+      return "目前沒有可授權的憑證";
+    }
+
     function renderChat() {
       const messages = state.messages.map(message => `
         <div class="message ${message.actor}">
@@ -2342,29 +2640,65 @@
 
     function renderState() {
       const sections = [];
+      const credentialInventory = state.credentialInventory || [];
+      const walletCredentialCount = credentialInventory.filter(
+        item => !["unavailable"].includes(item.status)
+      ).length;
 
       sections.push(`
         <details id="credentialWallet" class="state-section credential-wallet" ${credentialWalletOpen ? "open" : ""}>
-          <summary>我的數位憑證皮夾（${(state.credentialInventory || []).length}）</summary>
-          <div class="facts">
-            ${(state.credentialInventory || []).map(item => `
-              <div class="credential">
-                <div class="credential-detail">
-                  <strong>${escapeHtml(item.credentialType || item.label)}</strong>
-                  <small>${escapeHtml(item.issuer)} · 到期 ${escapeHtml(item.expiresAt)}</small>
-                  ${item.usedForServices?.length
-                    ? `<small>曾用於：${escapeHtml(item.usedForServices.join("、"))}</small>`
-                    : ""}
-                  ${item.status === "available"
-                    ? `<button class="credential-revoke" type="button" data-revoke-credential="${escapeHtml(item.id)}">撤銷 Agent 授權</button>`
-                    : ""}
-                </div>
-                <span class="credential-status ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
+          <summary>
+            <div class="wallet-summary-identity">
+              <div class="wallet-mark" aria-hidden="true"></div>
+              <div class="wallet-summary-copy">
+                <strong>數位憑證皮夾</strong>
+                <small>外部皮夾連線 · Demo 模擬</small>
               </div>
-            `).join("") || `<div class="agent-subtitle">尚未載入政府憑證清單。</div>`}
-          </div>
-          <div class="last-change">
-            「已授權」會跨登入保留；撤銷後立即變成「無可用憑證」，下次使用時必須重新申請。
+            </div>
+            <div class="wallet-summary-meta">
+              <span class="wallet-connected">已連接</span>
+              <span class="wallet-count">${walletCredentialCount} 張</span>
+              <span class="wallet-toggle" aria-hidden="true"></span>
+            </div>
+          </summary>
+          <div class="wallet-body">
+            <div class="wallet-connection" aria-label="政府服務 Agent 已透過安全連線連接數位憑證皮夾">
+              <span class="connection-node">政府服務 Agent</span>
+              <span class="connection-line">安全連線</span>
+              <span class="connection-node">憑證皮夾</span>
+            </div>
+            <div class="wallet-passes">
+              ${credentialInventory.map(item => `
+                <article class="wallet-pass ${escapeHtml(item.status)}">
+                  <div class="wallet-pass-top">
+                    <div class="wallet-pass-heading">
+                      <div class="issuer-emblem" aria-hidden="true">證</div>
+                      <div class="wallet-pass-title">
+                        <strong>${escapeHtml(item.credentialType || item.label)}</strong>
+                        <small>${escapeHtml(item.issuer)}</small>
+                      </div>
+                    </div>
+                    <span class="wallet-pass-state ${escapeHtml(item.status)}">${escapeHtml(walletCredentialLabel(item.status))}</span>
+                  </div>
+                  <div class="wallet-pass-meta">
+                    <span>有效期限<strong>${escapeHtml(item.expiresAt || "尚未簽發")}</strong></span>
+                    <span>憑證識別<strong>${escapeHtml(item.reference ? item.reference.slice(-12) : "尚無憑證")}</strong></span>
+                  </div>
+                  ${item.usedForServices?.length
+                    ? `<div class="wallet-demo-note">最近使用：${escapeHtml(item.usedForServices.join("、"))}</div>`
+                    : ""}
+                  <div class="agent-access">
+                    <span>Agent 使用權限<br><strong>${escapeHtml(walletAgentAccessLabel(item.status))}</strong></span>
+                    ${item.status === "available"
+                      ? `<button class="credential-revoke" type="button" data-revoke-credential="${escapeHtml(item.id)}">撤銷授權</button>`
+                      : ""}
+                  </div>
+                </article>
+              `).join("") || `<div class="agent-subtitle">皮夾內目前沒有數位憑證。</div>`}
+            </div>
+            <div class="wallet-demo-note">
+              此區為外部數位憑證皮夾的 Demo 連接介面，未串接正式 TW DIW；憑證由 Mock 發證機關提供。
+            </div>
           </div>
         </details>
       `);

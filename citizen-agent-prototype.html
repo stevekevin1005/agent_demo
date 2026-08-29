@@ -433,15 +433,16 @@
       font-size: 12px;
     }
 
-    .credential-create-form textarea {
-      grid-column: 1 / -1;
-      min-height: 180px;
-      padding: 11px;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      font: 13px/1.65 ui-monospace, "Microsoft JhengHei", monospace;
-      resize: vertical;
+    .credential-create-form label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .credential-create-form button {
+      align-self: end;
     }
 
     .document-upload-form input {
@@ -2003,16 +2004,9 @@
       chat.querySelectorAll("[data-credential-batch]").forEach(form => {
         form.addEventListener("submit", event => {
           event.preventDefault();
-          const fields = JSON.parse(form.dataset.credentialFields);
-          const lines = form.elements.applicationData.value.split(/\r?\n/);
           const applicationData = {};
-          fields.forEach(field => {
-            const line = lines.find(item =>
-              item.startsWith(`${field.label}：`) || item.startsWith(`${field.label}:`)
-            );
-            applicationData[field.name] = line
-              ? line.slice(line.indexOf(line.includes("：") ? "：" : ":") + 1).trim()
-              : "";
+          form.querySelectorAll("[data-credential-field]").forEach(input => {
+            applicationData[input.dataset.credentialField] = input.value;
           });
           dispatch({
             type: "CREATE_CREDENTIALS",
@@ -2129,13 +2123,21 @@
               ${missingGovernmentEvidence.length ? `
                 <div class="evidence-source-item">
                   <strong>申請 ${missingGovernmentEvidence.length} 張憑證所需資料</strong>
-                  <span>所有資料已合併在同一個輸入框並填入 Demo 假資料；送出後會分別呼叫對應的 Mock 政府發證 API。</span>
-                  <form
-                    class="credential-create-form"
-                    data-credential-batch
-                    data-credential-fields="${escapeHtml(JSON.stringify(applicationFields.map(field => ({ name: field.name, label: field.label }))))}"
-                  >
-                    <textarea name="applicationData" required aria-label="申請政府憑證所需資料">${escapeHtml(applicationFields.map(field => `${field.label}：${demoCredentialValue(field.name)}`).join("\n"))}</textarea>
+                  <span>每種資料各有一個輸入框；多張憑證共用的資料只需填寫一次。</span>
+                  <form class="credential-create-form" data-credential-batch>
+                    ${applicationFields.map(field => `
+                      <label>
+                        ${escapeHtml(field.label)}
+                        <input
+                          name="${escapeHtml(field.name)}"
+                          data-credential-field="${escapeHtml(field.name)}"
+                          type="${escapeHtml(field.type || "text")}"
+                          value="${escapeHtml(demoCredentialValue(field.name))}"
+                          required
+                          placeholder="${escapeHtml(field.placeholder || field.label)}"
+                        >
+                      </label>
+                    `).join("")}
                     <button class="secondary" type="submit">一併申請所需憑證</button>
                   </form>
                 </div>

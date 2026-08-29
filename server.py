@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -40,8 +40,8 @@ class UserProfileStore(Protocol):
         self,
         username: str,
         evidence_id: str,
-        reference: str,
-        expires_at: str,
+        application_data: dict[str, str],
+        validity_days: int,
     ) -> dict[str, Any]:
         """Persist one issued credential in the user's local wallet."""
 
@@ -82,18 +82,20 @@ class FileUserProfileStore:
         self,
         username: str,
         evidence_id: str,
-        reference: str,
-        expires_at: str,
+        application_data: dict[str, str],
+        validity_days: int,
     ) -> dict[str, Any]:
         with self._lock:
             profile = self._require_profile(username)
+            issued_at = date.today()
             profile["credentials"][evidence_id] = {
-                "reference": reference,
-                "acquiredAt": date.today().isoformat(),
-                "expiresAt": expires_at,
+                "reference": f"CRED-{evidence_id.upper()}-{uuid.uuid4().hex[:8].upper()}",
+                "acquiredAt": issued_at.isoformat(),
+                "expiresAt": (issued_at + timedelta(days=validity_days)).isoformat(),
                 "lastUsedAt": None,
                 "usedForServices": [],
                 "authorizedForAgent": False,
+                "applicationData": application_data,
             }
             self._write(profile)
             return profile
@@ -250,6 +252,9 @@ class MockGovernmentDataAdapter:
                     "credentialType": record["credentialType"],
                     "issuer": record["issuer"],
                     "expiresAt": record["expiresAt"],
+                    "applicationInstructions": record["applicationInstructions"],
+                    "applicationFields": record["applicationFields"],
+                    "validityDays": record["validityDays"],
                     "status": status,
                 }
             )
@@ -795,15 +800,37 @@ class CitizenAgent:
         upload_evidence = [
             item for item in service["evidence"] if item["source"] == "citizen_upload"
         ]
-        government_lines = "\n".join(
-            f"• {item['department']}：{item['label']}" for item in government_evidence
-        )
+        government_lines: list[str] = []
+        for item in government_evidence:
+            status = session.evidence[item["id"]]
+            if status in {"unavailable", "expired"}:
+                catalog_item = next(
+                    credential
+                    for credential in session.credential_inventory
+                    if credential["id"] == item["id"]
+                )
+                required_labels = "、".join(
+                    field["label"] for field in catalog_item["applicationFields"]
+                )
+                government_lines.append(
+                    (
+                        f"• 尚無可用的「{item['label']}」；我會先向{item['department']}申請，"
+                        f"需要您提供：{required_labels}"
+                    )
+                )
+            else:
+                government_lines.append(
+                    (
+                        f"• 錢包已有「{item['label']}」；同意後將使用此憑證"
+                        f"向{item['department']}取得最小必要結果"
+                    )
+                )
         upload_lines = "\n".join(
             f"• {item['label']}：{item['instructions']}" for item in upload_evidence
         )
         plan_parts = [
-            "同意後，我會向以下政府部門取得最小必要結果：",
-            government_lines,
+            "我先檢查了您的憑證錢包：",
+            "\n".join(government_lines),
         ]
         if upload_lines:
             plan_parts.extend(
@@ -819,8 +846,7 @@ class CitizenAgent:
         ]
         if missing_credentials:
             missing_lines = "\n".join(
-                f"• {item['department']}：{item['label']}"
-                for item in missing_credentials
+                f"• {item['department']}：{item['label']}" for item in missing_credentials
             )
             plan_parts.extend(
                 [
@@ -877,23 +903,32 @@ class CitizenAgent:
             raise AgentError("Unknown government credential")
         if self._credential_status(session, evidence_id) not in {"unavailable", "expired"}:
             raise AgentError("Credential is already present in this wallet")
-        reference = str(command.get("reference", "")).strip()
-        expires_at = str(command.get("expiresAt", "")).strip()
-        if len(reference) < 4:
-            raise AgentError("Credential reference is required")
-        try:
-            expiry = date.fromisoformat(expires_at)
-        except ValueError as exc:
-            raise AgentError("Credential expiry must be a valid date") from exc
-        if expiry <= date.today():
-            raise AgentError("Credential expiry must be in the future")
+        catalog_item = next(
+            item
+            for item in session.credential_inventory
+            if item["id"] == evidence_id
+        )
+        raw_application_data = command.get("applicationData")
+        if not isinstance(raw_application_data, dict):
+            raise AgentError("Credential application data is required")
+        application_data: dict[str, str] = {}
+        for field_definition in catalog_item["applicationFields"]:
+            field_name = field_definition["name"]
+            value = str(raw_application_data.get(field_name, "")).strip()
+            if not value:
+                raise AgentError(f"{field_definition['label']} is required")
+            application_data[field_name] = value
 
         profile = self._user_profiles.save_credential(
-            session.username, evidence_id, reference, expires_at
+            session.username,
+            evidence_id,
+            application_data,
+            int(catalog_item["validityDays"]),
         )
         catalog = self._government_data.credential_inventory(session.subject_id)
         session.credential_inventory = self._inventory_for_profile(profile, catalog)
         session.evidence[evidence_id] = "locked"
+        issued_credential = profile["credentials"][evidence_id]
         session.messages.extend(
             [
                 Message(
@@ -904,7 +939,8 @@ class CitizenAgent:
                     "agent",
                     (
                         f"已建立由{definition['department']}核發的「{definition['label']}」憑證，"
-                        f"有效至 {expires_at}。憑證已存入 {session.username} 的本機 Demo 錢包。"
+                        f"有效至 {issued_credential['expiresAt']}。"
+                        f"憑證已存入 {session.username} 的本機 Demo 錢包。"
                     ),
                 ),
             ]
@@ -913,7 +949,10 @@ class CitizenAgent:
             AuditEntry(
                 "民眾",
                 "建立政府憑證",
-                f"{definition['department']}：{definition['label']}；有效至 {expires_at}",
+                (
+                    f"{definition['department']}：{definition['label']}；"
+                    f"有效至 {issued_credential['expiresAt']}"
+                ),
             )
         )
         remaining = [

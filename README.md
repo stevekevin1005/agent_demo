@@ -118,9 +118,14 @@ Current Demo scenarios:
 ```
 
 When a required government credential is absent or expired, the workflow enters
-`awaiting_credentials`. The UI asks for a credential reference and future
-expiry date, persists the resulting Demo credential, and only then asks whether
-the citizen authorizes this Agent to retrieve data from the named department.
+`awaiting_credentials`. The backend supplies a credential-specific application
+schema instead of a generic form. For example, a medical-event credential asks
+for health-card number and visit date, while a residency credential asks for
+household address and registration date. The Demo validates the required
+fields, simulates department issuance, generates a credential reference and
+expiry, and persists it before asking whether the citizen authorizes retrieval.
+Application field values remain in the local profile and are not included in
+the language-model context.
 
 ## Docker / Zeabur
 

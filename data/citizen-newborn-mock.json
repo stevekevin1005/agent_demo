@@ -13,6 +13,13 @@
       "expiresAt": "2027-08-20",
       "recordStatus": "valid",
       "authorizedForAgent": true,
+      "applicationInstructions": "向身分識別主管機關申請自然人身分憑證。",
+      "validityDays": 365,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "birthDate", "label": "出生日期", "type": "date"},
+        {"name": "mobile", "label": "本人手機號碼", "type": "tel", "placeholder": "例如 0912345678"}
+      ],
       "satisfied": true,
       "disclosedValue": "身分有效"
     },
@@ -26,6 +33,13 @@
       "expiresAt": "2026-09-28",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向戶政主管機關申請戶籍設籍憑證。",
+      "validityDays": 90,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "householdAddress", "label": "目前戶籍地址", "type": "text", "placeholder": "縣市、區、路段門牌"},
+        {"name": "moveInDate", "label": "設籍日期", "type": "date"}
+      ],
       "satisfied": true,
       "disclosedValue": "設籍本市"
     },
@@ -39,6 +53,13 @@
       "expiresAt": "2026-09-25",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向戶政主管機關申請親屬關係憑證。",
+      "validityDays": 90,
+      "applicationFields": [
+        {"name": "guardianNationalId", "label": "申請人身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "childNationalId", "label": "子女身分證字號", "type": "text", "placeholder": "例如 B223456789"},
+        {"name": "childBirthDate", "label": "子女出生日期", "type": "date"}
+      ],
       "satisfied": true,
       "disclosedValue": "申請人為新生兒法定代理人"
     },
@@ -52,6 +73,12 @@
       "expiresAt": "2027-06-30",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向稅務主管機關申請所得級距憑證。",
+      "validityDays": 365,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "taxYear", "label": "所得年度", "type": "number", "placeholder": "例如 2025"}
+      ],
       "satisfied": true,
       "disclosedValue": "符合補助所得級距"
     },
@@ -65,6 +92,12 @@
       "expiresAt": "2026-09-28",
       "recordStatus": "valid",
       "authorizedForAgent": true,
+      "applicationInstructions": "向社會保險主管機關申請投保資格憑證。",
+      "validityDays": 90,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "insuranceNumber", "label": "社會保險證號", "type": "text", "placeholder": "輸入投保證號"}
+      ],
       "satisfied": true,
       "disclosedValue": "有效投保且符合生育給付條件"
     },
@@ -78,6 +111,13 @@
       "expiresAt": "2026-09-27",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向托育服務主管機關申請托育登記憑證。",
+      "validityDays": 90,
+      "applicationFields": [
+        {"name": "childNationalId", "label": "幼兒身分證字號", "type": "text", "placeholder": "例如 B223456789"},
+        {"name": "providerName", "label": "托育機構或保母姓名", "type": "text", "placeholder": "輸入登記名稱"},
+        {"name": "enrollmentNumber", "label": "托育登記編號", "type": "text", "placeholder": "輸入登記編號"}
+      ],
       "satisfied": true,
       "disclosedValue": "已登記合格托育服務"
     },
@@ -91,6 +131,13 @@
       "expiresAt": "2026-09-28",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "使用健保卡資料向健保與醫療資料主管機關申請近期就醫事件憑證。",
+      "validityDays": 30,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "healthCardNumber", "label": "健保卡卡號", "type": "text", "placeholder": "健保卡左下角 12 碼卡號"},
+        {"name": "visitDate", "label": "最近就醫日期", "type": "date"}
+      ],
       "satisfied": true,
       "disclosedValue": "近 30 日有符合急難救助範圍的住院事件"
     },
@@ -104,6 +151,12 @@
       "expiresAt": "2026-09-20",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向地政主管機關申請不動產持有狀況憑證。",
+      "validityDays": 30,
+      "applicationFields": [
+        {"name": "nationalId", "label": "申請人身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "householdAddress", "label": "申請家庭戶籍地址", "type": "text", "placeholder": "縣市、區、路段門牌"}
+      ],
       "satisfied": true,
       "disclosedValue": "申請家庭成員於補貼地區無自有住宅"
     },
@@ -117,6 +170,12 @@
       "expiresAt": "2026-09-27",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向就業保險主管機關申請就業保險年資憑證。",
+      "validityDays": 90,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "insuredUnit", "label": "最近投保單位", "type": "text", "placeholder": "公司或投保單位名稱"}
+      ],
       "satisfied": true,
       "disclosedValue": "離職前 3 年內就業保險年資符合門檻"
     },
@@ -130,6 +189,13 @@
       "expiresAt": "2026-09-28",
       "recordStatus": "valid",
       "authorizedForAgent": false,
+      "applicationInstructions": "向公立就業服務機構申請求職登記憑證。",
+      "validityDays": 90,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "serviceStation", "label": "辦理就業服務站", "type": "text", "placeholder": "例如 臺北就業服務站"},
+        {"name": "registrationDate", "label": "求職登記日期", "type": "date"}
+      ],
       "satisfied": true,
       "disclosedValue": "已完成求職登記與失業認定"
     },
@@ -143,6 +209,13 @@
       "expiresAt": "2026-07-31",
       "recordStatus": "expired",
       "authorizedForAgent": false,
+      "applicationInstructions": "向社會福利主管機關申請或更新身心障礙資格憑證。",
+      "validityDays": 365,
+      "applicationFields": [
+        {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "certificateNumber", "label": "身心障礙證明編號", "type": "text", "placeholder": "輸入證明編號"},
+        {"name": "assessmentDate", "label": "最近鑑定日期", "type": "date"}
+      ],
       "satisfied": false,
       "disclosedValue": "憑證已過期，需向發證機關更新"
     }

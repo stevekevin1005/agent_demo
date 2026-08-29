@@ -419,7 +419,7 @@
 
     .credential-create-form {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 150px auto;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 8px;
       margin-top: 9px;
     }
@@ -1758,8 +1758,7 @@
           action: "create_credential",
           payload: {
             evidenceId: action.evidenceId,
-            reference: action.reference,
-            expiresAt: action.expiresAt
+            applicationData: action.applicationData
           }
         },
         REVOKE_CREDENTIAL: {
@@ -1994,11 +1993,14 @@
       chat.querySelectorAll("[data-credential-create]").forEach(form => {
         form.addEventListener("submit", event => {
           event.preventDefault();
+          const applicationData = {};
+          form.querySelectorAll("[data-credential-field]").forEach(input => {
+            applicationData[input.dataset.credentialField] = input.value;
+          });
           dispatch({
             type: "CREATE_CREDENTIAL",
             evidenceId: form.dataset.credentialCreate,
-            reference: form.elements.reference.value,
-            expiresAt: form.elements.expiresAt.value
+            applicationData
           });
         });
       });
@@ -2079,18 +2081,30 @@
               <h4>向政府部門取得</h4>
               ${governmentEvidence.map(item => {
                 const status = evidenceStatus(state.credentials[item.id]);
+                const credential = state.credentialInventory.find(entry => entry.id === item.id);
                 const canCreate = state.workflowState === "awaiting_credentials"
                   && ["unavailable", "expired"].includes(state.credentials[item.id]);
                 return `
                   <div class="evidence-source-item">
                     <strong>${escapeHtml(item.label)}</strong>
                     <span>來源：${escapeHtml(item.department || "政府發證機關")} · 狀態：${escapeHtml(statusLabel(status))}</span>
+                    ${!canCreate
+                      ? `<span>錢包已有此憑證；確認後會使用它向${escapeHtml(item.department || "該政府機關")}取得本次最小必要結果。</span>`
+                      : ""}
                     ${canCreate ? `
-                      <span>目前錢包沒有可用憑證。請提供該機關核發的憑證識別資訊；Demo 將模擬驗證並存入本機錢包。</span>
+                      <span>${escapeHtml(credential?.applicationInstructions || "目前錢包沒有可用憑證，請提供申請資料。")}</span>
                       <form class="credential-create-form" data-credential-create="${escapeHtml(item.id)}">
-                        <input name="reference" required minlength="4" placeholder="憑證編號或核發參考碼">
-                        <input name="expiresAt" type="date" value="2027-12-31" required aria-label="憑證有效期限">
-                        <button class="secondary" type="submit">${state.credentials[item.id] === "expired" ? "更新憑證" : "建立憑證"}</button>
+                        ${(credential?.applicationFields || []).map(field => `
+                          <input
+                            name="${escapeHtml(field.name)}"
+                            data-credential-field="${escapeHtml(field.name)}"
+                            type="${escapeHtml(field.type || "text")}"
+                            required
+                            placeholder="${escapeHtml(field.placeholder || field.label)}"
+                            aria-label="${escapeHtml(field.label)}"
+                          >
+                        `).join("")}
+                        <button class="secondary" type="submit">${state.credentials[item.id] === "expired" ? "更新憑證" : "申請憑證"}</button>
                       </form>
                     ` : ""}
                   </div>

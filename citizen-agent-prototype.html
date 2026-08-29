@@ -1007,7 +1007,7 @@
     <div class="panel login-card">
       <div class="prototype-banner">Demo 登入 · 非正式身分驗證</div>
       <h1>登入政府服務 AI Agent</h1>
-      <p>為了讓展示人員可以直接操作，本 Demo 使用固定密碼。帳號名稱會用來建立獨立的本機憑證錢包檔案。</p>
+      <p>為了讓展示人員可以直接操作，本 Demo 使用固定密碼。帳號名稱會用來建立獨立的本機數位憑證皮夾檔案。</p>
       <div class="demo-credentials" aria-label="Demo 登入帳密">
         <div class="demo-credential">
           <span>Demo 帳號</span>
@@ -2187,7 +2187,7 @@
       if (!governmentEvidence.length && !citizenEvidence.length) return "";
 
       return `
-        <details id="evidencePlan" class="evidence-plan-card" ${evidencePlanOpen ? "open" : ""}>
+        <details id="evidencePlan" class="evidence-plan-card" ${evidencePlanOpen || ["awaiting_credentials", "awaiting_documents"].includes(state.workflowState) ? "open" : ""}>
           <summary>本次資料來源與取得方式</summary>
           <p>政府調閱與民眾上傳分開處理；只有下列政府部門會收到本次最小必要授權。</p>
           ${governmentEvidence.length ? `
@@ -2203,10 +2203,10 @@
                     <strong>${escapeHtml(item.label)}</strong>
                     <span>來源：${escapeHtml(item.department || "政府發證機關")} · 狀態：${escapeHtml(statusLabel(status))}</span>
                     ${!canCreate
-                      ? `<span>錢包已有此憑證；確認後會使用它向${escapeHtml(item.department || "該政府機關")}取得本次最小必要結果。</span>`
+                      ? `<span>數位憑證皮夾已有此憑證；確認後會使用它向${escapeHtml(item.department || "該政府機關")}取得本次最小必要結果。</span>`
                       : ""}
                     ${canCreate ? `
-                      <span>${escapeHtml(credential?.applicationInstructions || "目前錢包沒有可用憑證，請提供申請資料。")}</span>
+                      <span>${escapeHtml(credential?.applicationInstructions || "目前數位憑證皮夾沒有可用憑證，請提供申請資料。")}</span>
                     ` : ""}
                   </div>
                 `;
@@ -2345,7 +2345,7 @@
 
       sections.push(`
         <details id="credentialWallet" class="state-section credential-wallet" ${credentialWalletOpen ? "open" : ""}>
-          <summary>我的政府憑證（${(state.credentialInventory || []).length}）</summary>
+          <summary>我的數位憑證皮夾（${(state.credentialInventory || []).length}）</summary>
           <div class="facts">
             ${(state.credentialInventory || []).map(item => `
               <div class="credential">

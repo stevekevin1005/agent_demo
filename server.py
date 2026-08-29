@@ -819,7 +819,7 @@ class CitizenAgent:
             else:
                 government_lines.append(
                     (
-                        f"• 錢包已有「{item['label']}」；同意後將使用此憑證"
+                        f"• 數位憑證皮夾已有「{item['label']}」；同意後將使用此憑證"
                         f"向{item['department']}取得最小必要結果"
                     )
                 )
@@ -827,7 +827,7 @@ class CitizenAgent:
             f"• {item['label']}：{item['instructions']}" for item in upload_evidence
         )
         plan_parts = [
-            "我先檢查了您的憑證錢包：",
+            "我先檢查了您的數位憑證皮夾：",
             "\n".join(government_lines),
         ]
         if upload_lines:
@@ -848,7 +848,7 @@ class CitizenAgent:
             )
             plan_parts.extend(
                 [
-                    "\n您的錢包目前缺少或需要更新以下憑證：",
+                    "\n您的數位憑證皮夾目前缺少或需要更新以下憑證：",
                     missing_lines,
                 ]
             )
@@ -856,7 +856,7 @@ class CitizenAgent:
         if missing_credentials:
             session.state = "awaiting_credentials"
             next_step = (
-                "請使用下方欄位提供憑證識別資訊與效期。Demo 會把建立結果存入此帳號的本機錢包，供日後使用。"
+                "請使用下方欄位提供申請憑證所需資料。Demo 會把建立結果存入此帳號的本機數位憑證皮夾，供日後使用。"
             )
         else:
             session.state = "awaiting_consent"
@@ -942,7 +942,7 @@ class CitizenAgent:
                     "agent",
                     (
                         f"已一次送出 {len(applications)} 筆 Mock 政府發證 API 請求，"
-                        f"並取得：{issued_labels}。憑證已存入 {session.username} 的本機 Demo 錢包。"
+                        f"並取得：{issued_labels}。憑證已存入 {session.username} 的本機 Demo 數位憑證皮夾。"
                     ),
                 ),
             ]

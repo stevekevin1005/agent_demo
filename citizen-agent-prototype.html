@@ -24,6 +24,10 @@
       box-sizing: border-box;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     body {
       margin: 0;
       color: var(--ink);
@@ -46,6 +50,85 @@
       width: min(1440px, calc(100% - 32px));
       margin: 0 auto;
       padding: 28px 0 56px;
+    }
+
+    .login-page {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: min(520px, 100%);
+      padding: 28px;
+    }
+
+    .login-card h1 {
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .login-card p {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .demo-credentials {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .demo-credential {
+      padding: 12px;
+      background: var(--warning-soft);
+      border: 1px solid #fedf89;
+      border-radius: 10px;
+    }
+
+    .demo-credential span,
+    .demo-credential strong {
+      display: block;
+    }
+
+    .demo-credential span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .login-form label {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .login-form input {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .login-error {
+      min-height: 20px;
+      margin: 10px 0 0;
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    .production-login-note {
+      margin-top: 18px;
+      padding: 13px;
+      background: var(--accent-soft);
+      border-radius: 10px;
+      font-size: 13px;
     }
 
     .prototype-banner {
@@ -223,7 +306,8 @@
       animation-delay: 0.32s;
     }
 
-    .account-card {
+    .account-card,
+    .evidence-plan-card {
       margin: 4px 0 18px;
       padding: 16px;
       background: white;
@@ -283,16 +367,79 @@
       line-height: 1.5;
     }
 
-    .account-card h3 {
+    .account-card h3,
+    .evidence-plan-card h3 {
       margin: 0 0 5px;
       font-size: 15px;
     }
 
-    .account-card > p {
+    .account-card > p,
+    .evidence-plan-card > p {
       margin: 0 0 13px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.55;
+    }
+
+    .evidence-source-group {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .evidence-source-group h4 {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .evidence-source-item {
+      padding: 11px 12px;
+      background: var(--soft);
+      border-radius: 10px;
+    }
+
+    .evidence-source-item strong,
+    .evidence-source-item span {
+      display: block;
+    }
+
+    .evidence-source-item span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .document-upload-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .credential-create-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 150px auto;
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .credential-create-form input {
+      min-width: 0;
+      padding: 8px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .document-upload-form input {
+      min-width: 0;
+      padding: 8px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
     }
 
     .account-options {
@@ -514,6 +661,35 @@
       color: var(--warning);
     }
 
+    .credential-status.unauthorized,
+    .credential-status.upload_required,
+    .credential-status.expired {
+      color: var(--warning);
+    }
+
+    .credential-status.unavailable {
+      color: var(--danger);
+    }
+
+    .credential-status.uploaded {
+      color: var(--accent);
+    }
+
+    .credential-detail {
+      min-width: 0;
+    }
+
+    .credential-detail strong,
+    .credential-detail small {
+      display: block;
+    }
+
+    .credential-detail small {
+      margin-top: 3px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
     .last-change {
       margin-top: 16px;
       padding: 12px;
@@ -681,6 +857,15 @@
         display: none;
       }
 
+      .document-upload-form {
+        grid-template-columns: 1fr;
+      }
+
+      .credential-create-form,
+      .demo-credentials {
+        grid-template-columns: 1fr;
+      }
+
       .bubble {
         max-width: 90%;
       }
@@ -701,13 +886,46 @@
   </style>
 </head>
 <body>
-  <main class="page">
+  <section id="loginView" class="login-page">
+    <div class="panel login-card">
+      <div class="prototype-banner">Demo 登入 · 非正式身分驗證</div>
+      <h1>登入政府服務 AI Agent</h1>
+      <p>為了讓展示人員可以直接操作，本 Demo 使用固定密碼。帳號名稱會用來建立獨立的本機憑證錢包檔案。</p>
+      <div class="demo-credentials" aria-label="Demo 登入帳密">
+        <div class="demo-credential">
+          <span>Demo 帳號</span>
+          <strong>user</strong>
+        </div>
+        <div class="demo-credential">
+          <span>Demo 密碼</span>
+          <strong>password</strong>
+        </div>
+      </div>
+      <form id="loginForm" class="login-form">
+        <label>
+          帳號
+          <input name="username" value="user" autocomplete="username" required>
+        </label>
+        <label>
+          密碼
+          <input name="password" type="password" value="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary" type="submit">登入 Demo</button>
+      </form>
+      <div id="loginError" class="login-error" role="alert"></div>
+      <div class="production-login-note">
+        正式服務可改用手機身分驗證、自然人憑證、行動自然人憑證或健保卡憑證登入；本頁不代表已完成正式驗證串接。
+      </div>
+    </div>
+  </section>
+
+  <main id="appView" class="page" hidden>
     <div class="prototype-banner">拋棄式流程原型 · 不連接真實政府系統</div>
     <h1>政府服務 AI Agent</h1>
     <p class="intro">
       這個原型要回答的問題是：
       <span class="question">民眾能否透過一次對話，清楚理解補助、授權必要資料、確認申請內容，並保有最後送件控制權？</span>
-      第一版使用「新生兒與育兒補助」情境，所有資料只存在瀏覽器記憶體中。
+      目前支援新生兒、醫療急難、租屋、失業與案件進度查詢；政府資料皆為 Demo Mock Data。
     </p>
 
     <section class="workspace">
@@ -779,7 +997,7 @@
         "理解需求",
         "推薦可申請服務",
         "等待資料授權",
-        "取得必要證據",
+        "取得政府憑證／等待補件",
         "完成資格判斷",
         "等待民眾確認",
         "申請已送出"
@@ -787,16 +1005,47 @@
 
       const initialState = () => ({
         stage: 0,
+        workflowState: "awaiting_question",
         question: "",
+        lifeEvent: "",
         candidateServices: [],
         selectedService: null,
         noServiceMatch: false,
         consent: "not_requested",
         credentials: {},
+        evidenceDetails: {},
+        uploadedDocuments: {},
+        credentialInventory: [
+          {
+            id: "identity",
+            label: "身分有效",
+            credentialType: "自然人身分憑證",
+            issuer: "身分識別主管機關",
+            expiresAt: "2027-08-20",
+            status: "available"
+          },
+          {
+            id: "residency",
+            label: "設籍地",
+            credentialType: "戶籍設籍憑證",
+            issuer: "戶政主管機關",
+            expiresAt: "2026-09-28",
+            status: "unauthorized"
+          },
+          {
+            id: "disability_qualification",
+            label: "身心障礙資格",
+            credentialType: "身心障礙資格憑證",
+            issuer: "社會福利主管機關",
+            expiresAt: "2026-07-31",
+            status: "expired"
+          }
+        ],
         eligibility: "not_checked",
         draft: null,
         citizenConfirmed: false,
         application: null,
+        caseResults: [],
         bankAccounts: [
           {
             id: "bank-labor",
@@ -906,10 +1155,10 @@
                   estimatedAmount: "每月 5,000 元",
                   summary: "依家庭與設籍條件提供定期育兒支持。",
                   evidence: [
-                    { id: "identity", label: "身分有效" },
-                    { id: "residency", label: "設籍地" },
-                    { id: "relationship", label: "親子關係" },
-                    { id: "income", label: "所得級距" }
+                    { id: "identity", label: "身分有效", source: "government", department: "身分識別主管機關" },
+                    { id: "residency", label: "設籍地", source: "government", department: "戶政主管機關" },
+                    { id: "relationship", label: "親子關係", source: "government", department: "戶政主管機關" },
+                    { id: "income", label: "所得級距", source: "government", department: "稅務主管機關" }
                   ]
                 },
                 {
@@ -919,9 +1168,9 @@
                   estimatedAmount: "一次性 30,000 元",
                   summary: "依投保與生育事實提供一次性給付。",
                   evidence: [
-                    { id: "identity", label: "身分有效" },
-                    { id: "relationship", label: "親子關係" },
-                    { id: "insurance", label: "社會保險資格" }
+                    { id: "identity", label: "身分有效", source: "government", department: "身分識別主管機關" },
+                    { id: "relationship", label: "親子關係", source: "government", department: "戶政主管機關" },
+                    { id: "insurance", label: "社會保險資格", source: "government", department: "社會保險主管機關" }
                   ]
                 },
                 {
@@ -931,10 +1180,10 @@
                   estimatedAmount: "每月最高 7,000 元",
                   summary: "使用合格托育服務時提供費用補助。",
                   evidence: [
-                    { id: "identity", label: "身分有效" },
-                    { id: "residency", label: "設籍地" },
-                    { id: "relationship", label: "親子關係" },
-                    { id: "enrollment", label: "托育服務登記" }
+                    { id: "identity", label: "身分有效", source: "government", department: "身分識別主管機關" },
+                    { id: "residency", label: "設籍地", source: "government", department: "戶政主管機關" },
+                    { id: "relationship", label: "親子關係", source: "government", department: "戶政主管機關" },
+                    { id: "enrollment", label: "托育服務登記", source: "government", department: "托育服務主管機關" }
                   ]
                 }
               ],
@@ -1018,10 +1267,16 @@
             const credentials = Object.fromEntries(
               Object.keys(state.credentials).map(key => [key, "available"])
             );
+            const requestedIds = new Set(Object.keys(credentials));
             const next = {
               ...state,
               stage: 4,
               credentials,
+              credentialInventory: state.credentialInventory.map(item => (
+                requestedIds.has(item.id) && item.status !== "expired"
+                  ? { ...item, status: "available" }
+                  : item
+              )),
               lastChange: `已取得${Object.keys(credentials).length}項最小化證據結果；憑證細節留待下一版設計。`
             };
             return appendAudit(next, "Credential Vault", "提供最小化證據", `${Object.keys(credentials).length} 項證據皆可驗證`);
@@ -1275,7 +1530,12 @@
     let thinkingText = "";
     let backendMode = false;
     let backendSessionId = null;
+    let currentCredentials = null;
 
+    const loginView = document.querySelector("#loginView");
+    const appView = document.querySelector("#appView");
+    const loginForm = document.querySelector("#loginForm");
+    const loginError = document.querySelector("#loginError");
     const chat = document.querySelector("#chat");
     const stateBody = document.querySelector("#stateBody");
     const freePlay = document.querySelector("#freePlay");
@@ -1446,6 +1706,23 @@
           action: "deny_consent",
           message: action.utterance || ""
         },
+        CREATE_CREDENTIAL: {
+          action: "create_credential",
+          payload: {
+            evidenceId: action.evidenceId,
+            reference: action.reference,
+            expiresAt: action.expiresAt
+          }
+        },
+        UPLOAD_DOCUMENT: {
+          action: "upload_document",
+          payload: {
+            evidenceId: action.evidenceId,
+            fileName: action.fileName,
+            contentType: action.contentType,
+            size: action.size
+          }
+        },
         CREATE_DRAFT: {
           action: "create_draft",
           message: action.utterance || ""
@@ -1476,6 +1753,10 @@
 
       const previewAction = action.type === "MODEL_MESSAGE"
         ? { type: "USER_MESSAGE", text: action.utterance }
+        : action.type === "CREATE_CREDENTIAL"
+          ? { type: "USER_MESSAGE", text: "提供政府憑證資訊" }
+        : action.type === "UPLOAD_DOCUMENT"
+          ? { type: "USER_MESSAGE", text: `上傳文件：${action.fileName}` }
         : action.type === "ASK_QUESTION"
           ? { type: "ASK_QUESTION", question: action.question || action.utterance }
           : action;
@@ -1484,7 +1765,9 @@
       thinkingText = {
         ASK_QUESTION: "正在理解問題並查詢跨機關服務…",
         SELECT_SERVICE: "正在整理本次需要的最小資料範圍…",
+        CREATE_CREDENTIAL: "正在模擬驗證並建立政府憑證…",
         GRANT_CONSENT: "正在取得必要證據並執行資格規則…",
+        UPLOAD_DOCUMENT: "正在檢查檔案類型並登記文件…",
         CREATE_DRAFT: "正在建立申請草稿…",
         SELECT_BANK_ACCOUNT: "正在核對帳戶登記來源…",
         ADD_BANK_ACCOUNT: "正在建立新帳戶驗證程序…",
@@ -1525,7 +1808,9 @@
       const stageByState = {
         awaiting_question: 0,
         awaiting_service: 2,
+        awaiting_credentials: 3,
         awaiting_consent: 3,
+        awaiting_documents: 4,
         eligible: 5,
         ineligible: 5,
         awaiting_account: 6,
@@ -1535,16 +1820,22 @@
       const latestAudit = payload.audit[payload.audit.length - 1];
       return {
         stage: stageByState[payload.state] ?? 0,
+        workflowState: payload.state,
         question: payload.question,
+        lifeEvent: payload.life_event,
         noServiceMatch: payload.no_service_match,
         candidateServices: payload.candidate_services,
         selectedService: payload.selected_service,
         consent: payload.consent,
         credentials: payload.evidence,
+        evidenceDetails: payload.evidence_details || {},
+        uploadedDocuments: payload.uploaded_documents || {},
+        credentialInventory: payload.credential_inventory || [],
         eligibility: payload.eligibility,
         draft: payload.draft,
         citizenConfirmed: payload.state === "submitted",
         application: payload.application,
+        caseResults: payload.case_results || [],
         bankAccounts: payload.bankAccounts,
         selectedBankAccountId: payload.selected_bank_account_id,
         messages: payload.messages,
@@ -1558,7 +1849,12 @@
     function statusLabel(status) {
       const labels = {
         locked: "未授權",
-        available: "已取得",
+        available: "可使用",
+        unauthorized: "未授權",
+        expired: "已過期",
+        unavailable: "無可用憑證",
+        upload_required: "需要上傳",
+        uploaded: "已上傳",
         not_requested: "尚未請求",
         pending: "等待決定",
         granted: "已同意",
@@ -1587,7 +1883,7 @@
         </div>
       ` : "";
 
-      chat.innerHTML = messages + thinking + renderServiceCard() + renderNoServiceCard() + renderBankAccountCard();
+      chat.innerHTML = messages + thinking + renderServiceCard() + renderEvidencePlanCard() + renderCaseResultsCard() + renderNoServiceCard() + renderBankAccountCard();
       chat.scrollTop = chat.scrollHeight;
 
       chat.querySelectorAll("[data-service-id]").forEach(button => {
@@ -1625,6 +1921,33 @@
         verifyButton.addEventListener("click", () => dispatch({ type: "VERIFY_BANK_ACCOUNT" }));
       }
 
+      chat.querySelectorAll("[data-document-upload]").forEach(form => {
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          const file = form.elements.document.files[0];
+          if (!file) return;
+          dispatch({
+            type: "UPLOAD_DOCUMENT",
+            evidenceId: form.dataset.documentUpload,
+            fileName: file.name,
+            contentType: file.type,
+            size: file.size
+          });
+        });
+      });
+
+      chat.querySelectorAll("[data-credential-create]").forEach(form => {
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          dispatch({
+            type: "CREATE_CREDENTIAL",
+            evidenceId: form.dataset.credentialCreate,
+            reference: form.elements.reference.value,
+            expiresAt: form.elements.expiresAt.value
+          });
+        });
+      });
+
       const restartButton = chat.querySelector("#restartConversation");
       if (restartButton) {
         restartButton.addEventListener("click", reset);
@@ -1636,8 +1959,32 @@
       return `
         <div class="service-card">
           <h3>目前服務目錄沒有相符項目</h3>
-          <p>您可以重新開始並換一種方式描述需求，或改問目前支援的新生兒與育兒服務。</p>
+          <p>您可以重新開始並換一種方式描述需求。目前支援新生兒、醫療急難、租屋、失業與案件查詢。</p>
           <button id="restartConversation" class="primary" type="button">重新開始對話</button>
+        </div>
+      `;
+    }
+
+    function renderCaseResultsCard() {
+      if (!state.caseResults?.length || isThinking) return "";
+      return `
+        <div class="service-card">
+          <h3>我的政府案件</h3>
+          <p>以下狀態由 Mock 政府案件介面回傳，不是由語言模型產生。</p>
+          <div class="service-options">
+            ${state.caseResults.map(item => `
+              <div class="service-option">
+                <span class="service-name">${escapeHtml(item.serviceName)} · ${escapeHtml(item.status)}</span>
+                <span class="service-meta">
+                  案件編號：${escapeHtml(item.id)}<br>
+                  主管機關：${escapeHtml(item.agency)}<br>
+                  最新進度：${escapeHtml(item.nextStep)}<br>
+                  更新日期：${escapeHtml(item.updatedAt)}
+                  ${item.estimatedCompletion ? `<br>預計完成：${escapeHtml(item.estimatedCompletion)}` : ""}
+                </span>
+              </div>
+            `).join("")}
+          </div>
         </div>
       `;
     }
@@ -1657,6 +2004,74 @@
               </button>
             `).join("")}
           </div>
+        </div>
+      `;
+    }
+
+    function renderEvidencePlanCard() {
+      if (!state.selectedService || isThinking) return "";
+      const evidence = state.selectedService.evidence || [];
+      const governmentEvidence = evidence.filter(item => (item.source || "government") === "government");
+      const citizenEvidence = evidence.filter(item => item.source === "citizen_upload");
+      if (!governmentEvidence.length && !citizenEvidence.length) return "";
+
+      return `
+        <div class="evidence-plan-card">
+          <h3>本次資料來源與取得方式</h3>
+          <p>政府調閱與民眾上傳分開處理；只有下列政府部門會收到本次最小必要授權。</p>
+          ${governmentEvidence.length ? `
+            <div class="evidence-source-group">
+              <h4>向政府部門取得</h4>
+              ${governmentEvidence.map(item => {
+                const status = evidenceStatus(state.credentials[item.id]);
+                const canCreate = state.workflowState === "awaiting_credentials"
+                  && ["unavailable", "expired"].includes(state.credentials[item.id]);
+                return `
+                  <div class="evidence-source-item">
+                    <strong>${escapeHtml(item.label)}</strong>
+                    <span>來源：${escapeHtml(item.department || "政府發證機關")} · 狀態：${escapeHtml(statusLabel(status))}</span>
+                    ${canCreate ? `
+                      <span>目前錢包沒有可用憑證。請提供該機關核發的憑證識別資訊；Demo 將模擬驗證並存入本機錢包。</span>
+                      <form class="credential-create-form" data-credential-create="${escapeHtml(item.id)}">
+                        <input name="reference" required minlength="4" placeholder="憑證編號或核發參考碼">
+                        <input name="expiresAt" type="date" value="2027-12-31" required aria-label="憑證有效期限">
+                        <button class="secondary" type="submit">${state.credentials[item.id] === "expired" ? "更新憑證" : "建立憑證"}</button>
+                      </form>
+                    ` : ""}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          ` : ""}
+          ${citizenEvidence.length ? `
+            <div class="evidence-source-group">
+              <h4>由您提供</h4>
+              ${citizenEvidence.map(item => {
+                const status = state.credentials[item.id] || "upload_required";
+                const uploaded = state.uploadedDocuments[item.id];
+                const canUpload = state.consent === "granted" && status !== "uploaded";
+                return `
+                  <div class="evidence-source-item">
+                    <strong>${escapeHtml(item.label)} · ${escapeHtml(statusLabel(status))}</strong>
+                    <span>${escapeHtml(item.instructions || "請提供申請所需文件。")}</span>
+                    ${uploaded ? `<span>已提供：${escapeHtml(uploaded.fileName)}</span>` : ""}
+                    ${canUpload ? `
+                      <form class="document-upload-form" data-document-upload="${escapeHtml(item.id)}">
+                        <input
+                          name="document"
+                          type="file"
+                          required
+                          accept="${escapeHtml((item.acceptedTypes || []).join(","))}"
+                          aria-label="上傳${escapeHtml(item.label)}"
+                        >
+                        <button class="secondary" type="submit">上傳文件</button>
+                      </form>
+                    ` : ""}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          ` : ""}
         </div>
       `;
     }
@@ -1703,13 +2118,54 @@
     function renderState() {
       const sections = [];
 
+      sections.push(`
+        <div class="state-section">
+          <h3>我的政府憑證</h3>
+          <div class="facts">
+            ${(state.credentialInventory || []).map(item => `
+              <div class="credential">
+                <div class="credential-detail">
+                  <strong>${escapeHtml(item.credentialType || item.label)}</strong>
+                  <small>${escapeHtml(item.issuer)} · 到期 ${escapeHtml(item.expiresAt)}</small>
+                  ${item.usedForServices?.length
+                    ? `<small>曾用於：${escapeHtml(item.usedForServices.join("、"))}</small>`
+                    : ""}
+                </div>
+                <span class="credential-status ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
+              </div>
+            `).join("") || `<div class="agent-subtitle">尚未載入政府憑證清單。</div>`}
+          </div>
+          <div class="last-change">
+            「未授權」代表錢包已有憑證，但本次尚未同意 Agent 使用；同意後才會變成「可使用」。
+          </div>
+        </div>
+      `);
+
       if (state.question) {
         sections.push(`
           <div class="state-section">
             <h3>已理解的需求</h3>
             <div class="facts">
               <div class="fact"><span>民眾問題</span><strong>${escapeHtml(state.question)}</strong></div>
-              <div class="fact"><span>人生事件</span><strong>新生兒／育兒</strong></div>
+              ${state.lifeEvent ? `<div class="fact"><span>人生事件</span><strong>${escapeHtml(lifeEventLabel(state.lifeEvent))}</strong></div>` : ""}
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.caseResults?.length) {
+        sections.push(`
+          <div class="state-section">
+            <h3>案件查詢結果</h3>
+            <div class="facts">
+              ${state.caseResults.map(item => `
+                <div class="credential">
+                  <span>${escapeHtml(item.serviceName)} · ${escapeHtml(item.id)}</span>
+                  <span class="credential-status ${item.status === "已核准" ? "eligible" : "pending"}">
+                    ${escapeHtml(item.status)}
+                  </span>
+                </div>
+              `).join("")}
             </div>
           </div>
         `);
@@ -1723,7 +2179,8 @@
               <div class="fact"><span>服務名稱</span><strong>${state.selectedService.name}</strong></div>
               <div class="fact"><span>主管機關</span><strong>${state.selectedService.agency}</strong></div>
               <div class="fact"><span>預估補助</span><strong>${state.selectedService.estimatedAmount}</strong></div>
-              <div class="fact"><span>需要確認</span><strong>${state.selectedService.evidence.map(item => item.label).join("、")}</strong></div>
+              <div class="fact"><span>政府調閱</span><strong>${state.selectedService.evidence.filter(item => (item.source || "government") === "government").map(item => item.department || item.label).filter((value, index, values) => values.indexOf(value) === index).join("、")}</strong></div>
+              <div class="fact"><span>民眾提供</span><strong>${state.selectedService.evidence.filter(item => item.source === "citizen_upload").map(item => item.label).join("、") || "不需要"}</strong></div>
             </div>
           </div>
         `);
@@ -1765,7 +2222,13 @@
             <h3>本次需要的證據</h3>
             <div class="facts">
               ${state.selectedService.evidence.map(item =>
-                credentialRow(item.label, evidenceStatus(state.credentials[item.id]))
+                credentialRow(
+                  item.label,
+                  evidenceStatus(state.credentials[item.id]),
+                  item.source === "citizen_upload"
+                    ? "民眾上傳"
+                    : item.department || "政府發證機關"
+                )
               ).join("")}
             </div>
           </div>
@@ -1849,13 +2312,25 @@
       return status;
     }
 
-    function credentialRow(name, status) {
+    function credentialRow(name, status, source = "") {
       return `
         <div class="credential">
-          <span>${name}</span>
+          <div class="credential-detail">
+            <strong>${escapeHtml(name)}</strong>
+            ${source ? `<small>${escapeHtml(source)}</small>` : ""}
+          </div>
           <span class="credential-status ${status}">${statusLabel(status)}</span>
         </div>
       `;
+    }
+
+    function lifeEventLabel(value) {
+      return {
+        "newborn-family": "新生兒／育兒",
+        "medical-hardship": "醫療急難",
+        "housing": "租屋／住宅",
+        "unemployment": "失業／就業"
+      }[value] || value;
     }
 
     function renderFreePlay() {
@@ -1964,8 +2439,10 @@
       if (isThinking) return "Agent 正在處理，請稍候…";
       if (!state.question) return "我剛生小孩，有哪些補助可以申請？";
       if (state.candidateServices.length && !state.selectedService) return "請先從上方選擇一項服務。";
+      if (state.workflowState === "awaiting_credentials") return "請使用上方欄位建立或更新缺少的政府憑證。";
       if (state.selectedService && state.consent === "not_requested") return `我想申請${state.selectedService.name}。`;
       if (state.consent === "pending") return "我同意這次資格檢查使用上述資料。";
+      if (state.stage === 4 && Object.values(state.credentials).includes("upload_required")) return "請使用上方欄位上傳缺少的文件。";
       if (state.consent === "granted" && Object.values(state.credentials).some(value => value !== "available")) return "好，請開始取得必要資料並檢查。";
       if (state.stage === 4) return "資料都取得了，我符合資格嗎？";
       if (state.eligibility === "eligible" && !state.draft) return "如果符合，請幫我準備申請草稿。";
@@ -2038,33 +2515,55 @@
       render();
 
       if (!location.protocol.startsWith("http")) {
+        if (currentCredentials?.username !== "user" || currentCredentials?.password !== "password") {
+          throw new Error("離線 Demo 請使用畫面提供的 user / password");
+        }
         backendBadge.textContent = "離線 Demo · 瀏覽器內狀態";
+        loginView.hidden = true;
+        appView.hidden = false;
         return;
       }
 
-      try {
-        const healthResponse = await fetch("/api/health");
-        const health = await healthResponse.json();
-        const sessionResponse = await fetch("/api/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: "{}"
-        });
-        const session = await sessionResponse.json();
-        if (!healthResponse.ok || !sessionResponse.ok) throw new Error("Backend unavailable");
-        backendMode = true;
-        backendSessionId = session.id;
-        state = mapBackendState(session);
-        backendBadge.textContent = `後端已連線 · ${health.modelProvider} model`;
-      } catch (error) {
-        backendMode = false;
-        backendSessionId = null;
-        backendBadge.textContent = "後端未連線 · 使用離線 Demo";
-      }
+      const healthResponse = await fetch("/api/health");
+      const health = await healthResponse.json();
+      const sessionResponse = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(currentCredentials)
+      });
+      const session = await sessionResponse.json();
+      if (!healthResponse.ok) throw new Error("Agent 後端目前無法使用");
+      if (!sessionResponse.ok) throw new Error(session.error || "登入失敗");
+      backendMode = true;
+      backendSessionId = session.id;
+      state = mapBackendState(session);
+      backendBadge.textContent = `已登入 ${session.username} · ${health.modelProvider} model`;
+      loginView.hidden = true;
+      appView.hidden = false;
       render();
     }
 
-    initializeBackend();
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const button = loginForm.querySelector("button");
+      loginError.textContent = "";
+      button.disabled = true;
+      button.textContent = "登入中…";
+      currentCredentials = {
+        username: loginForm.elements.username.value.trim(),
+        password: loginForm.elements.password.value
+      };
+      try {
+        await initializeBackend();
+      } catch (error) {
+        backendMode = false;
+        backendSessionId = null;
+        loginError.textContent = error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = "登入 Demo";
+      }
+    });
   </script>
 </body>
 </html>

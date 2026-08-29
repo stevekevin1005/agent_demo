@@ -6,10 +6,10 @@
     "estimatedAmount": "每月 5,000 元",
     "summary": "依家庭與設籍條件提供定期育兒支持。",
     "evidence": [
-      {"id": "identity", "label": "身分有效"},
-      {"id": "residency", "label": "設籍地"},
-      {"id": "relationship", "label": "親子關係"},
-      {"id": "income", "label": "所得級距"}
+      {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
+      {"id": "residency", "label": "設籍地", "source": "government", "department": "戶政主管機關"},
+      {"id": "relationship", "label": "親子關係", "source": "government", "department": "戶政主管機關"},
+      {"id": "income", "label": "所得級距", "source": "government", "department": "稅務主管機關"}
     ]
   },
   {
@@ -19,9 +19,9 @@
     "estimatedAmount": "一次性 30,000 元",
     "summary": "依投保與生育事實提供一次性給付。",
     "evidence": [
-      {"id": "identity", "label": "身分有效"},
-      {"id": "relationship", "label": "親子關係"},
-      {"id": "insurance", "label": "社會保險資格"}
+      {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
+      {"id": "relationship", "label": "親子關係", "source": "government", "department": "戶政主管機關"},
+      {"id": "insurance", "label": "社會保險資格", "source": "government", "department": "社會保險主管機關"}
     ]
   },
   {
@@ -31,10 +31,69 @@
     "estimatedAmount": "每月最高 7,000 元",
     "summary": "使用合格托育服務時提供費用補助。",
     "evidence": [
-      {"id": "identity", "label": "身分有效"},
-      {"id": "residency", "label": "設籍地"},
-      {"id": "relationship", "label": "親子關係"},
-      {"id": "enrollment", "label": "托育服務登記"}
+      {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
+      {"id": "residency", "label": "設籍地", "source": "government", "department": "戶政主管機關"},
+      {"id": "relationship", "label": "親子關係", "source": "government", "department": "戶政主管機關"},
+      {"id": "enrollment", "label": "托育服務登記", "source": "government", "department": "托育服務主管機關"}
+    ]
+  },
+  {
+    "id": "medical-hardship-2026",
+    "name": "醫療急難救助",
+    "agency": "社會救助主管機關",
+    "estimatedAmount": "最高 50,000 元",
+    "summary": "因重大傷病或突發醫療支出造成生活困難時提供短期救助。",
+    "evidence": [
+      {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
+      {"id": "residency", "label": "設籍地", "source": "government", "department": "戶政主管機關"},
+      {"id": "medical_event", "label": "近期醫療事件", "source": "government", "department": "健保與醫療資料主管機關"},
+      {"id": "income", "label": "所得級距", "source": "government", "department": "稅務主管機關"},
+      {
+        "id": "medical_receipts",
+        "label": "醫療費用收據",
+        "source": "citizen_upload",
+        "instructions": "請上傳可辨識就醫日期、醫療院所與自付金額的收據。",
+        "acceptedTypes": [".pdf", ".jpg", ".jpeg", ".png"]
+      }
+    ]
+  },
+  {
+    "id": "rental-subsidy-2026",
+    "name": "租金補貼",
+    "agency": "住宅主管機關",
+    "estimatedAmount": "每月最高 8,000 元",
+    "summary": "依租賃事實、家庭所得與居住條件提供租金補助。",
+    "evidence": [
+      {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
+      {"id": "residency", "label": "設籍地", "source": "government", "department": "戶政主管機關"},
+      {"id": "income", "label": "所得級距", "source": "government", "department": "稅務主管機關"},
+      {
+        "id": "lease",
+        "label": "有效租賃契約",
+        "source": "citizen_upload",
+        "instructions": "租賃契約並非所有政府機關都持有，請上傳契約首頁、租期與簽章頁。",
+        "acceptedTypes": [".pdf", ".jpg", ".jpeg", ".png"]
+      },
+      {"id": "property_status", "label": "自有住宅狀況", "source": "government", "department": "地政主管機關"}
+    ]
+  },
+  {
+    "id": "unemployment-benefit-2026",
+    "name": "失業給付",
+    "agency": "就業保險主管機關",
+    "estimatedAmount": "依投保薪資按月核發",
+    "summary": "非自願離職並完成求職登記後，依就業保險資格提供給付。",
+    "evidence": [
+      {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
+      {"id": "employment_insurance", "label": "就業保險年資", "source": "government", "department": "就業保險主管機關"},
+      {
+        "id": "involuntary_separation",
+        "label": "非自願離職證明",
+        "source": "citizen_upload",
+        "instructions": "此文件通常由原雇主開立，請上傳載有離職原因與公司用印的證明。",
+        "acceptedTypes": [".pdf", ".jpg", ".jpeg", ".png"]
+      },
+      {"id": "job_registration", "label": "求職登記", "source": "government", "department": "公立就業服務機構"}
     ]
   }
 ]

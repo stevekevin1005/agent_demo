@@ -8,6 +8,21 @@ python .\server.py
 
 Then open <http://127.0.0.1:8080>.
 
+The Demo login page displays the default credentials directly:
+
+```text
+username: user
+password: password
+```
+
+Any safe username can be used with the Demo password so multiple presenters can
+have separate local wallets. Each profile is stored at
+`data/users/<username>.json`; passwords are not stored. These files are ignored
+by Git and may be ephemeral on container hosting without a persistent volume.
+Production authentication should replace this Demo login with mobile identity,
+a natural-person certificate, mobile natural-person certificate, or health-card
+credential verification.
+
 The default `mock` model is deterministic. To use an OpenAI-compatible model,
 set environment variables instead of placing a key in source code:
 
@@ -54,15 +69,41 @@ When the page is opened through the backend, the text box accepts freeform
 citizen messages. The model receives only the current workflow state and a
 limited catalog of allowed choices, then returns one structured action.
 
-Newborn-related government records are stored in
+After a service is selected, the Agent separates required evidence into:
+
+- Government credentials: the UI names the exact issuing department before
+  consent. A valid credential may still be shown as unauthorized until the
+  citizen grants this Agent one-time access for the selected service.
+- Citizen-provided documents: records such as an involuntary-separation
+  certificate, lease, or medical receipt use a file input instead of pretending
+  the government already holds them.
+
+The side panel shows the citizen's mock government credential wallet, including
+usable, unauthorized, and expired credentials. Uploaded document contents are
+not sent to the language model; this in-memory Demo records only file metadata
+and enforces a 10 MB limit.
+
+Mock government records are stored in
 `data/citizen-newborn-mock.json`. The backend reads them through a
 `GovernmentDataAdapter` and returns only the evidence required by the selected
 service. `GET /api/mock-government/citizen` exposes the fixture for Demo
 inspection.
 
+Current Demo scenarios:
+
+- Newborn and childcare: recurring childcare support, birth payment, childcare
+  service subsidy.
+- Medical hardship: short-term assistance for qualifying medical expenses.
+- Housing: rental subsidy.
+- Employment: unemployment benefit.
+- Existing case lookup: review status, missing-document notice, next step, and
+  estimated completion date.
+
 ## HTTP interface
 
 - `POST /api/sessions` starts a conversation.
+- `POST /api/login` validates the Demo login and starts a conversation with the
+  username's persisted credential wallet.
 - `POST /api/chat` sends a message or explicit workflow action.
 - `GET /api/sessions/{id}` reads the complete current state.
 - `GET /api/health` reports backend and model-provider status.
@@ -75,6 +116,11 @@ inspection.
   "message": "我想申請育兒生活補助"
 }
 ```
+
+When a required government credential is absent or expired, the workflow enters
+`awaiting_credentials`. The UI asks for a credential reference and future
+expiry date, persists the resulting Demo credential, and only then asks whether
+the citizen authorizes this Agent to retrieve data from the named department.
 
 ## Docker / Zeabur
 

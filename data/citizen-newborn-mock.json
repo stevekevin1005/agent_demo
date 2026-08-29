@@ -1,6 +1,6 @@
 {
   "subjectId": "citizen-demo-001",
-  "scenario": "newborn-family",
+  "scenario": "multi-life-event-demo",
   "displayName": "Demo 民眾",
   "records": {
     "identity": {
@@ -9,6 +9,10 @@
       "endpoint": "/mock/identity/citizen-demo-001",
       "recordId": "ID-DEMO-001",
       "lastUpdated": "2026-08-20",
+      "credentialType": "自然人身分憑證",
+      "expiresAt": "2027-08-20",
+      "recordStatus": "valid",
+      "authorizedForAgent": true,
       "satisfied": true,
       "disclosedValue": "身分有效"
     },
@@ -18,6 +22,10 @@
       "endpoint": "/mock/household/citizen-demo-001/residency",
       "recordId": "RES-DEMO-001",
       "lastUpdated": "2026-08-28",
+      "credentialType": "戶籍設籍憑證",
+      "expiresAt": "2026-09-28",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
       "satisfied": true,
       "disclosedValue": "設籍本市"
     },
@@ -27,6 +35,10 @@
       "endpoint": "/mock/household/citizen-demo-001/relationships",
       "recordId": "REL-DEMO-001",
       "lastUpdated": "2026-08-25",
+      "credentialType": "親屬關係憑證",
+      "expiresAt": "2026-09-25",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
       "satisfied": true,
       "disclosedValue": "申請人為新生兒法定代理人"
     },
@@ -36,6 +48,10 @@
       "endpoint": "/mock/tax/citizen-demo-001/income-bracket",
       "recordId": "TAX-DEMO-2025",
       "lastUpdated": "2026-06-30",
+      "credentialType": "所得級距憑證",
+      "expiresAt": "2027-06-30",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
       "satisfied": true,
       "disclosedValue": "符合補助所得級距"
     },
@@ -45,6 +61,10 @@
       "endpoint": "/mock/insurance/citizen-demo-001/status",
       "recordId": "INS-DEMO-001",
       "lastUpdated": "2026-08-28",
+      "credentialType": "社會保險資格憑證",
+      "expiresAt": "2026-09-28",
+      "recordStatus": "valid",
+      "authorizedForAgent": true,
       "satisfied": true,
       "disclosedValue": "有效投保且符合生育給付條件"
     },
@@ -54,10 +74,114 @@
       "endpoint": "/mock/childcare/citizen-demo-001/enrollment",
       "recordId": "CARE-DEMO-001",
       "lastUpdated": "2026-08-27",
+      "credentialType": "托育登記憑證",
+      "expiresAt": "2026-09-27",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
       "satisfied": true,
       "disclosedValue": "已登記合格托育服務"
+    },
+    "medical_event": {
+      "label": "近期醫療事件",
+      "issuer": "健保與醫療資料主管機關",
+      "endpoint": "/mock/health/citizen-demo-001/recent-event",
+      "recordId": "MED-DEMO-001",
+      "lastUpdated": "2026-08-28",
+      "credentialType": "近期就醫事件憑證",
+      "expiresAt": "2026-09-28",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
+      "satisfied": true,
+      "disclosedValue": "近 30 日有符合急難救助範圍的住院事件"
+    },
+    "property_status": {
+      "label": "自有住宅狀況",
+      "issuer": "地政主管機關",
+      "endpoint": "/mock/property/citizen-demo-001/status",
+      "recordId": "PROP-DEMO-001",
+      "lastUpdated": "2026-08-20",
+      "credentialType": "不動產持有狀況憑證",
+      "expiresAt": "2026-09-20",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
+      "satisfied": true,
+      "disclosedValue": "申請家庭成員於補貼地區無自有住宅"
+    },
+    "employment_insurance": {
+      "label": "就業保險年資",
+      "issuer": "就業保險主管機關",
+      "endpoint": "/mock/employment/citizen-demo-001/insurance",
+      "recordId": "EMPINS-DEMO-001",
+      "lastUpdated": "2026-08-27",
+      "credentialType": "就業保險年資憑證",
+      "expiresAt": "2026-09-27",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
+      "satisfied": true,
+      "disclosedValue": "離職前 3 年內就業保險年資符合門檻"
+    },
+    "job_registration": {
+      "label": "求職登記",
+      "issuer": "公立就業服務機構",
+      "endpoint": "/mock/employment/citizen-demo-001/job-registration",
+      "recordId": "JOB-DEMO-001",
+      "lastUpdated": "2026-08-28",
+      "credentialType": "求職登記憑證",
+      "expiresAt": "2026-09-28",
+      "recordStatus": "valid",
+      "authorizedForAgent": false,
+      "satisfied": true,
+      "disclosedValue": "已完成求職登記與失業認定"
+    },
+    "disability_qualification": {
+      "label": "身心障礙資格",
+      "issuer": "社會福利主管機關",
+      "endpoint": "/mock/welfare/citizen-demo-001/disability",
+      "recordId": "DIS-DEMO-001",
+      "lastUpdated": "2025-07-31",
+      "credentialType": "身心障礙資格憑證",
+      "expiresAt": "2026-07-31",
+      "recordStatus": "expired",
+      "authorizedForAgent": false,
+      "satisfied": false,
+      "disclosedValue": "憑證已過期，需向發證機關更新"
     }
   },
+  "cases": [
+    {
+      "id": "APP-2026-0820-014",
+      "serviceId": "rental-subsidy-2026",
+      "serviceName": "租金補貼",
+      "status": "審核中",
+      "agency": "住宅主管機關",
+      "submittedAt": "2026-08-20",
+      "updatedAt": "2026-08-28",
+      "nextStep": "等待所得與財產資料比對",
+      "estimatedCompletion": "2026-09-12"
+    },
+    {
+      "id": "APP-2026-0818-207",
+      "serviceId": "medical-hardship-2026",
+      "serviceName": "醫療急難救助",
+      "status": "待補件",
+      "agency": "社會救助主管機關",
+      "submittedAt": "2026-08-18",
+      "updatedAt": "2026-08-29",
+      "nextStep": "請於 2026-09-05 前補上醫療費用收據",
+      "estimatedCompletion": null
+    },
+    {
+      "id": "APP-2026-0805-033",
+      "serviceId": "unemployment-benefit-2026",
+      "serviceName": "失業給付",
+      "status": "已核准",
+      "agency": "就業保險主管機關",
+      "submittedAt": "2026-08-05",
+      "updatedAt": "2026-08-25",
+      "nextStep": "首筆給付預計匯入已登記帳戶",
+      "estimatedCompletion": "2026-08-31"
+    }
+  ],
   "registeredBankAccounts": [
     {
       "id": "bank-labor",

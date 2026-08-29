@@ -2,3 +2,5 @@
 *.key
 local-secrets.ps1
 __pycache__/
+data/users/*.json
+data/users/*.tmp

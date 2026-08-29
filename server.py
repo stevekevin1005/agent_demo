@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 import urllib.error
 import urllib.request
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -19,6 +20,7 @@ ROOT = Path(__file__).resolve().parent
 HTML_PATH = ROOT / "citizen-agent-prototype.html"
 SERVICES_PATH = ROOT / "data" / "services.json"
 MOCK_CITIZEN_PATH = ROOT / "data" / "citizen-newborn-mock.json"
+USER_PROFILES_DIR = ROOT / "data" / "users"
 
 
 class AgentError(Exception):
@@ -30,14 +32,142 @@ class ModelAdapter(Protocol):
         """Turn a citizen utterance into one constrained workflow action."""
 
 
+class UserProfileStore(Protocol):
+    def authenticate(self, username: str, password: str) -> dict[str, Any]:
+        """Validate Demo credentials and return the username-scoped profile."""
+
+    def save_credential(
+        self,
+        username: str,
+        evidence_id: str,
+        reference: str,
+        expires_at: str,
+    ) -> dict[str, Any]:
+        """Persist one issued credential in the user's local wallet."""
+
+    def record_usage(
+        self, username: str, evidence_ids: list[str], service_id: str
+    ) -> dict[str, Any]:
+        """Record where persisted credentials were used."""
+
+
+class FileUserProfileStore:
+    USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
+
+    def __init__(self, directory: Path, fixture: dict[str, Any]) -> None:
+        self._directory = directory
+        self._fixture = fixture
+        self._lock = threading.Lock()
+        self._directory.mkdir(parents=True, exist_ok=True)
+
+    def authenticate(self, username: str, password: str) -> dict[str, Any]:
+        username = username.strip()
+        if not self.USERNAME_PATTERN.fullmatch(username) or password != "password":
+            raise AgentError("Demo 帳號或密碼錯誤")
+        with self._lock:
+            profile = self._load(username)
+            if profile is None:
+                profile = self._default_profile(username)
+                self._write(profile)
+            return profile
+
+    def save_credential(
+        self,
+        username: str,
+        evidence_id: str,
+        reference: str,
+        expires_at: str,
+    ) -> dict[str, Any]:
+        with self._lock:
+            profile = self._require_profile(username)
+            profile["credentials"][evidence_id] = {
+                "reference": reference,
+                "acquiredAt": date.today().isoformat(),
+                "expiresAt": expires_at,
+                "lastUsedAt": None,
+                "usedForServices": [],
+            }
+            self._write(profile)
+            return profile
+
+    def record_usage(
+        self, username: str, evidence_ids: list[str], service_id: str
+    ) -> dict[str, Any]:
+        with self._lock:
+            profile = self._require_profile(username)
+            used_at = datetime.now().isoformat(timespec="seconds")
+            for evidence_id in evidence_ids:
+                credential = profile["credentials"].get(evidence_id)
+                if not credential:
+                    continue
+                credential["lastUsedAt"] = used_at
+                if service_id not in credential["usedForServices"]:
+                    credential["usedForServices"].append(service_id)
+            self._write(profile)
+            return profile
+
+    def _default_profile(self, username: str) -> dict[str, Any]:
+        credentials: dict[str, dict[str, Any]] = {}
+        for evidence_id, record in self._fixture["records"].items():
+            if evidence_id == "job_registration":
+                continue
+            credentials[evidence_id] = {
+                "reference": record["recordId"],
+                "acquiredAt": record["lastUpdated"],
+                "expiresAt": record["expiresAt"],
+                "lastUsedAt": None,
+                "usedForServices": [],
+            }
+        return {
+            "username": username,
+            "displayName": self._fixture["displayName"],
+            "credentials": credentials,
+        }
+
+    def _path(self, username: str) -> Path:
+        if not self.USERNAME_PATTERN.fullmatch(username):
+            raise AgentError("Invalid username")
+        return self._directory / f"{username}.json"
+
+    def _load(self, username: str) -> dict[str, Any] | None:
+        path = self._path(username)
+        if not path.exists():
+            return None
+        with path.open(encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _require_profile(self, username: str) -> dict[str, Any]:
+        profile = self._load(username)
+        if profile is None:
+            raise AgentError("User profile does not exist")
+        return profile
+
+    def _write(self, profile: dict[str, Any]) -> None:
+        path = self._path(profile["username"])
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(
+            json.dumps(profile, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+
+
 class GovernmentDataAdapter(Protocol):
     def collect_evidence(
-        self, subject_id: str, evidence_definitions: list[dict[str, str]]
+        self, subject_id: str, evidence_definitions: list[dict[str, Any]]
     ) -> dict[str, dict[str, Any]]:
         """Return the minimum government evidence required by one service."""
 
+    def credential_inventory(self, subject_id: str) -> list[dict[str, Any]]:
+        """Return government-issued credentials and their current usability."""
+
     def registered_bank_accounts(self, subject_id: str) -> list[dict[str, Any]]:
         """Return previously verified payment accounts."""
+
+    def cases(
+        self, subject_id: str, case_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Return the citizen's submitted government cases."""
 
 
 class MockGovernmentDataAdapter:
@@ -45,12 +175,14 @@ class MockGovernmentDataAdapter:
         self._fixture = fixture
 
     def collect_evidence(
-        self, subject_id: str, evidence_definitions: list[dict[str, str]]
+        self, subject_id: str, evidence_definitions: list[dict[str, Any]]
     ) -> dict[str, dict[str, Any]]:
         self._require_subject(subject_id)
         records = self._fixture["records"]
         result: dict[str, dict[str, Any]] = {}
         for definition in evidence_definitions:
+            if definition.get("source") != "government":
+                raise AgentError("Government adapter received citizen-provided evidence")
             evidence_id = definition["id"]
             if evidence_id not in records:
                 raise AgentError(f"Mock government record is missing: {evidence_id}")
@@ -60,14 +192,49 @@ class MockGovernmentDataAdapter:
                 "issuer": record["issuer"],
                 "recordId": record["recordId"],
                 "lastUpdated": record["lastUpdated"],
+                "expiresAt": record["expiresAt"],
                 "satisfied": record["satisfied"],
                 "disclosedValue": record["disclosedValue"],
             }
         return result
 
+    def credential_inventory(self, subject_id: str) -> list[dict[str, Any]]:
+        self._require_subject(subject_id)
+        inventory: list[dict[str, Any]] = []
+        for evidence_id, record in self._fixture["records"].items():
+            status = (
+                "expired"
+                if record.get("recordStatus") == "expired"
+                else "available"
+                if record.get("authorizedForAgent")
+                else "unauthorized"
+            )
+            inventory.append(
+                {
+                    "id": evidence_id,
+                    "label": record["label"],
+                    "credentialType": record["credentialType"],
+                    "issuer": record["issuer"],
+                    "expiresAt": record["expiresAt"],
+                    "status": status,
+                }
+            )
+        return inventory
+
     def registered_bank_accounts(self, subject_id: str) -> list[dict[str, Any]]:
         self._require_subject(subject_id)
         return [dict(item) for item in self._fixture["registeredBankAccounts"]]
+
+    def cases(
+        self, subject_id: str, case_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        self._require_subject(subject_id)
+        cases = self._fixture.get("cases", [])
+        return [
+            dict(item)
+            for item in cases
+            if case_id is None or item["id"].lower() == case_id.lower()
+        ]
 
     def fixture_view(self) -> dict[str, Any]:
         return self._fixture
@@ -83,20 +250,63 @@ class MockModelAdapter:
         state = context["state"]
 
         if state == "awaiting_question":
-            if any(word in text for word in ("生小孩", "新生兒", "育兒", "托育", "生育")):
+            if any(word in text for word in ("案件", "進度", "審核", "補件")):
+                return {"action": "query_case"}
+            event_matches = [
+                (
+                    ("生小孩", "新生兒", "育兒", "托育", "生育"),
+                    "newborn-family",
+                    {
+                        "childcare-benefit-2026",
+                        "birth-payment-2026",
+                        "care-service-2026",
+                    },
+                    "了解，這看起來與新生兒或育兒服務有關。我會整理可能適用的項目。",
+                ),
+                (
+                    ("生病", "住院", "醫療", "看病"),
+                    "medical-hardship",
+                    {"medical-hardship-2026"},
+                    "了解，這看起來與醫療支出或急難救助有關。",
+                ),
+                (
+                    ("租屋", "房租", "搬家", "租金"),
+                    "housing",
+                    {"rental-subsidy-2026"},
+                    "了解，這看起來與租屋及住宅補助有關。",
+                ),
+                (
+                    ("失業", "被裁員", "離職", "找工作"),
+                    "unemployment",
+                    {"unemployment-benefit-2026"},
+                    "了解，這看起來與失業及就業保險給付有關。",
+                ),
+            ]
+            for keywords, life_event, service_ids, assistant_message in event_matches:
+                if not any(word in text for word in keywords):
+                    continue
                 return {
                     "action": "ask_question",
                     "message": text,
-                    "lifeEvent": "newborn-family",
-                    "serviceIds": [item["id"] for item in context["services"]],
-                    "assistantMessage": "了解，這看起來與新生兒或育兒服務有關。我會整理目前目錄中可能適用的項目。",
+                    "lifeEvent": life_event,
+                    "serviceIds": [
+                        item["id"]
+                        for item in context["services"]
+                        if item["id"] in service_ids
+                    ],
+                    "assistantMessage": assistant_message,
                 }
             return {
                 "action": "message",
-                "assistantMessage": "我理解您需要政府協助，但目前 Demo 服務目錄只有新生兒與育兒項目。正式版本會接入醫療、病假與社會救助服務目錄。",
+                "assistantMessage": "目前 Demo 支援新生兒、醫療急難、租金補貼、失業給付與案件進度查詢。請描述您遇到的情況。",
                 "noServiceMatch": True,
             }
         if state == "awaiting_service":
+            if len(context["services"]) == 1:
+                return {
+                    "action": "select_service",
+                    "serviceId": context["services"][0]["id"],
+                }
             if any(word in text for word in ("差別", "說明", "哪個", "比較")):
                 return {
                     "action": "message",
@@ -118,6 +328,16 @@ class MockModelAdapter:
                     "assistantMessage": "資料只用於這次資格檢查，後端取得的是符合與否等最小結果，不會把完整戶籍、所得或身分資料交給對話模型。",
                 }
             return {"action": "grant_consent"}
+        if state == "awaiting_credentials":
+            return {
+                "action": "message",
+                "assistantMessage": "請使用畫面中的憑證欄位，提供缺少憑證的識別資訊與有效期限。",
+            }
+        if state == "awaiting_documents":
+            return {
+                "action": "message",
+                "assistantMessage": "請使用畫面中的上傳欄位提供缺少的文件；文件內容不會交給對話模型。",
+            }
         if state == "eligible":
             if any(word in text for word in ("為什麼", "依據", "怎麼判斷")):
                 return {
@@ -136,10 +356,11 @@ class MockModelAdapter:
                 "action": "message",
                 "assistantMessage": "申請尚未送出。您可以更換帳戶，或明確回覆確認後再送件。",
             }
-        return {
-            "action": "message",
-            "assistantMessage": "案件已送出。這個 Demo 下一步可以加入案件進度查詢。",
-        }
+        if state == "submitted" and any(
+            word in text for word in ("案件", "進度", "審核", "補件")
+        ):
+            return {"action": "query_case"}
+        return {"action": "message", "assistantMessage": "您可以繼續查詢案件進度。"}
 
 
 class OpenAICompatibleModelAdapter:
@@ -153,14 +374,16 @@ class OpenAICompatibleModelAdapter:
     def interpret(self, message: str, context: dict[str, Any]) -> dict[str, Any]:
         state = context["state"]
         allowed = {
-            "awaiting_question": ["ask_question", "message"],
+            "awaiting_question": ["ask_question", "query_case", "message"],
             "awaiting_service": ["select_service", "message"],
+            "awaiting_credentials": ["message"],
             "awaiting_consent": ["grant_consent", "deny_consent", "message"],
+            "awaiting_documents": ["message"],
             "eligible": ["create_draft", "message"],
             "ineligible": ["message"],
             "awaiting_account": ["select_bank_account", "add_bank_account", "message"],
             "awaiting_confirmation": ["confirm_and_submit", "message"],
-            "submitted": ["message"],
+            "submitted": ["query_case", "message"],
         }.get(state, ["message"])
 
         model_context = {
@@ -169,6 +392,7 @@ class OpenAICompatibleModelAdapter:
             "conversation": context.get("conversation", []),
             "services": context.get("services", []),
             "selectedService": context.get("selectedService"),
+            "uploadedDocuments": context.get("uploadedDocuments", []),
             "bankAccounts": context.get("bankAccounts", []),
         }
         body = {
@@ -184,6 +408,9 @@ class OpenAICompatibleModelAdapter:
                         "When action is ask_question, include assistantMessage, lifeEvent, "
                         "and serviceIds selected only from Context.services. If no listed "
                         "service matches, use action=message and noServiceMatch=true. "
+                        "Use query_case for requests about an existing application, review "
+                        "status, missing documents, or case progress; include caseId only "
+                        "when the citizen supplied one. "
                         "Never invent eligibility, consent, government records, service IDs, "
                         "bank accounts, or submission success. Ask or explain with action=message "
                         "when the citizen is ambiguous. Context:\n"
@@ -241,9 +468,11 @@ class AzureFoundryResponsesModelAdapter:
     def interpret(self, message: str, context: dict[str, Any]) -> dict[str, Any]:
         state = context["state"]
         allowed = {
-            "awaiting_question": ["ask_question", "message"],
+            "awaiting_question": ["ask_question", "query_case", "message"],
             "awaiting_service": ["select_service", "message"],
+            "awaiting_credentials": ["message"],
             "awaiting_consent": ["grant_consent", "deny_consent", "message"],
+            "awaiting_documents": ["message"],
             "eligible": ["create_draft", "message"],
             "ineligible": ["message"],
             "awaiting_account": [
@@ -252,7 +481,7 @@ class AzureFoundryResponsesModelAdapter:
                 "message",
             ],
             "awaiting_confirmation": ["confirm_and_submit", "message"],
-            "submitted": ["message"],
+            "submitted": ["query_case", "message"],
         }.get(state, ["message"])
         model_context = {
             "state": state,
@@ -260,6 +489,7 @@ class AzureFoundryResponsesModelAdapter:
             "conversation": context.get("conversation", []),
             "services": context.get("services", []),
             "selectedService": context.get("selectedService"),
+            "uploadedDocuments": context.get("uploadedDocuments", []),
             "bankAccounts": context.get("bankAccounts", []),
         }
         instructions = (
@@ -270,6 +500,8 @@ class AzureFoundryResponsesModelAdapter:
             "and serviceIds selected only from Context.services. If no listed service "
             "matches the citizen's need, use action=message, noServiceMatch=true, and "
             "explain the current scope. "
+            "Use action=query_case when the citizen asks about an existing application, "
+            "review status, missing documents, or progress. Include caseId only if stated. "
             "Never invent eligibility, consent, government records, service "
             "IDs, bank accounts, or submission success. If the citizen is ambiguous, "
             "explain or ask one concise question with action=message. "
@@ -337,6 +569,8 @@ class AuditEntry:
 @dataclass
 class Session:
     id: str
+    username: str = "user"
+    display_name: str = "Demo 民眾"
     subject_id: str = "citizen-demo-001"
     state: str = "awaiting_question"
     question: str = ""
@@ -347,11 +581,14 @@ class Session:
     consent: str = "not_requested"
     evidence: dict[str, str] = field(default_factory=dict)
     evidence_details: dict[str, dict[str, Any]] = field(default_factory=dict)
+    credential_inventory: list[dict[str, Any]] = field(default_factory=list)
+    uploaded_documents: dict[str, dict[str, Any]] = field(default_factory=dict)
     eligibility: str = "not_checked"
     draft: dict[str, Any] | None = None
     bank_accounts: list[dict[str, Any]] = field(default_factory=list)
     selected_bank_account_id: str | None = None
     application: dict[str, Any] | None = None
+    case_results: list[dict[str, Any]] = field(default_factory=list)
     messages: list[Message] = field(default_factory=list)
     audit: list[AuditEntry] = field(default_factory=list)
 
@@ -364,29 +601,72 @@ class CitizenAgent:
         model: ModelAdapter,
         services: list[dict[str, Any]],
         government_data: GovernmentDataAdapter,
+        user_profiles: UserProfileStore,
     ) -> None:
         self._model = model
         self._services = services
         self._government_data = government_data
+        self._user_profiles = user_profiles
         self._sessions: dict[str, Session] = {}
         self._lock = threading.Lock()
 
-    def start(self) -> dict[str, Any]:
+    def login(self, username: str, password: str) -> dict[str, Any]:
+        profile = self._user_profiles.authenticate(username, password)
+        return self.start(profile)
+
+    def start(self, profile: dict[str, Any] | None = None) -> dict[str, Any]:
+        if profile is None:
+            profile = self._user_profiles.authenticate("user", "password")
         session = Session(
             id=str(uuid.uuid4()),
+            username=profile["username"],
+            display_name=profile["displayName"],
             bank_accounts=self._government_data.registered_bank_accounts(
                 "citizen-demo-001"
+            ),
+            credential_inventory=self._inventory_for_profile(
+                profile,
+                self._government_data.credential_inventory("citizen-demo-001"),
             ),
         )
         session.messages.append(
             Message(
                 actor="agent",
-                text="您好，我可以協助您找出適用服務、檢查資格並準備申請。請告訴我最近發生了什麼事。",
+                text=(
+                    f"{profile['displayName']}您好，我可以協助您找出適用服務、檢查資格、準備申請，"
+                    "也可以查詢既有案件進度。請告訴我最近發生了什麼事。"
+                ),
             )
         )
         with self._lock:
             self._sessions[session.id] = session
         return self._view(session)
+
+    @staticmethod
+    def _inventory_for_profile(
+        profile: dict[str, Any], catalog: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        inventory: list[dict[str, Any]] = []
+        today = date.today().isoformat()
+        for item in catalog:
+            credential = profile["credentials"].get(item["id"])
+            if credential is None:
+                status = "unavailable"
+            elif credential["expiresAt"] < today:
+                status = "expired"
+            else:
+                status = "unauthorized"
+            inventory.append(
+                {
+                    **item,
+                    "status": status,
+                    "reference": credential["reference"] if credential else None,
+                    "lastUsedAt": credential["lastUsedAt"] if credential else None,
+                    "usedForServices": credential["usedForServices"] if credential else [],
+                    "expiresAt": credential["expiresAt"] if credential else item["expiresAt"],
+                }
+            )
+        return inventory
 
     def get(self, session_id: str) -> dict[str, Any]:
         return self._view(self._session(session_id))
@@ -464,10 +744,64 @@ class CitizenAgent:
         if not service:
             raise AgentError("Unknown service")
         session.selected_service = service
-        session.evidence = {item["id"]: "locked" for item in service["evidence"]}
-        session.consent = "pending"
-        session.state = "awaiting_consent"
-        labels = "\n• ".join(item["label"] for item in service["evidence"])
+        session.evidence = {
+            item["id"]: (
+                self._initial_evidence_status(session, item["id"])
+                if item["source"] == "government"
+                else "upload_required"
+            )
+            for item in service["evidence"]
+        }
+        session.consent = "not_requested"
+        government_evidence = [
+            item for item in service["evidence"] if item["source"] == "government"
+        ]
+        upload_evidence = [
+            item for item in service["evidence"] if item["source"] == "citizen_upload"
+        ]
+        government_lines = "\n".join(
+            f"• {item['department']}：{item['label']}" for item in government_evidence
+        )
+        upload_lines = "\n".join(
+            f"• {item['label']}：{item['instructions']}" for item in upload_evidence
+        )
+        plan_parts = [
+            "同意後，我會向以下政府部門取得最小必要結果：",
+            government_lines,
+        ]
+        if upload_lines:
+            plan_parts.extend(
+                [
+                    "\n以下資料政府不一定持有，需要由您上傳：",
+                    upload_lines,
+                ]
+            )
+        missing_credentials = [
+            item
+            for item in government_evidence
+            if session.evidence[item["id"]] in {"unavailable", "expired"}
+        ]
+        if missing_credentials:
+            missing_lines = "\n".join(
+                f"• {item['department']}：{item['label']}"
+                for item in missing_credentials
+            )
+            plan_parts.extend(
+                [
+                    "\n您的錢包目前缺少或需要更新以下憑證：",
+                    missing_lines,
+                ]
+            )
+        plan_text = "\n".join(plan_parts)
+        if missing_credentials:
+            session.state = "awaiting_credentials"
+            next_step = (
+                "請使用下方欄位提供憑證識別資訊與效期。Demo 會把建立結果存入此帳號的本機錢包，供日後使用。"
+            )
+        else:
+            session.state = "awaiting_consent"
+            session.consent = "pending"
+            next_step = "是否同意本 Agent 向上述部門取得本次所需資料？"
         session.messages.extend(
             [
                 Message("user", command.get("message") or f"我想先申請「{service['name']}」。"),
@@ -475,27 +809,255 @@ class CitizenAgent:
                     "agent",
                     (
                         f"好的，先處理「{service['name']}」，預估補助為{service['estimatedAmount']}。\n\n"
-                        f"為了檢查資格，我需要一次性確認：\n• {labels}\n\n"
-                        "只會取得資格判斷需要的結果。是否同意？"
+                        f"{plan_text}\n\n"
+                        "政府資料只會用於本次資格檢查，且不會把完整原始資料提供給對話模型。"
+                        f"{next_step}"
                     ),
                 ),
             ]
         )
-        session.audit.append(AuditEntry("民眾", "選擇政府服務", service["name"]))
+        departments = "、".join(
+            dict.fromkeys(item["department"] for item in government_evidence)
+        )
+        session.audit.extend(
+            [
+                AuditEntry("民眾", "選擇政府服務", service["name"]),
+                AuditEntry("Agent", "揭露資料來源", departments),
+            ]
+        )
+
+    def _on_create_credential(self, session: Session, command: dict[str, Any]) -> None:
+        self._require(session, "awaiting_credentials")
+        evidence_id = str(command.get("evidenceId", ""))
+        definition = next(
+            (
+                item
+                for item in session.selected_service["evidence"]
+                if item["id"] == evidence_id and item["source"] == "government"
+            ),
+            None,
+        )
+        if not definition:
+            raise AgentError("Unknown government credential")
+        if self._credential_status(session, evidence_id) not in {"unavailable", "expired"}:
+            raise AgentError("Credential is already present in this wallet")
+        reference = str(command.get("reference", "")).strip()
+        expires_at = str(command.get("expiresAt", "")).strip()
+        if len(reference) < 4:
+            raise AgentError("Credential reference is required")
+        try:
+            expiry = date.fromisoformat(expires_at)
+        except ValueError as exc:
+            raise AgentError("Credential expiry must be a valid date") from exc
+        if expiry <= date.today():
+            raise AgentError("Credential expiry must be in the future")
+
+        profile = self._user_profiles.save_credential(
+            session.username, evidence_id, reference, expires_at
+        )
+        catalog = self._government_data.credential_inventory(session.subject_id)
+        session.credential_inventory = self._inventory_for_profile(profile, catalog)
+        session.evidence[evidence_id] = "locked"
+        session.messages.extend(
+            [
+                Message(
+                    "user",
+                    f"我提供了「{definition['label']}」的憑證資訊。",
+                ),
+                Message(
+                    "agent",
+                    (
+                        f"已建立由{definition['department']}核發的「{definition['label']}」憑證，"
+                        f"有效至 {expires_at}。憑證已存入 {session.username} 的本機 Demo 錢包。"
+                    ),
+                ),
+            ]
+        )
+        session.audit.append(
+            AuditEntry(
+                "民眾",
+                "建立政府憑證",
+                f"{definition['department']}：{definition['label']}；有效至 {expires_at}",
+            )
+        )
+        remaining = [
+            item
+            for item in session.selected_service["evidence"]
+            if item["source"] == "government"
+            and self._credential_status(session, item["id"]) in {"unavailable", "expired"}
+        ]
+        if remaining:
+            labels = "、".join(item["label"] for item in remaining)
+            session.messages.append(Message("agent", f"仍需建立或更新：{labels}。"))
+            return
+        session.state = "awaiting_consent"
+        session.consent = "pending"
+        departments = "、".join(
+            dict.fromkeys(
+                item["department"]
+                for item in session.selected_service["evidence"]
+                if item["source"] == "government"
+            )
+        )
+        session.messages.append(
+            Message(
+                "agent",
+                f"所需憑證已備妥。是否同意本 Agent 向{departments}取得本次資格檢查資料？",
+            )
+        )
 
     def _on_grant_consent(self, session: Session, command: dict[str, Any]) -> None:
         self._require(session, "awaiting_consent")
         session.messages.append(Message("user", command.get("message") or "我同意本次資格檢查。"))
         session.consent = "granted"
         service = session.selected_service
-        session.evidence_details = self._government_data.collect_evidence(
-            session.subject_id, service["evidence"]
+        government_evidence = [
+            item for item in service["evidence"] if item["source"] == "government"
+        ]
+        expired = [
+            item
+            for item in government_evidence
+            if self._credential_status(session, item["id"]) == "expired"
+        ]
+        if expired:
+            labels = "、".join(item["label"] for item in expired)
+            session.eligibility = "blocked"
+            session.state = "ineligible"
+            session.messages.append(
+                Message("agent", f"無法繼續資格檢查：{labels}已過期，請先向發證機關更新。")
+            )
+            session.audit.append(AuditEntry("政策閘門", "阻擋過期憑證", labels))
+            return
+        unavailable = [
+            item
+            for item in government_evidence
+            if self._credential_status(session, item["id"]) == "unavailable"
+        ]
+        if unavailable:
+            labels = "、".join(item["label"] for item in unavailable)
+            session.eligibility = "blocked"
+            session.state = "ineligible"
+            session.messages.append(
+                Message("agent", f"無法繼續資格檢查：目前沒有可用的{labels}。")
+            )
+            session.audit.append(AuditEntry("政策閘門", "阻擋缺少憑證", labels))
+            return
+
+        requested_ids = {item["id"] for item in government_evidence}
+        profile = self._user_profiles.record_usage(
+            session.username,
+            list(requested_ids),
+            service["id"],
         )
-        session.evidence = {
-            key: "available" for key in session.evidence_details
+        session.credential_inventory = self._inventory_for_profile(
+            profile,
+            self._government_data.credential_inventory(session.subject_id),
+        )
+        for credential in session.credential_inventory:
+            if credential["id"] in requested_ids:
+                credential["status"] = "available"
+        session.evidence_details = self._government_data.collect_evidence(
+            session.subject_id, government_evidence
+        )
+        for evidence_id in session.evidence_details:
+            session.evidence[evidence_id] = "available"
+        departments = "、".join(
+            dict.fromkeys(item["department"] for item in government_evidence)
+        )
+        session.audit.append(
+            AuditEntry(
+                "民眾",
+                "授予資料存取",
+                f"一次性、限{service['name']}資格檢查；部門：{departments}",
+            )
+        )
+        pending_uploads = [
+            item
+            for item in service["evidence"]
+            if item["source"] == "citizen_upload"
+            and session.evidence[item["id"]] != "uploaded"
+        ]
+        if pending_uploads:
+            session.state = "awaiting_documents"
+            labels = "、".join(item["label"] for item in pending_uploads)
+            session.messages.append(
+                Message(
+                    "agent",
+                    f"政府憑證已取得。還需要您提供：{labels}。請使用下方上傳欄位，文件內容不會提供給對話模型。",
+                )
+            )
+            return
+
+        self._complete_eligibility(session)
+
+    def _on_upload_document(self, session: Session, command: dict[str, Any]) -> None:
+        self._require(session, "awaiting_documents")
+        evidence_id = str(command.get("evidenceId", ""))
+        definition = next(
+            (
+                item
+                for item in session.selected_service["evidence"]
+                if item["id"] == evidence_id and item["source"] == "citizen_upload"
+            ),
+            None,
+        )
+        if not definition:
+            raise AgentError("Unknown citizen-provided document")
+        file_name = str(command.get("fileName", "")).strip()
+        content_type = str(command.get("contentType", "")).strip() or "application/octet-stream"
+        size = int(command.get("size", 0))
+        if not file_name or size <= 0:
+            raise AgentError("A non-empty document is required")
+        if size > 10 * 1024 * 1024:
+            raise AgentError("Document exceeds the 10 MB demo limit")
+        suffix = Path(file_name).suffix.lower()
+        if suffix not in definition["acceptedTypes"]:
+            raise AgentError(
+                f"Unsupported document type; accepted: {', '.join(definition['acceptedTypes'])}"
+            )
+        document = {
+            "evidenceId": evidence_id,
+            "label": definition["label"],
+            "fileName": file_name,
+            "contentType": content_type,
+            "size": size,
+            "uploadedAt": datetime.now().isoformat(timespec="seconds"),
+            "satisfied": True,
+            "disclosedValue": f"民眾已提供 {file_name}",
         }
+        session.uploaded_documents[evidence_id] = document
+        session.evidence_details[evidence_id] = document
+        session.evidence[evidence_id] = "uploaded"
+        session.messages.extend(
+            [
+                Message("user", f"我已上傳「{definition['label']}」：{file_name}"),
+                Message(
+                    "agent",
+                    f"已收到「{definition['label']}」。Demo 只保留檔名、類型與大小，不會把文件內容交給對話模型。",
+                ),
+            ]
+        )
+        session.audit.append(
+            AuditEntry("民眾", "上傳申請文件", f"{definition['label']}：{file_name}")
+        )
+        remaining = [
+            item
+            for item in session.selected_service["evidence"]
+            if item["source"] == "citizen_upload"
+            and session.evidence[item["id"]] != "uploaded"
+        ]
+        if remaining:
+            labels = "、".join(item["label"] for item in remaining)
+            session.messages.append(Message("agent", f"仍待提供：{labels}。"))
+            return
+        self._complete_eligibility(session)
+
+    def _complete_eligibility(self, session: Session) -> None:
+        service = session.selected_service
         eligible = all(
-            item["satisfied"] for item in session.evidence_details.values()
+            session.evidence.get(item["id"]) in {"available", "uploaded"}
+            and session.evidence_details[item["id"]]["satisfied"]
+            for item in service["evidence"]
         )
         session.eligibility = "eligible" if eligible else "not_eligible"
         session.state = "eligible" if eligible else "ineligible"
@@ -511,15 +1073,12 @@ class CitizenAgent:
                 ),
             )
         )
-        session.audit.extend(
-            [
-                AuditEntry("民眾", "授予資料存取", f"一次性、限{service['name']}資格檢查"),
-                AuditEntry(
-                    "規則引擎",
-                    "資格判斷",
-                    f"{'符合' if eligible else '不符合'}；規則版本 2026.08",
-                ),
-            ]
+        session.audit.append(
+            AuditEntry(
+                "規則引擎",
+                "資格判斷",
+                f"{'符合' if eligible else '不符合'}；規則版本 2026.08",
+            )
         )
 
     def _on_deny_consent(self, session: Session, command: dict[str, Any]) -> None:
@@ -682,6 +1241,46 @@ class CitizenAgent:
             )
         )
 
+    def _on_query_case(self, session: Session, command: dict[str, Any]) -> None:
+        message = command.get("message", "").strip()
+        if message:
+            session.messages.append(Message("user", message))
+        case_id = command.get("caseId")
+        session.case_results = self._government_data.cases(
+            session.subject_id, case_id
+        )
+        session.no_service_match = False
+        if not session.case_results:
+            session.messages.append(
+                Message(
+                    "agent",
+                    "找不到符合的案件。請確認案件編號，或改為查詢全部案件。",
+                )
+            )
+            detail = case_id or "全部案件"
+            session.audit.append(AuditEntry("Agent", "案件查詢無結果", detail))
+            return
+
+        if len(session.case_results) == 1:
+            item = session.case_results[0]
+            summary = (
+                f"{item['serviceName']}（{item['id']}）目前狀態為「{item['status']}」。"
+                f"\n下一步：{item['nextStep']}"
+            )
+        else:
+            summary = (
+                f"目前找到 {len(session.case_results)} 筆案件，"
+                "請查看下方案件卡片中的最新狀態與下一步。"
+            )
+        session.messages.append(Message("agent", summary))
+        session.audit.append(
+            AuditEntry(
+                "政府案件系統",
+                "查詢案件進度",
+                case_id or f"全部 {len(session.case_results)} 筆案件",
+            )
+        )
+
     def _model_context(self, session: Session) -> dict[str, Any]:
         visible_services = (
             self._services
@@ -712,6 +1311,7 @@ class CitizenAgent:
                 if session.selected_service
                 else None
             ),
+            "uploadedDocuments": list(session.uploaded_documents.values()),
             "bankAccounts": [
                 {
                     "id": account["id"],
@@ -723,6 +1323,7 @@ class CitizenAgent:
                 for account in session.bank_accounts
                 if session.draft
             ],
+            "capabilities": ["service_discovery", "eligibility", "application", "case_query"],
         }
 
     def _session(self, session_id: str) -> Session:
@@ -730,6 +1331,23 @@ class CitizenAgent:
             return self._sessions[session_id]
         except KeyError as exc:
             raise AgentError("Unknown session") from exc
+
+    @staticmethod
+    def _credential_status(session: Session, evidence_id: str) -> str:
+        credential = next(
+            (
+                item
+                for item in session.credential_inventory
+                if item["id"] == evidence_id
+            ),
+            None,
+        )
+        return credential["status"] if credential else "unavailable"
+
+    @classmethod
+    def _initial_evidence_status(cls, session: Session, evidence_id: str) -> str:
+        credential_status = cls._credential_status(session, evidence_id)
+        return credential_status if credential_status in {"expired", "unavailable"} else "locked"
 
     @staticmethod
     def _require(session: Session, expected: str) -> None:
@@ -764,7 +1382,8 @@ def create_model() -> ModelAdapter:
 
 
 GOVERNMENT_DATA = MockGovernmentDataAdapter(load_mock_citizen())
-AGENT = CitizenAgent(create_model(), load_services(), GOVERNMENT_DATA)
+USER_PROFILES = FileUserProfileStore(USER_PROFILES_DIR, load_mock_citizen())
+AGENT = CitizenAgent(create_model(), load_services(), GOVERNMENT_DATA, USER_PROFILES)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -793,6 +1412,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
+        if path == "/api/login":
+            body = self._read_json()
+            self._handle(
+                lambda: AGENT.login(
+                    str(body.get("username", "")),
+                    str(body.get("password", "")),
+                ),
+                HTTPStatus.CREATED,
+            )
+            return
         if path == "/api/sessions":
             self._handle(AGENT.start, HTTPStatus.CREATED)
             return

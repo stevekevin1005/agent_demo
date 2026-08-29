@@ -1004,20 +1004,20 @@ class CitizenAgent:
             item["id"] == evidence_id
             for item in session.selected_service["evidence"]
         ):
-            session.evidence[evidence_id] = "locked"
+            session.evidence[evidence_id] = "unavailable"
             session.evidence_details.pop(evidence_id, None)
             if session.state != "submitted":
-                session.consent = "pending"
+                session.consent = "not_requested"
                 session.eligibility = "not_checked"
                 session.draft = None
                 session.selected_bank_account_id = None
-                session.state = "awaiting_consent"
+                session.state = "awaiting_credentials"
         session.messages.append(
             Message(
                 "agent",
                 (
                     f"已撤銷「{credential['credentialType']}」。此憑證目前不可供 Agent 使用，"
-                    "下次需要時必須重新提供資料並向發證機關申請。"
+                    "請使用下方的憑證申請欄位重新提供資料，並按下「申請／重新取得所需憑證」。"
                 ),
             )
         )
@@ -1044,10 +1044,19 @@ class CitizenAgent:
         ]
         if expired:
             labels = "、".join(item["label"] for item in expired)
-            session.eligibility = "blocked"
-            session.state = "ineligible"
+            for item in expired:
+                session.evidence[item["id"]] = "expired"
+            session.consent = "not_requested"
+            session.eligibility = "not_checked"
+            session.state = "awaiting_credentials"
             session.messages.append(
-                Message("agent", f"無法繼續資格檢查：{labels}已過期，請先向發證機關更新。")
+                Message(
+                    "agent",
+                    (
+                        f"目前無法繼續資格檢查，因「{labels}」已過期。"
+                        "請使用下方欄位更新資料，並重新取得憑證。"
+                    ),
+                )
             )
             session.audit.append(AuditEntry("政策閘門", "阻擋過期憑證", labels))
             return
@@ -1058,10 +1067,19 @@ class CitizenAgent:
         ]
         if unavailable:
             labels = "、".join(item["label"] for item in unavailable)
-            session.eligibility = "blocked"
-            session.state = "ineligible"
+            for item in unavailable:
+                session.evidence[item["id"]] = "unavailable"
+            session.consent = "not_requested"
+            session.eligibility = "not_checked"
+            session.state = "awaiting_credentials"
             session.messages.append(
-                Message("agent", f"無法繼續資格檢查：目前沒有可用的{labels}。")
+                Message(
+                    "agent",
+                    (
+                        f"目前無法重新取得資料，因現無可用的「{labels}」憑證。"
+                        "請使用下方欄位重新提供資料，並按下「申請／重新取得所需憑證」。"
+                    ),
+                )
             )
             session.audit.append(AuditEntry("政策閘門", "阻擋缺少憑證", labels))
             return

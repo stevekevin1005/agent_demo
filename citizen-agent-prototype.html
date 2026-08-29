@@ -473,6 +473,23 @@
       align-self: end;
     }
 
+    .credential-reissue-prompt {
+      margin: 12px 0;
+      padding: 11px 12px;
+      color: #7a2e0e;
+      background: #fff4e8;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .credential-reissue-prompt strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #9a3412;
+    }
+
     .document-upload-form input {
       min-width: 0;
       padding: 8px;
@@ -2438,6 +2455,12 @@
         <details id="evidencePlan" class="evidence-plan-card" ${evidencePlanOpen || ["awaiting_credentials", "awaiting_documents"].includes(state.workflowState) ? "open" : ""}>
           <summary>本次資料來源與取得方式</summary>
           <p>政府調閱與民眾上傳分開處理；只有下列政府部門會收到本次最小必要授權。</p>
+          ${state.workflowState === "awaiting_credentials" ? `
+            <div class="credential-reissue-prompt">
+              <strong>需要申請或重新取得憑證</strong>
+              請確認下方預填資料，再按下申請按鈕。完成後 Agent 才能繼續資格檢查。
+            </div>
+          ` : ""}
           ${governmentEvidence.length ? `
             <div class="evidence-source-group">
               <h4>向政府部門取得</h4>
@@ -2477,7 +2500,7 @@
                         >
                       </label>
                     `).join("")}
-                    <button class="secondary" type="submit">一併申請所需憑證</button>
+                    <button class="secondary" type="submit">申請／重新取得所需憑證</button>
                   </form>
                 </div>
               ` : ""}

@@ -726,6 +726,17 @@
       line-height: 1.45;
     }
 
+    .credential-revoke {
+      margin-top: 7px;
+      padding: 4px 8px;
+      color: var(--danger);
+      background: white;
+      border: 1px solid #fecdca;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
     .last-change {
       margin-top: 16px;
       padding: 12px;
@@ -1567,7 +1578,7 @@
     let backendMode = false;
     let backendSessionId = null;
     let currentCredentials = null;
-    let credentialWalletOpen = true;
+    let credentialWalletOpen = false;
 
     const loginView = document.querySelector("#loginView");
     const appView = document.querySelector("#appView");
@@ -1751,6 +1762,10 @@
             expiresAt: action.expiresAt
           }
         },
+        REVOKE_CREDENTIAL: {
+          action: "revoke_credential_authorization",
+          payload: { evidenceId: action.evidenceId }
+        },
         UPLOAD_DOCUMENT: {
           action: "upload_document",
           payload: {
@@ -1790,6 +1805,8 @@
 
       const previewAction = action.type === "MODEL_MESSAGE"
         ? { type: "USER_MESSAGE", text: action.utterance }
+        : action.type === "REVOKE_CREDENTIAL"
+          ? { type: "USER_MESSAGE", text: "撤銷 Agent 憑證授權" }
         : action.type === "CREATE_CREDENTIAL"
           ? { type: "USER_MESSAGE", text: "提供政府憑證資訊" }
         : action.type === "UPLOAD_DOCUMENT"
@@ -1802,6 +1819,7 @@
       thinkingText = {
         ASK_QUESTION: "正在理解問題並查詢跨機關服務…",
         SELECT_SERVICE: "正在整理本次需要的最小資料範圍…",
+        REVOKE_CREDENTIAL: "正在撤銷 Agent 憑證授權…",
         CREATE_CREDENTIAL: "正在模擬驗證並建立政府憑證…",
         GRANT_CONSENT: "正在取得必要證據並執行資格規則…",
         UPLOAD_DOCUMENT: "正在檢查檔案類型並登記文件…",
@@ -1886,7 +1904,7 @@
     function statusLabel(status) {
       const labels = {
         locked: "未授權",
-        available: "可使用",
+        available: "已授權",
         unauthorized: "未授權",
         expired: "已過期",
         unavailable: "無可用憑證",
@@ -2167,13 +2185,16 @@
                   ${item.usedForServices?.length
                     ? `<small>曾用於：${escapeHtml(item.usedForServices.join("、"))}</small>`
                     : ""}
+                  ${item.status === "available"
+                    ? `<button class="credential-revoke" type="button" data-revoke-credential="${escapeHtml(item.id)}">撤銷 Agent 授權</button>`
+                    : ""}
                 </div>
                 <span class="credential-status ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
               </div>
             `).join("") || `<div class="agent-subtitle">尚未載入政府憑證清單。</div>`}
           </div>
           <div class="last-change">
-            「未授權」代表錢包已有憑證，但本次尚未同意 Agent 使用；同意後才會變成「可使用」。
+            「已授權」會跨登入保留；撤銷後憑證仍在錢包，但 Agent 下次使用前必須重新取得同意。
           </div>
         </details>
       `);
@@ -2346,6 +2367,14 @@
           credentialWalletOpen = credentialWallet.open;
         });
       }
+      stateBody.querySelectorAll("[data-revoke-credential]").forEach(button => {
+        button.addEventListener("click", () => {
+          dispatch({
+            type: "REVOKE_CREDENTIAL",
+            evidenceId: button.dataset.revokeCredential
+          });
+        });
+      });
     }
 
     function evidenceStatus(status) {

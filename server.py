@@ -50,6 +50,11 @@ class UserProfileStore(Protocol):
     ) -> dict[str, Any]:
         """Record where persisted credentials were used."""
 
+    def revoke_authorization(
+        self, username: str, evidence_id: str
+    ) -> dict[str, Any]:
+        """Revoke this Agent's persisted authorization for one credential."""
+
 
 class FileUserProfileStore:
     USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
@@ -69,6 +74,8 @@ class FileUserProfileStore:
             if profile is None:
                 profile = self._default_profile(username)
                 self._write(profile)
+            elif self._migrate_profile(profile):
+                self._write(profile)
             return profile
 
     def save_credential(
@@ -86,6 +93,7 @@ class FileUserProfileStore:
                 "expiresAt": expires_at,
                 "lastUsedAt": None,
                 "usedForServices": [],
+                "authorizedForAgent": False,
             }
             self._write(profile)
             return profile
@@ -101,8 +109,21 @@ class FileUserProfileStore:
                 if not credential:
                     continue
                 credential["lastUsedAt"] = used_at
+                credential["authorizedForAgent"] = True
                 if service_id not in credential["usedForServices"]:
                     credential["usedForServices"].append(service_id)
+            self._write(profile)
+            return profile
+
+    def revoke_authorization(
+        self, username: str, evidence_id: str
+    ) -> dict[str, Any]:
+        with self._lock:
+            profile = self._require_profile(username)
+            credential = profile["credentials"].get(evidence_id)
+            if not credential:
+                raise AgentError("Credential does not exist in this wallet")
+            credential["authorizedForAgent"] = False
             self._write(profile)
             return profile
 
@@ -117,12 +138,25 @@ class FileUserProfileStore:
                 "expiresAt": record["expiresAt"],
                 "lastUsedAt": None,
                 "usedForServices": [],
+                "authorizedForAgent": bool(record.get("authorizedForAgent", False)),
             }
         return {
             "username": username,
             "displayName": self._fixture["displayName"],
             "credentials": credentials,
         }
+
+    def _migrate_profile(self, profile: dict[str, Any]) -> bool:
+        changed = False
+        for evidence_id, credential in profile.get("credentials", {}).items():
+            if "authorizedForAgent" in credential:
+                continue
+            record = self._fixture["records"].get(evidence_id, {})
+            credential["authorizedForAgent"] = bool(
+                credential.get("lastUsedAt") or record.get("authorizedForAgent", False)
+            )
+            changed = True
+        return changed
 
     def _path(self, username: str) -> Path:
         if not self.USERNAME_PATTERN.fullmatch(username):
@@ -654,6 +688,8 @@ class CitizenAgent:
                 status = "unavailable"
             elif credential["expiresAt"] < today:
                 status = "expired"
+            elif credential.get("authorizedForAgent", False):
+                status = "available"
             else:
                 status = "unauthorized"
             inventory.append(
@@ -903,6 +939,58 @@ class CitizenAgent:
             Message(
                 "agent",
                 f"所需憑證已備妥。是否同意本 Agent 向{departments}取得本次資格檢查資料？",
+            )
+        )
+
+    def _on_revoke_credential_authorization(
+        self, session: Session, command: dict[str, Any]
+    ) -> None:
+        evidence_id = str(command.get("evidenceId", ""))
+        credential = next(
+            (
+                item
+                for item in session.credential_inventory
+                if item["id"] == evidence_id
+            ),
+            None,
+        )
+        if not credential:
+            raise AgentError("Unknown government credential")
+        if credential["status"] != "available":
+            raise AgentError("This credential is not currently authorized")
+        profile = self._user_profiles.revoke_authorization(
+            session.username, evidence_id
+        )
+        session.credential_inventory = self._inventory_for_profile(
+            profile,
+            self._government_data.credential_inventory(session.subject_id),
+        )
+        if session.selected_service and any(
+            item["id"] == evidence_id
+            for item in session.selected_service["evidence"]
+        ):
+            session.evidence[evidence_id] = "locked"
+            session.evidence_details.pop(evidence_id, None)
+            if session.state != "submitted":
+                session.consent = "pending"
+                session.eligibility = "not_checked"
+                session.draft = None
+                session.selected_bank_account_id = None
+                session.state = "awaiting_consent"
+        session.messages.append(
+            Message(
+                "agent",
+                (
+                    f"已撤銷本 Agent 使用「{credential['credentialType']}」的持續授權。"
+                    "憑證仍保留在您的錢包；下次需要使用時會重新詢問。"
+                ),
+            )
+        )
+        session.audit.append(
+            AuditEntry(
+                "民眾",
+                "撤銷 Agent 憑證授權",
+                f"{credential['issuer']}：{credential['credentialType']}",
             )
         )
 

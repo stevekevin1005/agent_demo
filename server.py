@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parent
 HTML_PATH = ROOT / "citizen-agent-prototype.html"
 SLIDES_PATH = ROOT / "interactive-slides.html"
 ARCHITECTURE_PATH = ROOT / "docs" / "solution-architecture.svg"
+QR_CODE_PATH = ROOT / "agentdemo-qr.svg"
 SERVICES_PATH = ROOT / "data" / "services.json"
 MOCK_CITIZEN_PATH = ROOT / "data" / "citizen-newborn-mock.json"
 USER_PROFILES_DIR = ROOT / "data" / "users"
@@ -1680,6 +1681,13 @@ class Handler(BaseHTTPRequestHandler):
             self._send_bytes(
                 HTTPStatus.OK,
                 ARCHITECTURE_PATH.read_bytes(),
+                "image/svg+xml; charset=utf-8",
+            )
+            return
+        if path == "/agentdemo-qr.svg":
+            self._send_bytes(
+                HTTPStatus.OK,
+                QR_CODE_PATH.read_bytes(),
                 "image/svg+xml; charset=utf-8",
             )
             return

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>牛來｜可信政府服務 AI Agent</title>
+  <title>政好｜可信政府服務 AI Agent</title>
   <style>
     :root {
       --navy: #17235f;
@@ -154,6 +154,24 @@
       line-height: 1.6;
     }
 
+    .authors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .author {
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 12px;
+      color: #dce5ff;
+      background: rgba(255,255,255,.08);
+      font-size: 14px;
+    }
+
+    .author strong { color: white; }
+
     .hero-visual {
       position: relative;
       min-height: min(54vh, 540px);
@@ -268,6 +286,24 @@
 
     .answer-strip strong { color: #34e4c5; }
 
+    .impact-proof {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 16px;
+      padding: 13px 18px;
+      border: 1px solid #ffd98f;
+      border-radius: 12px;
+      color: #694700;
+      background: #fff6df;
+      font-weight: 700;
+    }
+
+    .impact-proof b {
+      color: #d17a00;
+      font: 900 24px Georgia, serif;
+    }
+
     .architecture {
       grid-template-columns: minmax(0, 1.5fr) minmax(270px, .5fr);
       gap: clamp(20px, 3vw, 46px);
@@ -282,12 +318,93 @@
       box-shadow: var(--shadow);
     }
 
-    .architecture-frame img {
-      width: 100%;
-      height: min(64vh, 660px);
-      display: block;
-      object-fit: contain;
-      border-radius: 14px;
+    .solution-map {
+      position: relative;
+      min-height: min(62vh, 650px);
+      display: grid;
+      grid-template-columns: .8fr 1fr 1.25fr 1fr;
+      grid-template-rows: 1fr 1fr .65fr;
+      gap: 18px 24px;
+      align-items: center;
+      padding: 26px;
+      overflow: hidden;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 8% 10%, rgba(19,199,163,.14), transparent 24%),
+        linear-gradient(145deg, #f5fbf9, #edf3f8);
+    }
+
+    .map-node {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 9px;
+      min-height: 135px;
+      padding: 18px;
+      border: 1px solid #cbd7e5;
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 12px 26px rgba(30,50,80,.12);
+      text-align: center;
+    }
+
+    .map-node b { color: var(--navy); font-size: 19px; }
+    .map-node small { color: var(--muted); line-height: 1.4; }
+    .map-node .map-icon { font-size: 34px; }
+    .map-citizen { grid-column: 1; grid-row: 1 / 3; }
+    .map-wallet { grid-column: 2; grid-row: 1; color: white; background: linear-gradient(145deg,#155d92,#4d409f); }
+    .map-wallet b, .map-wallet small { color: white; }
+    .map-mydata { grid-column: 2; grid-row: 2; }
+    .map-agent {
+      grid-column: 3;
+      grid-row: 1 / 3;
+      min-height: 310px;
+      color: white;
+      border: 0;
+      background: linear-gradient(145deg,#176b5b,#174f67);
+      box-shadow: 0 18px 38px rgba(23,79,103,.28);
+    }
+    .map-agent b { color: white; font-size: 25px; }
+    .map-agent small { color: #d4f3eb; }
+    .map-government { grid-column: 4; grid-row: 1 / 3; min-height: 240px; }
+    .map-audit {
+      grid-column: 2 / 5;
+      grid-row: 3;
+      min-height: 105px;
+      color: white;
+      border: 0;
+      background: linear-gradient(135deg,#713b8f,#9a4e78);
+    }
+    .map-audit b, .map-audit small { color: white; }
+
+    .map-flow {
+      position: absolute;
+      z-index: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: repeating-linear-gradient(90deg, var(--teal) 0 14px, transparent 14px 24px);
+      background-size: 48px 4px;
+      animation: flow 1.1s linear infinite;
+      transform-origin: left center;
+    }
+
+    .flow-citizen { left: 20%; top: 42%; width: 40%; }
+    .flow-wallet { left: 42%; top: 25%; width: 17%; transform: rotate(14deg); }
+    .flow-mydata { left: 42%; top: 56%; width: 17%; transform: rotate(-13deg); }
+    .flow-government { left: 66%; top: 42%; width: 20%; }
+    .flow-audit { left: 62%; top: 63%; width: 13%; transform: rotate(90deg); background-color: #8e4588; }
+
+    @keyframes flow { to { background-position: 48px 0; } }
+
+    .map-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #0f6657;
+      background: #c9f6e9;
+      font-size: 12px;
+      font-weight: 800;
     }
 
     .callout-stack {
@@ -311,6 +428,16 @@
     }
 
     .callout span { color: var(--muted); line-height: 1.45; }
+
+    .legal-note {
+      padding: 14px 17px;
+      border: 1px solid #bfe8dc;
+      border-radius: 12px;
+      color: #155f52;
+      background: #eaf8f4;
+      font-size: 13px;
+      line-height: 1.55;
+    }
 
     .journey {
       display: grid;
@@ -415,6 +542,13 @@
 
     .credential-code .key { color: #50dfc3; }
     .credential-code .value { color: #ffd279; }
+
+    .credential-preview {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 12px;
+    }
 
     .match-layout {
       display: grid;
@@ -548,6 +682,24 @@
       color: white;
       background: var(--red);
       font: 800 14px Consolas, monospace;
+    }
+
+    .delivery-state {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #5e4500;
+      background: #ffe5a5;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .delivery-state.done {
+      color: #064f3f;
+      background: #96efd8;
     }
 
     .policy p { color: #cbd5f4; }
@@ -698,12 +850,89 @@
       font-size: 12px;
     }
 
-    .demo-frame iframe {
-      width: 100%;
-      height: 100%;
+    .static-demo {
       min-height: 520px;
-      border: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
       background: #f4f7fb;
+    }
+
+    .demo-profile {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid #dce4ef;
+      color: var(--navy);
+      background: white;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .online {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #13765e;
+    }
+
+    .online::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #22bc8b;
+      box-shadow: 0 0 0 5px rgba(34,188,139,.12);
+    }
+
+    .demo-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .bubble {
+      max-width: 82%;
+      padding: 12px 15px;
+      border-radius: 15px;
+      color: #35405a;
+      background: white;
+      box-shadow: 0 5px 14px rgba(31,44,76,.08);
+      line-height: 1.5;
+      animation: bubbleIn .38s ease both;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      color: white;
+      background: var(--teal);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble.agent { border-bottom-left-radius: 4px; }
+
+    .bubble.system {
+      max-width: 100%;
+      border: 1px solid #cbeadf;
+      color: #176b5b;
+      background: #edfaf6;
+      font-size: 13px;
+    }
+
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(12px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .demo-actions {
+      display: flex;
+      gap: 10px;
+      padding: 14px 18px;
+      border-top: 1px solid #dce4ef;
+      background: white;
     }
 
     .button-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
@@ -734,6 +963,59 @@
       line-height: 1.5;
     }
 
+    .video-placeholder {
+      width: min(86vw, 1420px);
+      aspect-ratio: 16 / 9;
+      margin: auto;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px;
+      background: #080d20;
+      box-shadow: 0 28px 80px rgba(0,0,0,.32);
+    }
+
+    .slide.active .card,
+    .slide.active .callout,
+    .slide.active .journey-step,
+    .slide.active .requirement,
+    .slide.active .script-step,
+    .slide.active .event,
+    .slide.active .map-node,
+    .slide.active .closing-point {
+      animation: riseIn .55s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .slide.active :is(.card,.callout,.journey-step,.requirement,.script-step,.event,.map-node,.closing-point):nth-child(2) { animation-delay: .08s; }
+    .slide.active :is(.card,.callout,.journey-step,.requirement,.script-step,.event,.map-node,.closing-point):nth-child(3) { animation-delay: .16s; }
+    .slide.active :is(.card,.callout,.journey-step,.requirement,.script-step,.event,.map-node,.closing-point):nth-child(4) { animation-delay: .24s; }
+    .slide.active :is(.card,.callout,.journey-step,.requirement,.script-step,.event,.map-node,.closing-point):nth-child(5) { animation-delay: .32s; }
+    .slide.active :is(.card,.callout,.journey-step,.requirement,.script-step,.event,.map-node,.closing-point):nth-child(6) { animation-delay: .4s; }
+
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(22px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .qa {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .qa-mark {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(34vw, 430px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 50%;
+      color: white;
+      background: radial-gradient(circle at 35% 25%, #2dd0ba, #087c80 45%, #17235f);
+      box-shadow: 0 0 0 25px rgba(19,199,163,.08), 0 30px 80px rgba(0,0,0,.3);
+      font: 900 clamp(62px,9vw,130px) Georgia, serif;
+    }
+
     .closing {
       display: grid;
       grid-template-columns: 1.1fr .9fr;
@@ -754,6 +1036,15 @@
       font-size: clamp(18px, 1.8vw, 28px);
     }
 
+    .disclosure {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.18);
+      color: #bfc9e7;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
     .check {
       width: 42px;
       height: 42px;
@@ -769,8 +1060,9 @@
     .controls {
       position: fixed;
       z-index: 20;
-      right: 22px;
+      left: 50%;
       bottom: 20px;
+      transform: translateX(-50%);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -816,6 +1108,39 @@
       transition: width .3s ease;
     }
 
+    .qr-badge {
+      position: fixed;
+      z-index: 24;
+      right: 18px;
+      bottom: 16px;
+      width: 164px;
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 7px;
+      border: 1px solid #d7e0ec;
+      border-radius: 14px;
+      color: var(--navy);
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 10px 28px rgba(14,23,63,.22);
+      text-decoration: none;
+    }
+
+    .qr-badge img {
+      width: 110px;
+      height: 110px;
+      display: block;
+    }
+
+    .qr-badge span {
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.3;
+      writing-mode: vertical-rl;
+      letter-spacing: .08em;
+    }
+
     .hint {
       position: fixed;
       z-index: 20;
@@ -847,7 +1172,7 @@
     .overview .slide:hover { border-color: var(--mint); }
     .overview .slide .content { transform: scale(.42); transform-origin: top left; width: 238%; height: 238%; }
     .overview .slide-header { transform: scale(.65); transform-origin: top left; width: 154%; }
-    .overview .controls, .overview .hint, .overview .progress { display: none; }
+    .overview .controls, .overview .hint, .overview .progress, .overview .qr-badge { display: none; }
 
     @media (max-width: 1000px) {
       .hero-grid, .architecture, .credential-layout, .match-layout, .audit-layout, .live-layout, .closing {
@@ -858,8 +1183,10 @@
       .authorization-flow { grid-template-columns: 1fr; }
       .auth-node { min-height: 75px; }
       .hero-visual { display: none; }
-      .architecture-frame img { height: 44vh; }
-      .demo-frame iframe { min-height: 400px; }
+      .static-demo { min-height: 400px; }
+      .solution-map { min-height: 500px; }
+      .qa { grid-template-columns: 1fr; }
+      .qa-mark { display: none; }
     }
 
     @media (max-width: 700px) {
@@ -869,6 +1196,8 @@
       .requirement { grid-template-columns: 1fr; }
       .overview .slide { width: calc(50% - 18px); }
       .hint { display: none; }
+      .qr-badge { width: 112px; grid-template-columns: 76px 1fr; }
+      .qr-badge img { width: 76px; height: 76px; }
     }
   </style>
 </head>
@@ -876,17 +1205,22 @@
   <main class="deck" id="deck">
     <section class="slide dark active">
       <div class="slide-header">
-        <span class="tag">Trusted AI Hackathon Demo · 2026</span>
+        <span class="tag">Trustworthy AI Hackathon 2026 · 題目 04 政府服務</span>
       </div>
       <div class="content hero-grid">
         <div>
           <p class="eyebrow">GeovTrustAI presents</p>
-          <h1>牛來</h1>
+          <h1>政好</h1>
           <p class="hero-subtitle">可信任的政府服務 AI Agent<br>民眾一句話，Agent 協助完成跨機關申辦。</p>
           <p class="lede">每一步可驗證、每次授權有範圍、每一件申請都能還原。</p>
+          <div class="authors" aria-label="團隊成員">
+            <span class="author"><strong>Ali</strong> · 台灣大學</span>
+            <span class="author"><strong>慶霖</strong> · 全聯實業</span>
+            <span class="author"><strong>Steve</strong> · 台灣微軟</span>
+          </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
-          <div class="agent-orb"><strong>牛</strong></div>
+          <div class="agent-orb"><strong>政好</strong></div>
           <div class="orbit">數位憑證<br>皮夾</div>
           <div class="orbit">MyData</div>
           <div class="orbit">政府服務<br>探索</div>
@@ -905,12 +1239,12 @@
       <div class="content">
         <div>
           <div class="cards-3" id="painCards">
-            <button class="card selected" data-answer="牛來先理解生活事件，再從服務目錄找出可能適用的政府方案。">
+            <button class="card selected" data-answer="政好先理解生活事件，再從服務目錄找出可能適用的政府方案。">
               <span class="card-number">1</span>
               <h3>不知道有什麼服務</h3>
               <p>方案散落各機關網站，看得懂公文的人才找得到。</p>
             </button>
-            <button class="card" data-answer="民眾只面對單一 Agent；由 Agent 協調憑證皮夾、MyData 與受理機關。">
+            <button class="card" data-answer="民眾只面對單一 Agent；由政好協調憑證皮夾、MyData 與受理機關。">
               <span class="card-number">2</span>
               <h3>要跑好幾個機關</h3>
               <p>身分、就保、就服各驗各的，同一件事重複證明。</p>
@@ -921,7 +1255,8 @@
               <p>資料分散於各部會，民眾難以知道缺了哪一份。</p>
             </button>
           </div>
-          <div class="answer-strip"><strong>牛來的回答：</strong> <span id="painAnswer">牛來先理解生活事件，再從服務目錄找出可能適用的政府方案。</span></div>
+          <div class="answer-strip"><strong>政好的回答：</strong> <span id="painAnswer">政好先理解生活事件，再從服務目錄找出可能適用的政府方案。</span></div>
+          <div class="impact-proof"><b>15 日</b><span>幼兒送托後若未及時完成申請，補助起算日可能順延——政府服務的難，不只是找不到，而是錯過就影響權益。</span></div>
         </div>
       </div>
     </section>
@@ -935,12 +1270,25 @@
       </div>
       <div class="content architecture">
         <figure class="architecture-frame">
-          <img src="/docs/solution-architecture.svg" alt="牛來串接數位憑證皮夾、MyData、政府受理機關與案件 Audit Log 的解決方案架構">
+          <div class="solution-map" role="img" aria-label="民眾委託政好串接數位憑證皮夾、MyData、政府機關與案件 Audit Log">
+            <span class="map-flow flow-citizen"></span>
+            <span class="map-flow flow-wallet"></span>
+            <span class="map-flow flow-mydata"></span>
+            <span class="map-flow flow-government"></span>
+            <span class="map-flow flow-audit"></span>
+            <div class="map-node map-citizen"><span class="map-icon">👤</span><b>民眾 牛來</b><small>提出需求 · 決定授權 · 本人確認</small></div>
+            <div class="map-node map-wallet"><span class="map-icon">▣</span><b>數位憑證皮夾</b><small>出示可驗證資格 · Mock Adapter</small></div>
+            <div class="map-node map-mydata"><span class="map-icon">◉</span><b>MyData</b><small>目的限定 · 最小必要資料 · Mock Adapter</small></div>
+            <div class="map-node map-agent"><span class="map-icon">↔</span><b>政好 Agent</b><small>理解需求、編排工具、執行政策閘門</small><span class="map-pill">AI 理解需求｜後端決定行動</span></div>
+            <div class="map-node map-government"><span class="map-icon">🏛</span><b>政府受理機關</b><small>本人確認後才正式送件</small></div>
+            <div class="map-node map-audit"><span class="map-icon">☷</span><b>每一件申請都有獨立 Audit Log</b><small>授權 · 憑證 · 資料來源 · 規則版本 · 確認 · 送件結果</small></div>
+          </div>
         </figure>
         <div class="callout-stack">
           <div class="callout"><strong>1. 民眾 → Agent</strong><span>說明需求、授權必要資料、最後確認送件。</span></div>
           <div class="callout"><strong>2. Agent → 信任來源</strong><span>向數位憑證皮夾驗證資格，經同意向 MyData 調閱資料。</span></div>
           <div class="callout"><strong>3. Agent → 政府機關</strong><span>通過政策閘門後送件，並為每個案件保存完整時間線。</span></div>
+          <div class="legal-note"><strong>不是「打通所有資料庫」：</strong>個資利用必須與特定目的具有正當合理關聯；政好讓民眾逐案決定用途與資料範圍。</div>
         </div>
       </div>
     </section>
@@ -1006,7 +1354,7 @@
       <div class="slide-header">
         <div>
           <p class="eyebrow">Credentials & receipts</p>
-          <h2>三種證明，各自回答不同問題</h2>
+          <h2>三類憑證與一張收據</h2>
         </div>
       </div>
       <div class="content credential-layout">
@@ -1024,7 +1372,10 @@
             <h3>Execution Receipt</h3><p>證明行為：Agent 最後做了什麼，寫入哪一個案件紀錄？</p>
           </button>
         </div>
-        <pre class="credential-code" id="credentialCode"></pre>
+        <div class="credential-preview">
+          <pre class="credential-code" id="credentialCode"></pre>
+          <div class="scope-note"><strong>落地範圍：</strong>政府資格資料對應目前 Demo；委託授權與 Execution Receipt 為目標資料模型示意。</div>
+        </div>
       </div>
     </section>
 
@@ -1085,18 +1436,22 @@
         <div>
           <div class="policy-grid" id="policyGrid">
             <button class="card policy" data-message="授權的服務對象不符；機關端在讀取資料前即拒絕。">
+              <span class="delivery-state">目標設計</span>
               <span class="deny-code">AUDIENCE_MISMATCH</span>
               <h3>拿錯地方</h3><p>發給資格評估流程的授權，卻拿去另一個機關使用。</p><span class="policy-result">→ DENY</span>
             </button>
             <button class="card policy" data-message="要求超出授權欄位；Agent 無法取得完整原始紀錄。">
+              <span class="delivery-state">目標設計</span>
               <span class="deny-code">DATA_SCOPE_VIOLATION</span>
               <h3>拿太多資料</h3><p>只授權資格結果，卻要求完整投保或戶籍紀錄。</p><span class="policy-result">→ DENY</span>
             </button>
             <button class="card policy" data-message="一次性授權已使用；相同授權不能重複執行。">
+              <span class="delivery-state">目標設計</span>
               <span class="deny-code">REPLAY_DENIED</span>
               <h3>重複使用</h3><p>同一個一次性授權被拿來執行第二次。</p><span class="policy-result">→ DENY</span>
             </button>
             <button class="card policy" data-message="憑證已過期或撤銷；Agent 立即停止並引導使用者重新取得。">
+              <span class="delivery-state done">Demo 可重現</span>
               <span class="deny-code">CREDENTIAL_EXPIRED</span>
               <h3>失效或撤銷</h3><p>必要憑證超過有效期，或民眾已撤銷委託。</p><span class="policy-result">→ DENY</span>
             </button>
@@ -1122,49 +1477,36 @@
           <button class="event" data-event="本人確認後才正式送件，並產生可對應本案件的 Execution Receipt。"><span class="event-dot">05</span><span><h3>確認與送件</h3><p>10:02:15 · Submission</p></span></button>
         </div>
         <aside class="receipt">
-          <span class="receipt-label">AUDIT EVENT DETAIL</span>
-          <h3 style="font-size:26px;margin-top:12px">案件 NLA-2026-0829-001</h3>
+          <span class="receipt-label">AUDIT EVENT DETAIL · 示意畫面</span>
+          <h3 style="font-size:26px;margin-top:12px">案件 APP-20260829-9F21A0</h3>
           <p id="auditDetail" style="line-height:1.7">需求解析：民眾詢問育兒生活補助；Agent 對應至 childcare-benefit-2026。</p>
           <dl>
             <dt>Principal</dt><dd>已登入用戶 牛來</dd>
             <dt>Action</dt><dd>service.discover</dd>
-            <dt>Decision</dt><dd>ALLOW</dd>
-            <dt>Trace ID</dt><dd>evt_8f21a0</dd>
+            <dt>Decision*</dt><dd>ALLOW</dd>
+            <dt>Trace ID*</dt><dd>evt_8f21a0</dd>
           </dl>
+          <p style="color:#f3c8ed;font-size:12px">* Decision 與 Trace ID 為目標 Audit Bundle 欄位。</p>
           <span class="tag">授權、資料、規則、送件可串回同一案件</span>
         </aside>
       </div>
     </section>
 
-    <section class="slide">
+    <section class="slide dark">
       <div class="slide-header">
         <div>
           <p class="eyebrow">Live demo</p>
-          <h2>現在，讓牛來實際跑一次</h2>
+          <h2>Demo</h2>
         </div>
       </div>
-      <div class="content live-layout">
-        <div class="demo-script">
-          <div class="script-step"><b>1</b><div><strong>登入</strong><p>使用者：user　密碼：password</p></div></div>
-          <div class="script-step"><b>2</b><div><strong>提出需求</strong><p>「我想申請育兒生活補助」</p></div></div>
-          <div class="script-step"><b>3</b><div><strong>展示信任控制</strong><p>申請憑證 → 授權資料 → 規則判定 → 建立草稿。</p></div></div>
-          <div class="script-step"><b>4</b><div><strong>確認與稽核</strong><p>本人確認後送件，再從案件紀錄打開完整 Audit Log。</p></div></div>
-          <div class="button-row">
-            <a class="primary" href="/" target="_blank">另開完整 Demo</a>
-            <button class="secondary" id="reloadDemo">重新載入畫面</button>
-          </div>
-          <div class="scope-note"><strong>Demo 範圍揭露：</strong>目前數位憑證皮夾、MyData 與政府機關介接為概念架構及 Mock Adapter；介面用於展示可信代理流程。</div>
-        </div>
-        <div class="demo-frame">
-          <div class="browser-bar"><i class="browser-dot"></i><i class="browser-dot"></i><i class="browser-dot"></i><span class="browser-url">牛來｜政府服務 AI Agent</span></div>
-          <iframe id="demoIframe" src="/" title="牛來互動式 Demo"></iframe>
-        </div>
+      <div class="content">
+        <div class="video-placeholder" aria-label="預留 Demo 影片版位"></div>
       </div>
     </section>
 
     <section class="slide dark">
       <div class="slide-header">
-        <span class="tag">GeovTrustAI · 牛來</span>
+        <span class="tag">GeovTrustAI · 政好</span>
       </div>
       <div class="content closing">
         <div>
@@ -1176,16 +1518,40 @@
           <div class="closing-point"><span class="check">✓</span><span>AI 輔助理解，規則負責決策</span></div>
           <div class="closing-point"><span class="check">✓</span><span>憑證證明資格，授權限制用途</span></div>
           <div class="closing-point"><span class="check">✓</span><span>本人掌握送件，每案完整留痕</span></div>
-          <div class="answer-strip"><strong>牛來：</strong>民眾的一個入口，政府服務的一條可信代理鏈。</div>
+          <div class="answer-strip"><strong>政好：</strong>民眾的一個入口，政府服務的一條可信代理鏈。</div>
+          <div class="disclosure">本 Demo 使用合成資料與 Mock Adapter，不含真實個資；數位憑證皮夾、MyData 與政府機關為概念介接。程式與 AI 協作工具使用情形揭露於 README。</div>
         </div>
+      </div>
+    </section>
+
+    <section class="slide dark">
+      <div class="slide-header">
+        <span class="tag">GeovTrustAI · 政好</span>
+      </div>
+      <div class="content qa">
+        <div>
+          <p class="eyebrow">Discussion</p>
+          <h1 style="font-size:clamp(70px,10vw,150px)">Q&amp;A</h1>
+          <p class="hero-subtitle">可信任的政府服務 Agent，<br>應該代表誰、能做什麼、如何被追責？</p>
+          <div class="authors">
+            <span class="author"><strong>Ali</strong> · 台灣大學</span>
+            <span class="author"><strong>慶霖</strong> · 全聯實業</span>
+            <span class="author"><strong>Steve</strong> · 台灣微軟</span>
+          </div>
+        </div>
+        <div class="qa-mark">?</div>
       </div>
     </section>
   </main>
 
+  <a class="qr-badge" href="https://agentdemo.zeabur.app/" target="_blank" rel="noopener" aria-label="掃描 QR Code 試用政好 Agent">
+    <img src="agentdemo-qr.svg" alt="https://agentdemo.zeabur.app/ QR Code">
+    <span>掃碼試用</span>
+  </a>
   <div class="hint">← → 換頁 · F 全螢幕 · O 總覽 · Home / End</div>
   <nav class="controls" aria-label="簡報控制">
     <button class="control" id="prev" aria-label="上一頁">←</button>
-    <span class="slide-count" id="slideCount">1 / 12</span>
+    <span class="slide-count" id="slideCount">1 / 13</span>
     <button class="control" id="next" aria-label="下一頁">→</button>
     <button class="control" id="overview" aria-label="總覽">▦</button>
     <button class="control" id="fullscreen" aria-label="全螢幕">⛶</button>
@@ -1255,17 +1621,16 @@
 
     const credentialExamples = {
       fact: `{
-  "type": "IdentityQualificationCredential",
   "issuer": "Mock Identity Authority",
-  "subject": "citizen:user_001",
-  "claims": { "identity_valid": true },
-  "valid_until": "2027-08-29",
-  "credential_status": { "state": "ACTIVE" },
-  "proof": { "type": "DemoMockProof" }
+  "recordId": "identity-user-001",
+  "lastUpdated": "2026-08-29",
+  "expiresAt": "2027-08-29",
+  "satisfied": true,
+  "disclosedValue": "身分有效"
 }`,
       delegation: `{
   "principal": "citizen:user_001",
-  "agent": "niu-lai",
+  "agent": "zheng-hao",
   "purpose": "childcare-benefit.check",
   "action": "eligibility.evaluate",
   "claims": ["identity_valid", "child_age"],
@@ -1281,7 +1646,7 @@
 }`,
       receipt: `{
   "case_id": "NLA-2026-0829-001",
-  "agent": "niu-lai",
+  "agent": "zheng-hao",
   "action": "application.submit",
   "decision": "ALLOW",
   "submitted_at": "2026-08-29T10:02:15+08:00",
@@ -1335,11 +1700,6 @@
       if (!item) return;
       document.querySelectorAll(".event").forEach(entry => entry.classList.toggle("active", entry === item));
       document.querySelector("#auditDetail").textContent = item.dataset.event;
-    });
-
-    document.querySelector("#reloadDemo").addEventListener("click", () => {
-      const iframe = document.querySelector("#demoIframe");
-      iframe.src = iframe.src;
     });
 
     showSlide(current);

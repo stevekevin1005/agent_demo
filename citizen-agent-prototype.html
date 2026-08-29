@@ -1206,12 +1206,6 @@
       line-height: 1.55;
     }
 
-    .controls,
-    .walkthroughs {
-      margin-top: 18px;
-      padding: 20px;
-    }
-
     .section-heading {
       display: flex;
       align-items: baseline;
@@ -1229,75 +1223,6 @@
       margin: 0;
       color: var(--muted);
       font-size: 13px;
-    }
-
-    .button-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      overflow-x: auto;
-    }
-
-    .tab {
-      padding: 9px 12px;
-      color: var(--muted);
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    .tab.active {
-      color: white;
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .walkthrough-description {
-      margin: 0 0 14px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-    }
-
-    .step {
-      position: relative;
-      min-height: 88px;
-      padding: 14px;
-      color: var(--ink);
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      text-align: left;
-    }
-
-    .step.current {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.1);
-    }
-
-    .step.complete {
-      color: var(--muted);
-      background: var(--soft);
-    }
-
-    .step-number {
-      display: block;
-      margin-bottom: 7px;
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 800;
     }
 
     .audit {
@@ -1352,8 +1277,6 @@
 
       .agent-header,
       .state-header,
-      .controls,
-      .walkthroughs,
       .audit {
         padding: 15px;
       }
@@ -1469,24 +1392,6 @@
       </aside>
     </section>
 
-    <section class="panel controls">
-      <div class="section-heading">
-        <h2>自由操作</h2>
-        <p>故意跳步也可以，觀察系統是否正確阻擋。</p>
-      </div>
-      <div id="freePlay" class="button-grid"></div>
-    </section>
-
-    <section class="panel walkthroughs">
-      <div class="section-heading">
-        <h2>引導情境</h2>
-        <p>每個情境開始時都會回到相同初始狀態。</p>
-      </div>
-      <div id="tabs" class="tabs"></div>
-      <p id="walkthroughDescription" class="walkthrough-description"></p>
-      <div id="steps" class="steps"></div>
-    </section>
-
     <section class="panel audit">
       <div class="section-heading">
         <h2>操作與授權紀錄</h2>
@@ -1577,7 +1482,7 @@
           }
         ],
         audit: [],
-        lastChange: "尚未開始。民眾可以直接輸入問題，或使用下方引導情境。"
+        lastChange: "尚未開始。民眾可以直接輸入問題，或使用猜你想問的快捷按鈕。"
       });
 
       function now() {
@@ -1977,62 +1882,7 @@
       return { initialState, transition, stages };
     })();
 
-    const actions = [
-      { type: "FIND_SERVICES", label: "民眾：有哪些可以申請？", utterance: "請幫我看看有哪些補助可以申請。", style: "secondary" },
-      { type: "REQUEST_CONSENT", label: "Agent：說明需要哪些授權", style: "secondary" },
-      { type: "GRANT_CONSENT", label: "民眾：我同意授權", utterance: "我同意這次資格檢查使用上述資料。", style: "primary" },
-      { type: "DENY_CONSENT", label: "民眾：我不同意", utterance: "我不同意調閱資料，請只告訴我申請條件。", style: "danger" },
-      { type: "FETCH_CREDENTIALS", label: "Agent：取得必要證據", style: "secondary" },
-      { type: "CHECK_ELIGIBILITY", label: "民眾：我符合資格嗎？", utterance: "資料都取得了，我符合資格嗎？", style: "secondary" },
-      { type: "CREATE_DRAFT", label: "民眾：幫我準備草稿", utterance: "如果符合，請幫我準備申請草稿。", style: "secondary" },
-      { type: "CONFIRM_APPLICATION", label: "民眾：我確認內容", utterance: "我已確認申請內容與入帳帳戶，可以送出。", style: "primary" },
-      { type: "SUBMIT_APPLICATION", label: "Agent：正式送件", style: "primary" },
-      { type: "REVOKE_CONSENT", label: "民眾：撤回資料授權", utterance: "我要撤回剛才的資料授權。", style: "danger" }
-    ];
-
-    const walkthroughs = [
-      {
-        id: "happy",
-        title: "完整申請",
-        description: "觀察 Agent 如何從服務說明走到最小授權、資格判斷、民眾確認與正式送件。",
-        steps: [
-          { type: "ASK_QUESTION", question: "我剛生小孩，有哪些補助可以申請？", label: "「我剛生小孩，有哪些補助？」" },
-          { type: "SELECT_SERVICE", serviceId: "childcare-benefit-2026", utterance: "我想先申請育兒生活補助。", label: "選擇「育兒生活補助」" },
-          { type: "GRANT_CONSENT", utterance: "我同意這次資格檢查使用上述資料。", label: "「我同意這次資料授權」" },
-          { type: "CREATE_DRAFT", utterance: "如果符合，請幫我準備申請草稿。", label: "「請幫我準備申請草稿」" },
-          { type: "SELECT_BANK_ACCOUNT", accountId: "bank-labor", utterance: "我要使用臺灣銀行末四碼 1234 的帳戶。", label: "選擇已登記的臺灣銀行帳戶" },
-          { type: "CONFIRM_APPLICATION", utterance: "確認，請使用這個帳戶並送出申請。", label: "「確認，使用這個帳戶送出」" }
-        ]
-      },
-      {
-        id: "deny",
-        title: "拒絕資料授權",
-        description: "民眾拒絕時，Agent 應停止調閱與資格判斷，但仍提供一般服務說明。",
-        steps: [
-          { type: "ASK_QUESTION", question: "我剛生小孩，有哪些補助可以申請？", label: "「我剛生小孩，有哪些補助？」" },
-          { type: "SELECT_SERVICE", serviceId: "childcare-benefit-2026", utterance: "我想先申請育兒生活補助。", label: "選擇「育兒生活補助」" },
-          { type: "DENY_CONSENT", utterance: "我不同意調閱資料，請只告訴我申請條件。", label: "「我不同意調閱資料」" },
-          { type: "FETCH_CREDENTIALS", label: "Agent 嘗試調閱資料" }
-        ]
-      },
-      {
-        id: "illegal-submit",
-        title: "阻擋未確認送件",
-        description: "即使資格符合且草稿完成，Agent 也不能代替民眾完成最後確認。",
-        steps: [
-          { type: "ASK_QUESTION", question: "請幫我申請育兒補助。", label: "「請幫我申請育兒補助」" },
-          { type: "SELECT_SERVICE", serviceId: "childcare-benefit-2026", utterance: "我要申請育兒生活補助。", label: "選擇「育兒生活補助」" },
-          { type: "GRANT_CONSENT", utterance: "我同意為了這次申請調閱必要資料。", label: "「我同意資料調閱」" },
-          { type: "CREATE_DRAFT", utterance: "符合的話就幫我建立申請草稿。", label: "「幫我建立申請草稿」" },
-          { type: "SELECT_BANK_ACCOUNT", accountId: "bank-tax", utterance: "我要使用郵局末四碼 5678 的帳戶。", label: "選擇已登記的郵局帳戶" },
-          { type: "SUBMIT_APPLICATION", utterance: "不用再讓我確認，直接幫我送出。", label: "「不用確認，直接送出」" }
-        ]
-      }
-    ];
-
     let state = CitizenServiceFlow.initialState();
-    let activeWalkthrough = walkthroughs[0];
-    let walkthroughStep = 0;
     let isThinking = false;
     let thinkingText = "";
     let backendMode = false;
@@ -2048,10 +1898,6 @@
     const chat = document.querySelector("#chat");
     const quickPrompts = document.querySelector("#quickPrompts");
     const stateBody = document.querySelector("#stateBody");
-    const freePlay = document.querySelector("#freePlay");
-    const tabs = document.querySelector("#tabs");
-    const steps = document.querySelector("#steps");
-    const walkthroughDescription = document.querySelector("#walkthroughDescription");
     const auditList = document.querySelector("#auditList");
     const composer = document.querySelector("#composer");
     const questionInput = document.querySelector("#questionInput");
@@ -2067,19 +1913,18 @@
       SUBMIT_APPLICATION: "正在確認授權狀態並送出申請…"
     };
 
-    function completeAction(action, fromWalkthrough) {
+    function completeAction(action) {
       state = CitizenServiceFlow.transition(state, action);
-      if (fromWalkthrough) walkthroughStep += 1;
       isThinking = false;
       thinkingText = "";
       render();
     }
 
-    function dispatch(action, fromWalkthrough = false) {
+    function dispatch(action) {
       if (isThinking) return;
 
       if (backendMode && backendRequest(action)) {
-        dispatchBackend(action, fromWalkthrough);
+        dispatchBackend(action);
         return;
       }
 
@@ -2095,7 +1940,6 @@
 
           window.setTimeout(() => {
             state = CitizenServiceFlow.transition(state, { type: "FIND_SERVICES" });
-            if (fromWalkthrough) walkthroughStep += 1;
             isThinking = false;
             thinkingText = "";
             render();
@@ -2117,7 +1961,6 @@
 
         window.setTimeout(() => {
           state = CitizenServiceFlow.transition(state, { type: "REQUEST_CONSENT" });
-          if (fromWalkthrough) walkthroughStep += 1;
           isThinking = false;
           thinkingText = "";
           render();
@@ -2143,7 +1986,6 @@
 
           window.setTimeout(() => {
             state = CitizenServiceFlow.transition(state, { type: "CHECK_ELIGIBILITY" });
-            if (fromWalkthrough) walkthroughStep += 1;
             isThinking = false;
             thinkingText = "";
             render();
@@ -2165,7 +2007,6 @@
 
         window.setTimeout(() => {
           state = CitizenServiceFlow.transition(state, { type: "SUBMIT_APPLICATION" });
-          if (fromWalkthrough) walkthroughStep += 1;
           isThinking = false;
           thinkingText = "";
           render();
@@ -2186,11 +2027,11 @@
         isThinking = true;
         thinkingText = message;
         render();
-        window.setTimeout(() => completeAction(action, fromWalkthrough), 900);
+        window.setTimeout(() => completeAction(action), 900);
         return;
       }
 
-      completeAction(action, fromWalkthrough);
+      completeAction(action);
     }
 
     function backendRequest(action) {
@@ -2259,7 +2100,7 @@
       return mapping[action.type] || null;
     }
 
-    async function dispatchBackend(action, fromWalkthrough) {
+    async function dispatchBackend(action) {
       const request = backendRequest(action);
       if (!request) return;
 
@@ -2306,7 +2147,6 @@
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Agent backend request failed");
         state = mapBackendState(payload);
-        if (fromWalkthrough) walkthroughStep += 1;
       } catch (error) {
         if (error.message === "Unknown session" && currentCredentials) {
           await initializeBackend();
@@ -3063,63 +2903,6 @@
       }[fieldName] || "Demo 資料";
     }
 
-    function renderFreePlay() {
-      const visibleActions = backendMode
-        ? actions.filter(action => backendRequest(action))
-        : actions;
-      freePlay.innerHTML = visibleActions.map(action => `
-        <button class="${action.style}" type="button" data-action="${action.type}" ${isThinking ? "disabled" : ""}>
-          ${action.label}
-        </button>
-      `).join("");
-
-      freePlay.querySelectorAll("button").forEach(button => {
-        button.addEventListener("click", () => dispatch({ type: button.dataset.action }));
-      });
-    }
-
-    function renderWalkthrough() {
-      tabs.innerHTML = walkthroughs.map(walkthrough => `
-        <button
-          class="tab ${walkthrough.id === activeWalkthrough.id ? "active" : ""}"
-          type="button"
-          data-walkthrough="${walkthrough.id}"
-        >
-          ${walkthrough.title}
-        </button>
-      `).join("");
-
-      walkthroughDescription.textContent = activeWalkthrough.description;
-
-      steps.innerHTML = activeWalkthrough.steps.map((step, index) => `
-        <button
-          class="step ${index === walkthroughStep ? "current" : ""} ${index < walkthroughStep ? "complete" : ""}"
-          type="button"
-          data-step="${index}"
-          ${index !== walkthroughStep || isThinking ? "disabled" : ""}
-        >
-          <span class="step-number">步驟 ${index + 1}</span>
-          ${step.label}
-        </button>
-      `).join("");
-
-      tabs.querySelectorAll("button").forEach(button => {
-        button.addEventListener("click", () => {
-          activeWalkthrough = walkthroughs.find(item => item.id === button.dataset.walkthrough);
-          walkthroughStep = 0;
-          state = CitizenServiceFlow.initialState();
-          render();
-        });
-      });
-
-      steps.querySelectorAll("button").forEach(button => {
-        button.addEventListener("click", () => {
-          const step = activeWalkthrough.steps[Number(button.dataset.step)];
-          dispatch(step, true);
-        });
-      });
-    }
-
     function renderAudit() {
       if (!state.audit.length) {
         auditList.innerHTML = `<div class="agent-subtitle">操作後會在這裡留下用途、授權與送件紀錄。</div>`;
@@ -3150,7 +2933,6 @@
         return;
       }
       state = CitizenServiceFlow.initialState();
-      walkthroughStep = 0;
       isThinking = false;
       thinkingText = "";
       render();
@@ -3160,8 +2942,6 @@
       renderChat();
       renderQuickPrompts();
       renderState();
-      renderFreePlay();
-      renderWalkthrough();
       renderAudit();
       renderComposer();
     }
@@ -3288,7 +3068,6 @@
 
     async function initializeBackend() {
       state = CitizenServiceFlow.initialState();
-      walkthroughStep = 0;
       isThinking = false;
       thinkingText = "";
       render();

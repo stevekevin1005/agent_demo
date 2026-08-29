@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4FAF8"/>
+      <stop offset="1" stop-color="#EEF2F8"/>
+    </linearGradient>
+    <linearGradient id="agent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#176B5B"/>
+      <stop offset="1" stop-color="#174F67"/>
+    </linearGradient>
+    <linearGradient id="wallet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#165D91"/>
+      <stop offset="1" stop-color="#4A3F9E"/>
+    </linearGradient>
+    <linearGradient id="audit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#713B8F"/>
+      <stop offset="1" stop-color="#9A4E78"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#172033" flood-opacity=".13"/>
+    </filter>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#176B5B"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#326B9A"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#7A4A91"/>
+    </marker>
+    <style>
+      text { font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; }
+      .title { font-size: 48px; font-weight: 800; fill: #172033; }
+      .subtitle { font-size: 22px; fill: #667085; }
+      .card-title { font-size: 27px; font-weight: 800; }
+      .card-subtitle { font-size: 17px; }
+      .body { font-size: 18px; fill: #344054; }
+      .small { font-size: 15px; fill: #667085; }
+      .pill { font-size: 15px; font-weight: 700; }
+      .flow-label { font-size: 16px; font-weight: 800; }
+      .agent-line { font-size: 18px; fill: #FFFFFF; }
+      .wallet-note { font-size: 13px; fill: #DCE5FF; }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <circle cx="135" cy="105" r="180" fill="#DDF1EB" opacity=".6"/>
+  <circle cx="1800" cy="940" r="260" fill="#E0E6F2" opacity=".65"/>
+
+  <text x="110" y="92" class="title">可信政府服務 Agent｜Solution Architecture</text>
+  <text x="110" y="132" class="subtitle">民眾只需授權與確認；Agent 負責跨系統編排、最小揭露、送件與全程可追溯</text>
+
+  <!-- Citizen -->
+  <g filter="url(#shadow)">
+    <rect x="90" y="270" width="300" height="300" rx="34" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="2"/>
+  </g>
+  <circle cx="240" cy="365" r="52" fill="#E8F4F1"/>
+  <circle cx="240" cy="347" r="20" fill="#176B5B"/>
+  <path d="M198 405 Q240 367 282 405 V422 H198Z" fill="#176B5B"/>
+  <text x="240" y="468" text-anchor="middle" class="card-title" fill="#172033">民眾</text>
+  <text x="240" y="500" text-anchor="middle" class="card-subtitle" fill="#667085">Principal／資料本人</text>
+  <rect x="139" y="522" width="202" height="32" rx="16" fill="#E8F4F1"/>
+  <text x="240" y="544" text-anchor="middle" class="pill" fill="#176B5B">授權範圍由本人決定</text>
+
+  <!-- Wallet -->
+  <g filter="url(#shadow)">
+    <rect x="500" y="190" width="355" height="220" rx="30" fill="url(#wallet)"/>
+  </g>
+  <rect x="548" y="235" width="70" height="52" rx="12" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+  <circle cx="604" cy="261" r="7" fill="#75E6BD"/>
+  <text x="648" y="254" class="card-title" fill="#FFFFFF">數位憑證皮夾</text>
+  <text x="648" y="284" class="card-subtitle" fill="#DCE5FF">持有與出示可驗證憑證</text>
+  <rect x="545" y="325" width="112" height="34" rx="17" fill="#FFFFFF" opacity=".16"/>
+  <text x="601" y="348" text-anchor="middle" class="pill" fill="#FFFFFF">身分資格</text>
+  <rect x="669" y="325" width="142" height="34" rx="17" fill="#FFFFFF" opacity=".16"/>
+  <text x="740" y="348" text-anchor="middle" class="pill" fill="#FFFFFF">選擇性揭露</text>
+  <text x="545" y="386" class="wallet-note">憑證由政府／可信機關簽發，Agent 不自行創造</text>
+
+  <!-- MyData -->
+  <g filter="url(#shadow)">
+    <rect x="500" y="505" width="355" height="220" rx="30" fill="#FFFFFF" stroke="#A8CBE1" stroke-width="2"/>
+  </g>
+  <ellipse cx="584" cy="565" rx="39" ry="14" fill="#326B9A"/>
+  <rect x="545" y="565" width="78" height="55" fill="#DDECF5"/>
+  <ellipse cx="584" cy="620" rx="39" ry="14" fill="#326B9A"/>
+  <path d="M545 565 V620 M623 565 V620" stroke="#326B9A" stroke-width="3"/>
+  <text x="648" y="570" class="card-title" fill="#174F67">MyData</text>
+  <text x="648" y="601" class="card-subtitle" fill="#667085">取得政府既有資料</text>
+  <rect x="545" y="653" width="125" height="34" rx="17" fill="#E7F1F8"/>
+  <text x="607" y="676" text-anchor="middle" class="pill" fill="#326B9A">目的限定</text>
+  <rect x="681" y="653" width="130" height="34" rx="17" fill="#E7F1F8"/>
+  <text x="746" y="676" text-anchor="middle" class="pill" fill="#326B9A">最小必要資料</text>
+
+  <!-- Agent -->
+  <g filter="url(#shadow)">
+    <rect x="980" y="225" width="420" height="500" rx="38" fill="url(#agent)"/>
+  </g>
+  <circle cx="1190" cy="310" r="52" fill="#FFFFFF" opacity=".14"/>
+  <path d="M1162 314 H1218 M1173 295 L1162 314 1173 333 M1207 295 L1218 314 1207 333"
+        fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1190" y="395" text-anchor="middle" class="card-title" fill="#FFFFFF">可信政府服務 Agent</text>
+  <text x="1190" y="426" text-anchor="middle" class="card-subtitle" fill="#CFE9E2">Trust Orchestrator</text>
+
+  <rect x="1025" y="467" width="330" height="53" rx="15" fill="#FFFFFF" opacity=".13"/>
+  <circle cx="1056" cy="493" r="12" fill="#75E6BD"/>
+  <path d="M1050 493 L1055 498 1064 487" fill="none" stroke="#174F67" stroke-width="3"/>
+  <text x="1080" y="500" class="agent-line">管理授權範圍與有效期限</text>
+
+  <rect x="1025" y="532" width="330" height="53" rx="15" fill="#FFFFFF" opacity=".13"/>
+  <circle cx="1056" cy="558" r="12" fill="#75E6BD"/>
+  <path d="M1050 558 L1055 563 1064 552" fill="none" stroke="#174F67" stroke-width="3"/>
+  <text x="1080" y="565" class="agent-line">編排皮夾、MyData 與送件工具</text>
+
+  <rect x="1025" y="597" width="330" height="53" rx="15" fill="#FFFFFF" opacity=".13"/>
+  <circle cx="1056" cy="623" r="12" fill="#75E6BD"/>
+  <path d="M1050 623 L1055 628 1064 617" fill="none" stroke="#174F67" stroke-width="3"/>
+  <text x="1080" y="630" class="agent-line">Policy Gate：高風險動作攔截</text>
+
+  <rect x="1063" y="674" width="254" height="34" rx="17" fill="#75E6BD"/>
+  <text x="1190" y="697" text-anchor="middle" class="pill" fill="#174F67">AI 理解需求｜後端決定行動</text>
+
+  <!-- Government -->
+  <g filter="url(#shadow)">
+    <rect x="1530" y="265" width="300" height="400" rx="34" fill="#FFFFFF" stroke="#C8D2E1" stroke-width="2"/>
+  </g>
+  <path d="M1593 352 L1680 307 1767 352 Z" fill="#326B9A"/>
+  <rect x="1609" y="352" width="142" height="14" fill="#326B9A"/>
+  <rect x="1622" y="366" width="20" height="72" fill="#DDECF5"/>
+  <rect x="1652" y="366" width="20" height="72" fill="#DDECF5"/>
+  <rect x="1682" y="366" width="20" height="72" fill="#DDECF5"/>
+  <rect x="1712" y="366" width="20" height="72" fill="#DDECF5"/>
+  <rect x="1609" y="438" width="142" height="14" fill="#326B9A"/>
+  <text x="1680" y="500" text-anchor="middle" class="card-title" fill="#172033">政府受理機關</text>
+  <text x="1680" y="532" text-anchor="middle" class="card-subtitle" fill="#667085">跨部會申請系統</text>
+  <rect x="1582" y="566" width="88" height="34" rx="17" fill="#E7F1F8"/>
+  <text x="1626" y="589" text-anchor="middle" class="pill" fill="#326B9A">戶政</text>
+  <rect x="1682" y="566" width="96" height="34" rx="17" fill="#E7F1F8"/>
+  <text x="1730" y="589" text-anchor="middle" class="pill" fill="#326B9A">社福</text>
+  <rect x="1632" y="612" width="96" height="34" rx="17" fill="#E7F1F8"/>
+  <text x="1680" y="635" text-anchor="middle" class="pill" fill="#326B9A">稅務／勞保</text>
+
+  <!-- Audit -->
+  <g filter="url(#shadow)">
+    <rect x="760" y="835" width="760" height="170" rx="30" fill="url(#audit)"/>
+  </g>
+  <rect x="806" y="879" width="66" height="82" rx="10" fill="#FFFFFF" opacity=".16"/>
+  <path d="M823 900 H855 M823 917 H855 M823 934 H846" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <text x="905" y="891" class="card-title" fill="#FFFFFF">每一張送件單都有獨立 Audit Log</text>
+  <text x="905" y="925" class="card-subtitle" fill="#F1DAF5">誰授權｜用了哪些憑證與資料｜套用哪條規則｜誰確認｜何時送件</text>
+  <rect x="905" y="948" width="150" height="32" rx="16" fill="#FFFFFF" opacity=".15"/>
+  <text x="980" y="970" text-anchor="middle" class="pill" fill="#FFFFFF">案件級時間線</text>
+  <rect x="1068" y="948" width="155" height="32" rx="16" fill="#FFFFFF" opacity=".15"/>
+  <text x="1145" y="970" text-anchor="middle" class="pill" fill="#FFFFFF">可還原決策依據</text>
+  <rect x="1236" y="948" width="224" height="32" rx="16" fill="#FFFFFF" opacity=".15"/>
+  <text x="1348" y="970" text-anchor="middle" class="pill" fill="#FFFFFF">撤銷後立即停止後續行動</text>
+
+  <!-- Flows -->
+  <path d="M390 350 C430 300 455 282 500 282" fill="none" stroke="#176B5B" stroke-width="6" marker-end="url(#arrowGreen)"/>
+  <text x="440" y="238" text-anchor="middle" class="flow-label" fill="#176B5B">① 出示憑證</text>
+
+  <path d="M390 490 C437 554 455 600 500 612" fill="none" stroke="#326B9A" stroke-width="6" marker-end="url(#arrowBlue)"/>
+  <text x="445" y="568" text-anchor="middle" class="flow-label" fill="#326B9A">② 同意取用</text>
+
+  <path d="M855 302 C905 302 930 325 980 350" fill="none" stroke="#176B5B" stroke-width="6" marker-end="url(#arrowGreen)"/>
+  <text x="919" y="294" text-anchor="middle" class="flow-label" fill="#176B5B">驗證結果</text>
+
+  <path d="M855 615 C910 615 940 580 980 545" fill="none" stroke="#326B9A" stroke-width="6" marker-end="url(#arrowBlue)"/>
+  <text x="918" y="637" text-anchor="middle" class="flow-label" fill="#326B9A">最小必要資料</text>
+
+  <path d="M1400 465 C1450 465 1480 465 1530 465" fill="none" stroke="#176B5B" stroke-width="7" marker-end="url(#arrowGreen)"/>
+  <text x="1465" y="438" text-anchor="middle" class="flow-label" fill="#176B5B">③ 本人確認後送件</text>
+
+  <path d="M1190 725 L1190 835" fill="none" stroke="#7A4A91" stroke-width="7" marker-end="url(#arrowPurple)"/>
+  <text x="1210" y="792" class="flow-label" fill="#7A4A91">④ 全程留痕</text>
+
+  <!-- Footer -->
+  <text x="110" y="1035" class="small">
+    Concept Architecture｜正式版串接 TW DIW、MyData 與政府申辦介面；目前 Demo 使用 Mock Adapter 與合成資料。
+  </text>
+</svg>

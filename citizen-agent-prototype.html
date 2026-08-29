@@ -565,6 +565,36 @@
       border-top: 1px solid var(--line);
     }
 
+    .quick-prompts {
+      padding: 14px 16px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .quick-prompts-title {
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .quick-prompts-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-prompt {
+      min-height: 36px;
+      padding: 8px 11px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid #b7ddd5;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: left;
+    }
+
     .composer input {
       flex: 1;
       min-width: 0;
@@ -1030,10 +1060,12 @@
 
         <div id="chat" class="chat" aria-live="polite"></div>
 
+        <div id="quickPrompts" class="quick-prompts"></div>
+
         <form id="composer" class="composer">
           <input
             id="questionInput"
-            value="我剛生小孩，有哪些補助可以申請？"
+            placeholder="也可以自行輸入想詢問的政府服務"
             aria-label="輸入政府服務問題"
           >
           <button class="primary" type="submit">送出問題</button>
@@ -1626,6 +1658,7 @@
     const loginForm = document.querySelector("#loginForm");
     const loginError = document.querySelector("#loginError");
     const chat = document.querySelector("#chat");
+    const quickPrompts = document.querySelector("#quickPrompts");
     const stateBody = document.querySelector("#stateBody");
     const freePlay = document.querySelector("#freePlay");
     const tabs = document.querySelector("#tabs");
@@ -2627,6 +2660,7 @@
 
     function render() {
       renderChat();
+      renderQuickPrompts();
       renderState();
       renderFreePlay();
       renderWalkthrough();
@@ -2653,6 +2687,43 @@
       if (state.application) return "申請已送出，可以查詢案件進度。";
       if (state.consent === "denied") return "請改成告訴我人工申請需要準備什麼。";
       return "";
+    }
+
+    const demoPrompts = [
+      "我剛生小孩，有哪些補助可以申請？",
+      "我失業了，可以申請什麼給付？",
+      "我正在租屋，有哪些租金補貼？",
+      "我住院後經濟困難，有急難救助嗎？",
+      "幫我查詢目前申請案件進度"
+    ];
+
+    function renderQuickPrompts() {
+      if (state.question || state.caseResults?.length || isThinking) {
+        quickPrompts.hidden = true;
+        quickPrompts.innerHTML = "";
+        return;
+      }
+      quickPrompts.hidden = false;
+      quickPrompts.innerHTML = `
+        <div class="quick-prompts-title">猜你想問</div>
+        <div class="quick-prompts-list">
+          ${demoPrompts.map(prompt => `
+            <button class="quick-prompt" type="button" data-demo-prompt="${escapeHtml(prompt)}">
+              ${escapeHtml(prompt)}
+            </button>
+          `).join("")}
+        </div>
+      `;
+      quickPrompts.querySelectorAll("[data-demo-prompt]").forEach(button => {
+        button.addEventListener("click", () => {
+          const prompt = button.dataset.demoPrompt;
+          dispatch(
+            backendMode
+              ? { type: "MODEL_MESSAGE", utterance: prompt }
+              : { type: "ASK_QUESTION", question: prompt }
+          );
+        });
+      });
     }
 
     function composerAction(text) {
@@ -2692,15 +2763,18 @@
         questionInput.disabled = isThinking || Boolean(state.application) || waitingForAccount || waitingForService;
         composer.querySelector("button").disabled = isThinking || Boolean(state.application) || waitingForAccount || waitingForService;
       }
-      questionInput.value = suggestedUtterance();
+      questionInput.placeholder = suggestedUtterance() || "也可以自行輸入想詢問的政府服務";
     }
 
     composer.addEventListener("submit", event => {
       event.preventDefault();
+      const text = questionInput.value.trim();
+      if (!text) return;
+      questionInput.value = "";
       if (backendMode) {
-        dispatch({ type: "MODEL_MESSAGE", utterance: questionInput.value });
+        dispatch({ type: "MODEL_MESSAGE", utterance: text });
       } else {
-        dispatch(composerAction(questionInput.value));
+        dispatch(composerAction(text));
       }
     });
 

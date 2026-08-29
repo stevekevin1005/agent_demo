@@ -1,0 +1,40 @@
+[
+  {
+    "id": "childcare-benefit-2026",
+    "name": "育兒生活補助",
+    "agency": "社會福利主管機關",
+    "estimatedAmount": "每月 5,000 元",
+    "summary": "依家庭與設籍條件提供定期育兒支持。",
+    "evidence": [
+      {"id": "identity", "label": "身分有效"},
+      {"id": "residency", "label": "設籍地"},
+      {"id": "relationship", "label": "親子關係"},
+      {"id": "income", "label": "所得級距"}
+    ]
+  },
+  {
+    "id": "birth-payment-2026",
+    "name": "生育一次性給付",
+    "agency": "社會保險主管機關",
+    "estimatedAmount": "一次性 30,000 元",
+    "summary": "依投保與生育事實提供一次性給付。",
+    "evidence": [
+      {"id": "identity", "label": "身分有效"},
+      {"id": "relationship", "label": "親子關係"},
+      {"id": "insurance", "label": "社會保險資格"}
+    ]
+  },
+  {
+    "id": "care-service-2026",
+    "name": "托育服務補助",
+    "agency": "托育服務主管機關",
+    "estimatedAmount": "每月最高 7,000 元",
+    "summary": "使用合格托育服務時提供費用補助。",
+    "evidence": [
+      {"id": "identity", "label": "身分有效"},
+      {"id": "residency", "label": "設籍地"},
+      {"id": "relationship", "label": "親子關係"},
+      {"id": "enrollment", "label": "托育服務登記"}
+    ]
+  }
+]

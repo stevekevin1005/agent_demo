@@ -1,0 +1,4 @@
+.env
+*.key
+local-secrets.ps1
+__pycache__/

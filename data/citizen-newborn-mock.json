@@ -1,0 +1,77 @@
+{
+  "subjectId": "citizen-demo-001",
+  "scenario": "newborn-family",
+  "displayName": "Demo 民眾",
+  "records": {
+    "identity": {
+      "label": "身分有效",
+      "issuer": "身分識別主管機關",
+      "endpoint": "/mock/identity/citizen-demo-001",
+      "recordId": "ID-DEMO-001",
+      "lastUpdated": "2026-08-20",
+      "satisfied": true,
+      "disclosedValue": "身分有效"
+    },
+    "residency": {
+      "label": "設籍地",
+      "issuer": "戶政主管機關",
+      "endpoint": "/mock/household/citizen-demo-001/residency",
+      "recordId": "RES-DEMO-001",
+      "lastUpdated": "2026-08-28",
+      "satisfied": true,
+      "disclosedValue": "設籍本市"
+    },
+    "relationship": {
+      "label": "親子關係",
+      "issuer": "戶政主管機關",
+      "endpoint": "/mock/household/citizen-demo-001/relationships",
+      "recordId": "REL-DEMO-001",
+      "lastUpdated": "2026-08-25",
+      "satisfied": true,
+      "disclosedValue": "申請人為新生兒法定代理人"
+    },
+    "income": {
+      "label": "所得級距",
+      "issuer": "稅務主管機關",
+      "endpoint": "/mock/tax/citizen-demo-001/income-bracket",
+      "recordId": "TAX-DEMO-2025",
+      "lastUpdated": "2026-06-30",
+      "satisfied": true,
+      "disclosedValue": "符合補助所得級距"
+    },
+    "insurance": {
+      "label": "社會保險資格",
+      "issuer": "社會保險主管機關",
+      "endpoint": "/mock/insurance/citizen-demo-001/status",
+      "recordId": "INS-DEMO-001",
+      "lastUpdated": "2026-08-28",
+      "satisfied": true,
+      "disclosedValue": "有效投保且符合生育給付條件"
+    },
+    "enrollment": {
+      "label": "托育服務登記",
+      "issuer": "托育服務主管機關",
+      "endpoint": "/mock/childcare/citizen-demo-001/enrollment",
+      "recordId": "CARE-DEMO-001",
+      "lastUpdated": "2026-08-27",
+      "satisfied": true,
+      "disclosedValue": "已登記合格托育服務"
+    }
+  },
+  "registeredBankAccounts": [
+    {
+      "id": "bank-labor",
+      "bank": "臺灣銀行",
+      "maskedNumber": "•••• 1234",
+      "source": "勞保給付帳戶",
+      "verified": true
+    },
+    {
+      "id": "bank-tax",
+      "bank": "中華郵政",
+      "maskedNumber": "•••• 5678",
+      "source": "綜合所得稅退稅帳戶",
+      "verified": true
+    }
+  ]
+}

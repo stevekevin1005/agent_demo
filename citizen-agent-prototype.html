@@ -1,0 +1,2070 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>政府服務 AI Agent 流程原型</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --line: #dfe5ec;
+      --surface: #ffffff;
+      --soft: #f5f7fa;
+      --accent: #176b5b;
+      --accent-soft: #e8f4f1;
+      --danger: #b42318;
+      --danger-soft: #fef3f2;
+      --warning: #9a6700;
+      --warning-soft: #fffaeb;
+      --shadow: 0 18px 45px rgba(23, 32, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(23, 107, 91, 0.08), transparent 34rem),
+        var(--soft);
+      font-family: Inter, "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .prototype-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 7px 11px;
+      color: var(--warning);
+      background: var(--warning-soft);
+      border: 1px solid #fedf89;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      letter-spacing: -0.04em;
+    }
+
+    .intro {
+      max-width: 880px;
+      margin: 12px 0 26px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .question {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .agent-panel {
+      min-height: 680px;
+      overflow: hidden;
+    }
+
+    .agent-header,
+    .state-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .agent-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .seal {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: white;
+      background: var(--accent);
+      border-radius: 13px;
+      font-weight: 800;
+    }
+
+    .agent-title,
+    .state-title {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .agent-subtitle {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .trust-badge {
+      padding: 7px 10px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .chat {
+      height: 500px;
+      padding: 22px;
+      overflow-y: auto;
+      background: #fbfcfd;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 16px;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: min(78%, 620px);
+      padding: 13px 15px;
+      border-radius: 16px;
+      line-height: 1.65;
+      white-space: pre-line;
+    }
+
+    .message.agent .bubble {
+      background: white;
+      border: 1px solid var(--line);
+      border-top-left-radius: 5px;
+    }
+
+    .message.user .bubble {
+      color: white;
+      background: var(--accent);
+      border-top-right-radius: 5px;
+    }
+
+    .message.system .bubble {
+      width: 100%;
+      max-width: none;
+      color: var(--muted);
+      background: var(--soft);
+      border: 1px dashed var(--line);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .thinking-bubble {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+    }
+
+    .thinking-dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .thinking-dots span {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: thinking-pulse 1s infinite ease-in-out;
+    }
+
+    .thinking-dots span:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+
+    .thinking-dots span:nth-child(3) {
+      animation-delay: 0.32s;
+    }
+
+    .account-card {
+      margin: 4px 0 18px;
+      padding: 16px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .service-card {
+      margin: 4px 0 18px;
+      padding: 16px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .service-card h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+    }
+
+    .service-card > p {
+      margin: 0 0 13px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .service-options {
+      display: grid;
+      gap: 9px;
+    }
+
+    .service-option {
+      width: 100%;
+      padding: 13px;
+      color: var(--ink);
+      background: var(--soft);
+      border: 1px solid transparent;
+      border-radius: 11px;
+      text-align: left;
+    }
+
+    .service-option:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .service-name {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 800;
+    }
+
+    .service-meta {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .account-card h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+    }
+
+    .account-card > p {
+      margin: 0 0 13px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .account-options {
+      display: grid;
+      gap: 9px;
+    }
+
+    .account-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      padding: 12px;
+      color: var(--ink);
+      background: var(--soft);
+      border: 1px solid transparent;
+      border-radius: 11px;
+      text-align: left;
+    }
+
+    .account-option.selected {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .account-name {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 800;
+    }
+
+    .account-source {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .account-verified {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .account-pending {
+      color: var(--warning);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .new-account-form {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr auto;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .new-account-form input {
+      min-width: 0;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    @keyframes thinking-pulse {
+      0%, 70%, 100% {
+        opacity: 0.28;
+        transform: translateY(0);
+      }
+      35% {
+        opacity: 1;
+        transform: translateY(-3px);
+      }
+    }
+
+    .composer {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .composer input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .composer input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.12);
+    }
+
+    .primary,
+    .secondary,
+    .danger,
+    .ghost {
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      font-weight: 750;
+    }
+
+    .primary {
+      color: white;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .secondary {
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid #b7ddd5;
+    }
+
+    .danger {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border: 1px solid #fecdca;
+    }
+
+    .ghost {
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+
+    .state-panel {
+      overflow: hidden;
+    }
+
+    .state-body {
+      padding: 18px;
+    }
+
+    .stage {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 13px;
+      background: var(--accent-soft);
+      border-radius: 12px;
+    }
+
+    .stage-index {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      color: white;
+      background: var(--accent);
+      border-radius: 50%;
+      font-weight: 800;
+    }
+
+    .stage-name {
+      font-weight: 800;
+    }
+
+    .state-section {
+      margin-top: 18px;
+    }
+
+    .state-section h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .facts {
+      display: grid;
+      gap: 8px;
+    }
+
+    .fact,
+    .credential {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 12px;
+      background: var(--soft);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .fact span:first-child,
+    .credential span:first-child {
+      color: var(--muted);
+    }
+
+    .credential-status {
+      font-weight: 800;
+    }
+
+    .credential-status.available,
+    .credential-status.granted,
+    .credential-status.eligible,
+    .credential-status.submitted {
+      color: var(--accent);
+    }
+
+    .credential-status.denied,
+    .credential-status.blocked {
+      color: var(--danger);
+    }
+
+    .credential-status.pending {
+      color: var(--warning);
+    }
+
+    .last-change {
+      margin-top: 16px;
+      padding: 12px;
+      color: var(--muted);
+      background: #f8fafc;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 9px 9px 0;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .controls,
+    .walkthroughs {
+      margin-top: 18px;
+      padding: 20px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .section-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .button-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+
+    .tab {
+      padding: 9px 12px;
+      color: var(--muted);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: white;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .walkthrough-description {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .step {
+      position: relative;
+      min-height: 88px;
+      padding: 14px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      text-align: left;
+    }
+
+    .step.current {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.1);
+    }
+
+    .step.complete {
+      color: var(--muted);
+      background: var(--soft);
+    }
+
+    .step-number {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .audit {
+      margin-top: 18px;
+      padding: 20px;
+    }
+
+    .audit-list {
+      display: grid;
+      gap: 8px;
+      max-height: 230px;
+      overflow-y: auto;
+    }
+
+    .audit-entry {
+      display: grid;
+      grid-template-columns: 72px 120px 1fr;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .audit-entry:last-child {
+      border-bottom: 0;
+    }
+
+    .audit-time,
+    .audit-actor {
+      color: var(--muted);
+    }
+
+    @media (max-width: 920px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .state-panel {
+        order: -1;
+      }
+
+      .chat {
+        height: 430px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        width: min(100% - 20px, 1440px);
+        padding-top: 18px;
+      }
+
+      .agent-header,
+      .state-header,
+      .controls,
+      .walkthroughs,
+      .audit {
+        padding: 15px;
+      }
+
+      .trust-badge {
+        display: none;
+      }
+
+      .bubble {
+        max-width: 90%;
+      }
+
+      .composer {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .audit-entry {
+        grid-template-columns: 64px 1fr;
+      }
+
+      .audit-entry div:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="prototype-banner">拋棄式流程原型 · 不連接真實政府系統</div>
+    <h1>政府服務 AI Agent</h1>
+    <p class="intro">
+      這個原型要回答的問題是：
+      <span class="question">民眾能否透過一次對話，清楚理解補助、授權必要資料、確認申請內容，並保有最後送件控制權？</span>
+      第一版使用「新生兒與育兒補助」情境，所有資料只存在瀏覽器記憶體中。
+    </p>
+
+    <section class="workspace">
+      <div class="panel agent-panel">
+        <header class="agent-header">
+          <div class="agent-identity">
+            <div class="seal">政</div>
+            <div>
+              <h2 class="agent-title">政府服務小幫手</h2>
+              <p class="agent-subtitle">整合服務說明、資格檢查與申請草稿</p>
+            </div>
+          </div>
+          <div id="backendBadge" class="trust-badge">正在連接 Agent 後端…</div>
+        </header>
+
+        <div id="chat" class="chat" aria-live="polite"></div>
+
+        <form id="composer" class="composer">
+          <input
+            id="questionInput"
+            value="我剛生小孩，有哪些補助可以申請？"
+            aria-label="輸入政府服務問題"
+          >
+          <button class="primary" type="submit">送出問題</button>
+        </form>
+      </div>
+
+      <aside class="panel state-panel">
+        <header class="state-header">
+          <h2 class="state-title">目前流程狀態</h2>
+          <button id="resetTop" class="ghost" type="button">重新開始</button>
+        </header>
+        <div id="stateBody" class="state-body"></div>
+      </aside>
+    </section>
+
+    <section class="panel controls">
+      <div class="section-heading">
+        <h2>自由操作</h2>
+        <p>故意跳步也可以，觀察系統是否正確阻擋。</p>
+      </div>
+      <div id="freePlay" class="button-grid"></div>
+    </section>
+
+    <section class="panel walkthroughs">
+      <div class="section-heading">
+        <h2>引導情境</h2>
+        <p>每個情境開始時都會回到相同初始狀態。</p>
+      </div>
+      <div id="tabs" class="tabs"></div>
+      <p id="walkthroughDescription" class="walkthrough-description"></p>
+      <div id="steps" class="steps"></div>
+    </section>
+
+    <section class="panel audit">
+      <div class="section-heading">
+        <h2>操作與授權紀錄</h2>
+        <p>讓民眾知道誰在什麼時候做了什麼。</p>
+      </div>
+      <div id="auditList" class="audit-list"></div>
+    </section>
+  </main>
+
+  <script>
+    // Portable state machine: no DOM access. This is the part intended to survive the prototype.
+    const CitizenServiceFlow = (() => {
+      const stages = [
+        "等待民眾提問",
+        "理解需求",
+        "推薦可申請服務",
+        "等待資料授權",
+        "取得必要證據",
+        "完成資格判斷",
+        "等待民眾確認",
+        "申請已送出"
+      ];
+
+      const initialState = () => ({
+        stage: 0,
+        question: "",
+        candidateServices: [],
+        selectedService: null,
+        noServiceMatch: false,
+        consent: "not_requested",
+        credentials: {},
+        eligibility: "not_checked",
+        draft: null,
+        citizenConfirmed: false,
+        application: null,
+        bankAccounts: [
+          {
+            id: "bank-labor",
+            bank: "臺灣銀行",
+            maskedNumber: "•••• 1234",
+            source: "勞保給付帳戶",
+            verified: true
+          },
+          {
+            id: "bank-tax",
+            bank: "中華郵政",
+            maskedNumber: "•••• 5678",
+            source: "綜合所得稅退稅帳戶",
+            verified: true
+          }
+        ],
+        selectedBankAccountId: null,
+        messages: [
+          {
+            actor: "agent",
+            text: "您好，我可以協助您找出適用的政府服務、說明需要哪些資料，並在您確認後建立申請。請先告訴我最近發生了什麼事。"
+          }
+        ],
+        audit: [],
+        lastChange: "尚未開始。民眾可以直接輸入問題，或使用下方引導情境。"
+      });
+
+      function now() {
+        return new Date().toLocaleTimeString("zh-TW", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+      }
+
+      function appendAudit(state, actor, action, detail) {
+        return {
+          ...state,
+          audit: [...state.audit, { time: now(), actor, action, detail }]
+        };
+      }
+
+      function addMessage(state, actor, text) {
+        return {
+          ...state,
+          messages: [...state.messages, { actor, text }]
+        };
+      }
+
+      function reject(state, reason) {
+        let next = addMessage(state, "system", `此操作目前不可執行：${reason}`);
+        next = appendAudit(next, "系統", "阻擋操作", reason);
+        return { ...next, lastChange: `操作被阻擋：${reason}` };
+      }
+
+      function transition(state, action) {
+        switch (action.type) {
+          case "RESET":
+            return initialState();
+
+          case "ASK_QUESTION": {
+            const question = (action.question || "").trim();
+            if (!question) return reject(state, "請先輸入問題。");
+            let next = initialState();
+            next = {
+              ...next,
+              stage: 1,
+              question,
+              messages: [
+                ...next.messages,
+                { actor: "user", text: question }
+              ],
+              lastChange: "Agent 正在理解民眾描述，尚未存取任何政府資料。"
+            };
+            return appendAudit(next, "民眾", "提出問題", question);
+          }
+
+          case "ANALYZE_QUESTION": {
+            let next = addMessage(
+              state,
+              "agent",
+              "了解。這看起來是「新生兒」人生事件。我會先整理可能適用的服務，目前不會調閱任何個人資料。"
+            );
+            return {
+              ...next,
+              lastChange: "Agent 只分析了民眾描述，尚未存取政府資料。"
+            };
+          }
+
+          case "USER_MESSAGE": {
+            const text = (action.text || "").trim();
+            if (!text) return state;
+            return addMessage(state, "user", text);
+          }
+
+          case "FIND_SERVICES": {
+            if (state.stage < 1) return reject(state, "需要先知道民眾想處理什麼問題。");
+            if (state.candidateServices.length) return reject(state, "適用服務已經整理完成。");
+            let next = {
+              ...state,
+              stage: 2,
+              candidateServices: [
+                {
+                  id: "childcare-benefit-2026",
+                  name: "育兒生活補助",
+                  agency: "社會福利主管機關",
+                  estimatedAmount: "每月 5,000 元",
+                  summary: "依家庭與設籍條件提供定期育兒支持。",
+                  evidence: [
+                    { id: "identity", label: "身分有效" },
+                    { id: "residency", label: "設籍地" },
+                    { id: "relationship", label: "親子關係" },
+                    { id: "income", label: "所得級距" }
+                  ]
+                },
+                {
+                  id: "birth-payment-2026",
+                  name: "生育一次性給付",
+                  agency: "社會保險主管機關",
+                  estimatedAmount: "一次性 30,000 元",
+                  summary: "依投保與生育事實提供一次性給付。",
+                  evidence: [
+                    { id: "identity", label: "身分有效" },
+                    { id: "relationship", label: "親子關係" },
+                    { id: "insurance", label: "社會保險資格" }
+                  ]
+                },
+                {
+                  id: "care-service-2026",
+                  name: "托育服務補助",
+                  agency: "托育服務主管機關",
+                  estimatedAmount: "每月最高 7,000 元",
+                  summary: "使用合格托育服務時提供費用補助。",
+                  evidence: [
+                    { id: "identity", label: "身分有效" },
+                    { id: "residency", label: "設籍地" },
+                    { id: "relationship", label: "親子關係" },
+                    { id: "enrollment", label: "托育服務登記" }
+                  ]
+                }
+              ],
+              lastChange: "找到三項可能適用的服務，正在等待民眾選擇。"
+            };
+            next = addMessage(
+              next,
+              "agent",
+              "我找到 3 項可能適用的服務。請選擇想先了解或申請的項目；不同服務會使用不同的資格條件與資料。"
+            );
+            return appendAudit(next, "Agent", "推薦服務", "找到 3 項可能適用服務");
+          }
+
+          case "SELECT_SERVICE": {
+            const service = state.candidateServices.find(item => item.id === action.serviceId);
+            if (!service) return reject(state, "找不到指定的政府服務。");
+            const credentials = Object.fromEntries(service.evidence.map(item => [item.id, "locked"]));
+            let next = {
+              ...state,
+              selectedService: service,
+              credentials,
+              lastChange: `民眾選擇「${service.name}」，接下來只會要求這項服務需要的資料。`
+            };
+            next = addMessage(next, "user", action.utterance || `我想先申請「${service.name}」。`);
+            next = addMessage(
+              next,
+              "agent",
+              `好的，先處理「${service.name}」，預估補助為${service.estimatedAmount}。`
+            );
+            return appendAudit(next, "民眾", "選擇政府服務", service.name);
+          }
+
+          case "REQUEST_CONSENT": {
+            if (state.stage < 2) return reject(state, "需要先選定要檢查的政府服務。");
+            if (!state.selectedService) return reject(state, "請先選擇一項政府服務。");
+            if (state.consent === "granted") return reject(state, "民眾已經授權，不需要重複要求。");
+            let next = {
+              ...state,
+              stage: 3,
+              consent: "pending",
+              lastChange: "Agent 已列出用途與資料範圍，正在等待民眾決定。"
+            };
+            next = addMessage(
+              next,
+              "agent",
+              `為了檢查資格，我需要一次性讀取以下結果：\n• ${state.selectedService.evidence.map(item => item.label).join("\n• ")}\n\n我只會取得資格判斷需要的結果，不會把完整原始資料提供給對話模型。是否同意？`
+            );
+            return appendAudit(next, "Agent", "請求資料授權", `用途：${state.selectedService.name}資格檢查`);
+          }
+
+          case "GRANT_CONSENT": {
+            if (state.consent !== "pending") return reject(state, "目前沒有等待中的授權請求。");
+            let next = {
+              ...state,
+              consent: "granted",
+              lastChange: `民眾同意${state.selectedService.name}資格檢查所需的最小資料範圍。`
+            };
+            next = addMessage(next, "user", action.utterance || "我同意這次資格檢查使用上述資料。");
+            return appendAudit(next, "民眾", "授予資料存取", `一次性、限${state.selectedService.name}資格檢查`);
+          }
+
+          case "DENY_CONSENT": {
+            if (state.consent !== "pending") return reject(state, "目前沒有等待中的授權請求。");
+            let next = {
+              ...state,
+              consent: "denied",
+              eligibility: "blocked",
+              lastChange: "民眾拒絕授權；Agent 保留服務說明，但停止資格檢查。"
+            };
+            next = addMessage(next, "user", action.utterance || "我不同意調閱資料，請只告訴我申請條件。");
+            next = addMessage(
+              next,
+              "agent",
+              "沒問題。我不會調閱資料，也不會進行自動資格判斷。您仍可查看申請條件，或改用人工準備文件。"
+            );
+            return appendAudit(next, "民眾", "拒絕資料存取", "未調閱任何資料");
+          }
+
+          case "FETCH_CREDENTIALS": {
+            if (state.consent !== "granted") return reject(state, "必須先取得民眾明確授權。");
+            const credentials = Object.fromEntries(
+              Object.keys(state.credentials).map(key => [key, "available"])
+            );
+            const next = {
+              ...state,
+              stage: 4,
+              credentials,
+              lastChange: `已取得${Object.keys(credentials).length}項最小化證據結果；憑證細節留待下一版設計。`
+            };
+            return appendAudit(next, "Credential Vault", "提供最小化證據", `${Object.keys(credentials).length} 項證據皆可驗證`);
+          }
+
+          case "CHECK_ELIGIBILITY": {
+            const allAvailable = Object.values(state.credentials).every(value => value === "available");
+            if (!allAvailable) return reject(state, "必要證據尚未齊全。");
+            let next = {
+              ...state,
+              stage: 5,
+              eligibility: "eligible",
+              lastChange: "確定性規則引擎判定符合資格；不是由語言模型自行猜測。"
+            };
+            next = addMessage(
+              next,
+              "agent",
+              `資格檢查完成：您目前符合「${state.selectedService.name}」條件。\n\n判斷依據：${state.selectedService.evidence.map(item => item.label).join("、")}皆符合。`
+            );
+            return appendAudit(next, "規則引擎", "資格判斷", "符合；規則版本 2026.08");
+          }
+
+          case "CREATE_DRAFT": {
+            if (state.eligibility !== "eligible") return reject(state, "需要先完成資格判斷。");
+            let next = {
+              ...state,
+              stage: 6,
+              draft: {
+                service: state.selectedService.name,
+                applicant: "Demo 民眾",
+                child: "Demo 新生兒",
+                paymentAccount: "尚未選擇",
+                evidenceCount: state.selectedService.evidence.length,
+                status: "等待確認"
+              },
+              citizenConfirmed: false,
+              lastChange: "申請草稿已建立，但 Agent 沒有送件權限。"
+            };
+            next = addMessage(
+              next,
+              "agent",
+              "申請草稿已完成。請選擇一個曾向政府機關登記並驗證過的入帳帳戶，或新增其他帳戶。\n\n只有完成帳戶選擇並由您確認後，系統才可以送件。"
+            );
+            return appendAudit(next, "Agent", "建立申請草稿", "尚未送件");
+          }
+
+          case "SELECT_BANK_ACCOUNT": {
+            if (!state.draft) return reject(state, "需要先建立申請草稿。");
+            const account = state.bankAccounts.find(item => item.id === action.accountId);
+            if (!account) return reject(state, "找不到指定的入帳帳戶。");
+            let next = {
+              ...state,
+              selectedBankAccountId: account.id,
+              draft: {
+                ...state.draft,
+                paymentAccount: `${account.bank} ${account.maskedNumber}（登記於${account.source}）`
+              },
+              lastChange: `已選擇${account.bank}帳戶，來源為${account.source}。`
+            };
+            next = addMessage(
+              next,
+              "user",
+              action.utterance || `我要使用${account.bank} ${account.maskedNumber} 作為入帳帳戶。`
+            );
+            next = addMessage(
+              next,
+              "agent",
+              `您選擇的是 ${account.bank} ${account.maskedNumber}，這個帳戶曾登記於「${account.source}」。\n\n是否確認使用這個帳戶收取「${state.selectedService.name}」？確認後我會送出申請。`
+            );
+            return appendAudit(next, "民眾", "選擇入帳帳戶", `${account.bank}；來源：${account.source}`);
+          }
+
+          case "ADD_BANK_ACCOUNT": {
+            if (!state.draft) return reject(state, "需要先建立申請草稿。");
+            const bank = (action.bank || "").trim();
+            const number = (action.number || "").replace(/\s/g, "");
+            if (!bank || number.length < 6) return reject(state, "請輸入銀行名稱與完整帳號。");
+            const account = {
+              id: `bank-new-${Date.now()}`,
+              bank,
+              maskedNumber: `•••• ${number.slice(-4)}`,
+              source: "本次由民眾新增",
+              verified: false
+            };
+            let next = {
+              ...state,
+              bankAccounts: [...state.bankAccounts, account],
+              selectedBankAccountId: account.id,
+              draft: {
+                ...state.draft,
+                paymentAccount: `${account.bank} ${account.maskedNumber}（等待驗證）`
+              },
+              lastChange: "已新增帳戶，但完成帳戶持有人驗證前不能送件。"
+            };
+            next = addMessage(next, "user", `我要改用新的${bank}帳戶 ${account.maskedNumber}。`);
+            next = addMessage(next, "agent", "新帳戶尚未在其他政府服務中驗證。請先完成帳戶持有人驗證，才能用於本次申請。");
+            return appendAudit(next, "民眾", "新增入帳帳戶", `${bank}；等待驗證`);
+          }
+
+          case "VERIFY_BANK_ACCOUNT": {
+            const account = state.bankAccounts.find(item => item.id === state.selectedBankAccountId);
+            if (!account || account.verified) return reject(state, "目前沒有等待驗證的新帳戶。");
+            const bankAccounts = state.bankAccounts.map(item =>
+              item.id === account.id
+                ? { ...item, verified: true, source: "本次申請完成帳戶持有人驗證" }
+                : item
+            );
+            let next = {
+              ...state,
+              bankAccounts,
+              draft: {
+                ...state.draft,
+                paymentAccount: `${account.bank} ${account.maskedNumber}（本次已驗證）`
+              },
+              lastChange: "新帳戶已完成模擬持有人驗證，可以用於本次申請。"
+            };
+            next = addMessage(
+              next,
+              "agent",
+              `帳戶持有人驗證完成。您選擇的是 ${account.bank} ${account.maskedNumber}。\n\n是否確認使用這個帳戶收取「${state.selectedService.name}」？確認後我會送出申請。`
+            );
+            return appendAudit(next, "帳戶驗證服務", "驗證新帳戶", `${account.bank} ${account.maskedNumber}`);
+          }
+
+          case "CONFIRM_APPLICATION": {
+            if (!state.draft) return reject(state, "目前沒有可以確認的申請草稿。");
+            const account = state.bankAccounts.find(item => item.id === state.selectedBankAccountId);
+            if (!account) return reject(state, "請先選擇入帳帳戶。");
+            if (!account.verified) return reject(state, "新帳戶尚未完成持有人驗證。");
+            let next = {
+              ...state,
+              citizenConfirmed: true,
+              draft: {
+                ...state.draft,
+                status: "民眾已確認"
+              },
+              lastChange: "民眾已確認草稿內容與入帳帳戶，現在才具備送件條件。"
+            };
+            next = addMessage(next, "user", action.utterance || "確認，請使用這個帳戶並送出申請。");
+            return appendAudit(next, "民眾", "確認申請內容", "允許送出此一申請");
+          }
+
+          case "SUBMIT_APPLICATION": {
+            if (!state.draft) return reject(state, "必須先建立申請草稿。");
+            if (!state.citizenConfirmed) return reject(state, "Agent 不得在民眾確認前送件。");
+            let next = {
+              ...state,
+              stage: 7,
+              application: {
+                id: "APP-2026-0829-001",
+                status: "已收件",
+                submittedAt: now()
+              },
+              draft: {
+                ...state.draft,
+                status: "已送出"
+              },
+              lastChange: "申請已送出，並產生可追蹤的案件編號。"
+            };
+            next = addMessage(
+              next,
+              "agent",
+              "申請已成功送出。\n案件編號：APP-2026-0829-001\n目前狀態：已收件\n\n您可以在這個對話中繼續查詢進度。"
+            );
+            return appendAudit(next, "政府服務 API", "受理申請", "APP-2026-0829-001");
+          }
+
+          case "REVOKE_CONSENT": {
+            if (state.consent !== "granted") return reject(state, "目前沒有可撤回的有效授權。");
+            const credentials = Object.fromEntries(
+              Object.keys(state.credentials).map(key => [key, "locked"])
+            );
+            let next = {
+              ...state,
+              consent: "revoked",
+              credentials,
+              lastChange: state.application
+                ? "授權已撤回，後續不得再次調閱；已送出的案件與稽核紀錄仍保留。"
+                : "授權已撤回，暫存證據不可再使用。"
+            };
+            next = addMessage(next, "user", action.utterance || "我要撤回剛才的資料授權。");
+            next = addMessage(next, "agent", "資料授權已撤回。我不會再使用這次取得的證據；法定案件紀錄不受影響。");
+            return appendAudit(next, "民眾", "撤回資料授權", "後續禁止再次調閱");
+          }
+
+          default:
+            return reject(state, "未知操作。");
+        }
+      }
+
+      return { initialState, transition, stages };
+    })();
+
+    const actions = [
+      { type: "FIND_SERVICES", label: "民眾：有哪些可以申請？", utterance: "請幫我看看有哪些補助可以申請。", style: "secondary" },
+      { type: "REQUEST_CONSENT", label: "Agent：說明需要哪些授權", style: "secondary" },
+      { type: "GRANT_CONSENT", label: "民眾：我同意授權", utterance: "我同意這次資格檢查使用上述資料。", style: "primary" },
+      { type: "DENY_CONSENT", label: "民眾：我不同意", utterance: "我不同意調閱資料，請只告訴我申請條件。", style: "danger" },
+      { type: "FETCH_CREDENTIALS", label: "Agent：取得必要證據", style: "secondary" },
+      { type: "CHECK_ELIGIBILITY", label: "民眾：我符合資格嗎？", utterance: "資料都取得了，我符合資格嗎？", style: "secondary" },
+      { type: "CREATE_DRAFT", label: "民眾：幫我準備草稿", utterance: "如果符合，請幫我準備申請草稿。", style: "secondary" },
+      { type: "CONFIRM_APPLICATION", label: "民眾：我確認內容", utterance: "我已確認申請內容與入帳帳戶，可以送出。", style: "primary" },
+      { type: "SUBMIT_APPLICATION", label: "Agent：正式送件", style: "primary" },
+      { type: "REVOKE_CONSENT", label: "民眾：撤回資料授權", utterance: "我要撤回剛才的資料授權。", style: "danger" }
+    ];
+
+    const walkthroughs = [
+      {
+        id: "happy",
+        title: "完整申請",
+        description: "觀察 Agent 如何從服務說明走到最小授權、資格判斷、民眾確認與正式送件。",
+        steps: [
+          { type: "ASK_QUESTION", question: "我剛生小孩，有哪些補助可以申請？", label: "「我剛生小孩，有哪些補助？」" },
+          { type: "SELECT_SERVICE", serviceId: "childcare-benefit-2026", utterance: "我想先申請育兒生活補助。", label: "選擇「育兒生活補助」" },
+          { type: "GRANT_CONSENT", utterance: "我同意這次資格檢查使用上述資料。", label: "「我同意這次資料授權」" },
+          { type: "CREATE_DRAFT", utterance: "如果符合，請幫我準備申請草稿。", label: "「請幫我準備申請草稿」" },
+          { type: "SELECT_BANK_ACCOUNT", accountId: "bank-labor", utterance: "我要使用臺灣銀行末四碼 1234 的帳戶。", label: "選擇已登記的臺灣銀行帳戶" },
+          { type: "CONFIRM_APPLICATION", utterance: "確認，請使用這個帳戶並送出申請。", label: "「確認，使用這個帳戶送出」" }
+        ]
+      },
+      {
+        id: "deny",
+        title: "拒絕資料授權",
+        description: "民眾拒絕時，Agent 應停止調閱與資格判斷，但仍提供一般服務說明。",
+        steps: [
+          { type: "ASK_QUESTION", question: "我剛生小孩，有哪些補助可以申請？", label: "「我剛生小孩，有哪些補助？」" },
+          { type: "SELECT_SERVICE", serviceId: "childcare-benefit-2026", utterance: "我想先申請育兒生活補助。", label: "選擇「育兒生活補助」" },
+          { type: "DENY_CONSENT", utterance: "我不同意調閱資料，請只告訴我申請條件。", label: "「我不同意調閱資料」" },
+          { type: "FETCH_CREDENTIALS", label: "Agent 嘗試調閱資料" }
+        ]
+      },
+      {
+        id: "illegal-submit",
+        title: "阻擋未確認送件",
+        description: "即使資格符合且草稿完成，Agent 也不能代替民眾完成最後確認。",
+        steps: [
+          { type: "ASK_QUESTION", question: "請幫我申請育兒補助。", label: "「請幫我申請育兒補助」" },
+          { type: "SELECT_SERVICE", serviceId: "childcare-benefit-2026", utterance: "我要申請育兒生活補助。", label: "選擇「育兒生活補助」" },
+          { type: "GRANT_CONSENT", utterance: "我同意為了這次申請調閱必要資料。", label: "「我同意資料調閱」" },
+          { type: "CREATE_DRAFT", utterance: "符合的話就幫我建立申請草稿。", label: "「幫我建立申請草稿」" },
+          { type: "SELECT_BANK_ACCOUNT", accountId: "bank-tax", utterance: "我要使用郵局末四碼 5678 的帳戶。", label: "選擇已登記的郵局帳戶" },
+          { type: "SUBMIT_APPLICATION", utterance: "不用再讓我確認，直接幫我送出。", label: "「不用確認，直接送出」" }
+        ]
+      }
+    ];
+
+    let state = CitizenServiceFlow.initialState();
+    let activeWalkthrough = walkthroughs[0];
+    let walkthroughStep = 0;
+    let isThinking = false;
+    let thinkingText = "";
+    let backendMode = false;
+    let backendSessionId = null;
+
+    const chat = document.querySelector("#chat");
+    const stateBody = document.querySelector("#stateBody");
+    const freePlay = document.querySelector("#freePlay");
+    const tabs = document.querySelector("#tabs");
+    const steps = document.querySelector("#steps");
+    const walkthroughDescription = document.querySelector("#walkthroughDescription");
+    const auditList = document.querySelector("#auditList");
+    const composer = document.querySelector("#composer");
+    const questionInput = document.querySelector("#questionInput");
+    const backendBadge = document.querySelector("#backendBadge");
+
+    const thinkingMessages = {
+      ASK_QUESTION: "正在理解您的問題與人生事件…",
+      FIND_SERVICES: "正在查詢跨機關服務目錄…",
+      REQUEST_CONSENT: "正在整理本次需要的最小資料範圍…",
+      FETCH_CREDENTIALS: "正在向憑證保管庫取得已授權的必要證據…",
+      CHECK_ELIGIBILITY: "正在依規則版本 2026.08 檢查資格…",
+      CREATE_DRAFT: "正在整理申請欄位與證據…",
+      SUBMIT_APPLICATION: "正在確認授權狀態並送出申請…"
+    };
+
+    function completeAction(action, fromWalkthrough) {
+      state = CitizenServiceFlow.transition(state, action);
+      if (fromWalkthrough) walkthroughStep += 1;
+      isThinking = false;
+      thinkingText = "";
+      render();
+    }
+
+    function dispatch(action, fromWalkthrough = false) {
+      if (isThinking) return;
+
+      if (backendMode && backendRequest(action)) {
+        dispatchBackend(action, fromWalkthrough);
+        return;
+      }
+
+      if (action.type === "ASK_QUESTION") {
+        state = CitizenServiceFlow.transition(state, action);
+        isThinking = true;
+        thinkingText = thinkingMessages.ASK_QUESTION;
+        render();
+        window.setTimeout(() => {
+          state = CitizenServiceFlow.transition(state, { type: "ANALYZE_QUESTION" });
+          thinkingText = thinkingMessages.FIND_SERVICES;
+          render();
+
+          window.setTimeout(() => {
+            state = CitizenServiceFlow.transition(state, { type: "FIND_SERVICES" });
+            if (fromWalkthrough) walkthroughStep += 1;
+            isThinking = false;
+            thinkingText = "";
+            render();
+          }, 1200);
+        }, 900);
+        return;
+      }
+
+      if (action.type === "SELECT_SERVICE") {
+        state = CitizenServiceFlow.transition(state, action);
+        if (!state.selectedService) {
+          render();
+          return;
+        }
+
+        isThinking = true;
+        thinkingText = thinkingMessages.REQUEST_CONSENT;
+        render();
+
+        window.setTimeout(() => {
+          state = CitizenServiceFlow.transition(state, { type: "REQUEST_CONSENT" });
+          if (fromWalkthrough) walkthroughStep += 1;
+          isThinking = false;
+          thinkingText = "";
+          render();
+        }, 900);
+        return;
+      }
+
+      if (action.type === "GRANT_CONSENT") {
+        state = CitizenServiceFlow.transition(state, action);
+        if (state.consent !== "granted") {
+          render();
+          return;
+        }
+
+        isThinking = true;
+        thinkingText = thinkingMessages.FETCH_CREDENTIALS;
+        render();
+
+        window.setTimeout(() => {
+          state = CitizenServiceFlow.transition(state, { type: "FETCH_CREDENTIALS" });
+          thinkingText = thinkingMessages.CHECK_ELIGIBILITY;
+          render();
+
+          window.setTimeout(() => {
+            state = CitizenServiceFlow.transition(state, { type: "CHECK_ELIGIBILITY" });
+            if (fromWalkthrough) walkthroughStep += 1;
+            isThinking = false;
+            thinkingText = "";
+            render();
+          }, 1200);
+        }, 1200);
+        return;
+      }
+
+      if (action.type === "CONFIRM_APPLICATION") {
+        state = CitizenServiceFlow.transition(state, action);
+        if (!state.citizenConfirmed) {
+          render();
+          return;
+        }
+
+        isThinking = true;
+        thinkingText = thinkingMessages.SUBMIT_APPLICATION;
+        render();
+
+        window.setTimeout(() => {
+          state = CitizenServiceFlow.transition(state, { type: "SUBMIT_APPLICATION" });
+          if (fromWalkthrough) walkthroughStep += 1;
+          isThinking = false;
+          thinkingText = "";
+          render();
+        }, 1200);
+        return;
+      }
+
+      const isCitizenAction = ["GRANT_CONSENT", "DENY_CONSENT", "CONFIRM_APPLICATION", "REVOKE_CONSENT"].includes(action.type);
+      if (action.utterance && !isCitizenAction) {
+        state = CitizenServiceFlow.transition(state, {
+          type: "USER_MESSAGE",
+          text: action.utterance
+        });
+      }
+
+      const message = thinkingMessages[action.type];
+      if (message) {
+        isThinking = true;
+        thinkingText = message;
+        render();
+        window.setTimeout(() => completeAction(action, fromWalkthrough), 900);
+        return;
+      }
+
+      completeAction(action, fromWalkthrough);
+    }
+
+    function backendRequest(action) {
+      const mapping = {
+        MODEL_MESSAGE: {
+          action: null,
+          message: action.utterance || ""
+        },
+        ASK_QUESTION: {
+          action: "ask_question",
+          message: action.question || action.utterance || ""
+        },
+        SELECT_SERVICE: {
+          action: "select_service",
+          message: action.utterance || "",
+          payload: { serviceId: action.serviceId }
+        },
+        GRANT_CONSENT: {
+          action: "grant_consent",
+          message: action.utterance || ""
+        },
+        DENY_CONSENT: {
+          action: "deny_consent",
+          message: action.utterance || ""
+        },
+        CREATE_DRAFT: {
+          action: "create_draft",
+          message: action.utterance || ""
+        },
+        SELECT_BANK_ACCOUNT: {
+          action: "select_bank_account",
+          message: action.utterance || "",
+          payload: { accountId: action.accountId }
+        },
+        ADD_BANK_ACCOUNT: {
+          action: "add_bank_account",
+          payload: { bank: action.bank, number: action.number }
+        },
+        VERIFY_BANK_ACCOUNT: {
+          action: "verify_bank_account"
+        },
+        CONFIRM_APPLICATION: {
+          action: "confirm_and_submit",
+          message: action.utterance || ""
+        }
+      };
+      return mapping[action.type] || null;
+    }
+
+    async function dispatchBackend(action, fromWalkthrough) {
+      const request = backendRequest(action);
+      if (!request) return;
+
+      const previewAction = action.type === "MODEL_MESSAGE"
+        ? { type: "USER_MESSAGE", text: action.utterance }
+        : action.type === "ASK_QUESTION"
+          ? { type: "ASK_QUESTION", question: action.question || action.utterance }
+          : action;
+      state = CitizenServiceFlow.transition(state, previewAction);
+      isThinking = true;
+      thinkingText = {
+        ASK_QUESTION: "正在理解問題並查詢跨機關服務…",
+        SELECT_SERVICE: "正在整理本次需要的最小資料範圍…",
+        GRANT_CONSENT: "正在取得必要證據並執行資格規則…",
+        CREATE_DRAFT: "正在建立申請草稿…",
+        SELECT_BANK_ACCOUNT: "正在核對帳戶登記來源…",
+        ADD_BANK_ACCOUNT: "正在建立新帳戶驗證程序…",
+        VERIFY_BANK_ACCOUNT: "正在驗證帳戶持有人…",
+        CONFIRM_APPLICATION: "正在確認授權狀態並送出申請…",
+        MODEL_MESSAGE: "正在理解您的意思並規劃下一步…"
+      }[action.type] || "正在處理…";
+      render();
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: backendSessionId,
+            message: request.message || "",
+            action: request.action,
+            payload: request.payload || {}
+          })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Agent backend request failed");
+        state = mapBackendState(payload);
+        if (fromWalkthrough) walkthroughStep += 1;
+      } catch (error) {
+        state = CitizenServiceFlow.transition(state, {
+          type: "USER_MESSAGE",
+          text: `後端錯誤：${error.message}`
+        });
+      } finally {
+        isThinking = false;
+        thinkingText = "";
+        render();
+      }
+    }
+
+    function mapBackendState(payload) {
+      const stageByState = {
+        awaiting_question: 0,
+        awaiting_service: 2,
+        awaiting_consent: 3,
+        eligible: 5,
+        ineligible: 5,
+        awaiting_account: 6,
+        awaiting_confirmation: 6,
+        submitted: 7
+      };
+      const latestAudit = payload.audit[payload.audit.length - 1];
+      return {
+        stage: stageByState[payload.state] ?? 0,
+        question: payload.question,
+        noServiceMatch: payload.no_service_match,
+        candidateServices: payload.candidate_services,
+        selectedService: payload.selected_service,
+        consent: payload.consent,
+        credentials: payload.evidence,
+        eligibility: payload.eligibility,
+        draft: payload.draft,
+        citizenConfirmed: payload.state === "submitted",
+        application: payload.application,
+        bankAccounts: payload.bankAccounts,
+        selectedBankAccountId: payload.selected_bank_account_id,
+        messages: payload.messages,
+        audit: payload.audit,
+        lastChange: latestAudit
+          ? `${latestAudit.action}：${latestAudit.detail}`
+          : "後端 session 已建立，等待民眾提問。"
+      };
+    }
+
+    function statusLabel(status) {
+      const labels = {
+        locked: "未授權",
+        available: "已取得",
+        not_requested: "尚未請求",
+        pending: "等待決定",
+        granted: "已同意",
+        denied: "已拒絕",
+        revoked: "已撤回",
+        not_checked: "尚未判斷",
+        blocked: "無法判斷",
+        eligible: "符合資格"
+      };
+      return labels[status] || status;
+    }
+
+    function renderChat() {
+      const messages = state.messages.map(message => `
+        <div class="message ${message.actor}">
+          <div class="bubble">${escapeHtml(message.text)}</div>
+        </div>
+      `).join("");
+
+      const thinking = isThinking ? `
+        <div class="message agent">
+          <div class="bubble thinking-bubble">
+            <span class="thinking-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span>${escapeHtml(thinkingText)}</span>
+          </div>
+        </div>
+      ` : "";
+
+      chat.innerHTML = messages + thinking + renderServiceCard() + renderNoServiceCard() + renderBankAccountCard();
+      chat.scrollTop = chat.scrollHeight;
+
+      chat.querySelectorAll("[data-service-id]").forEach(button => {
+        button.addEventListener("click", () => {
+          dispatch({
+            type: "SELECT_SERVICE",
+            serviceId: button.dataset.serviceId
+          });
+        });
+      });
+
+      chat.querySelectorAll("[data-bank-account]").forEach(button => {
+        button.addEventListener("click", () => {
+          dispatch({
+            type: "SELECT_BANK_ACCOUNT",
+            accountId: button.dataset.bankAccount
+          });
+        });
+      });
+
+      const newAccountForm = chat.querySelector("#newAccountForm");
+      if (newAccountForm) {
+        newAccountForm.addEventListener("submit", event => {
+          event.preventDefault();
+          dispatch({
+            type: "ADD_BANK_ACCOUNT",
+            bank: newAccountForm.elements.bank.value,
+            number: newAccountForm.elements.number.value
+          });
+        });
+      }
+
+      const verifyButton = chat.querySelector("#verifyNewAccount");
+      if (verifyButton) {
+        verifyButton.addEventListener("click", () => dispatch({ type: "VERIFY_BANK_ACCOUNT" }));
+      }
+
+      const restartButton = chat.querySelector("#restartConversation");
+      if (restartButton) {
+        restartButton.addEventListener("click", reset);
+      }
+    }
+
+    function renderNoServiceCard() {
+      if (!state.noServiceMatch || isThinking) return "";
+      return `
+        <div class="service-card">
+          <h3>目前服務目錄沒有相符項目</h3>
+          <p>您可以重新開始並換一種方式描述需求，或改問目前支援的新生兒與育兒服務。</p>
+          <button id="restartConversation" class="primary" type="button">重新開始對話</button>
+        </div>
+      `;
+    }
+
+    function renderServiceCard() {
+      if (!state.candidateServices.length || state.selectedService || isThinking) return "";
+
+      return `
+        <div class="service-card">
+          <h3>選擇要先處理的服務</h3>
+          <p>以下金額與名稱為 Demo 資料。選擇後才會說明該服務需要的資料。</p>
+          <div class="service-options">
+            ${state.candidateServices.map(service => `
+              <button class="service-option" type="button" data-service-id="${service.id}">
+                <span class="service-name">${escapeHtml(service.name)} · ${escapeHtml(service.estimatedAmount)}</span>
+                <span class="service-meta">${escapeHtml(service.summary)}<br>${escapeHtml(service.agency)}</span>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBankAccountCard() {
+      if (!state.draft || state.citizenConfirmed || state.application || isThinking) return "";
+
+      const accounts = state.bankAccounts.map(account => `
+        <button
+          class="account-option ${account.id === state.selectedBankAccountId ? "selected" : ""}"
+          type="button"
+          data-bank-account="${account.id}"
+        >
+          <span>
+            <span class="account-name">${escapeHtml(account.bank)} ${escapeHtml(account.maskedNumber)}</span>
+            <span class="account-source">登記來源：${escapeHtml(account.source)}</span>
+          </span>
+          <span class="${account.verified ? "account-verified" : "account-pending"}">
+            ${account.verified ? "已驗證" : "待驗證"}
+          </span>
+        </button>
+      `).join("");
+
+      const selected = state.bankAccounts.find(account => account.id === state.selectedBankAccountId);
+      const verifyAction = selected && !selected.verified
+        ? `<button id="verifyNewAccount" class="secondary" type="button">模擬完成帳戶驗證</button>`
+        : "";
+
+      return `
+        <div class="account-card">
+          <h3>選擇補助入帳帳戶</h3>
+          <p>既有帳戶會標示曾在哪項政府服務登記。完整帳號不會提供給對話模型。</p>
+          <div class="account-options">${accounts}</div>
+          ${verifyAction}
+          <form id="newAccountForm" class="new-account-form">
+            <input name="bank" aria-label="銀行名稱" placeholder="銀行名稱">
+            <input name="number" aria-label="新帳戶號碼" placeholder="輸入新帳戶號碼">
+            <button class="ghost" type="submit">新增帳戶</button>
+          </form>
+        </div>
+      `;
+    }
+
+    function renderState() {
+      const sections = [];
+
+      if (state.question) {
+        sections.push(`
+          <div class="state-section">
+            <h3>已理解的需求</h3>
+            <div class="facts">
+              <div class="fact"><span>民眾問題</span><strong>${escapeHtml(state.question)}</strong></div>
+              <div class="fact"><span>人生事件</span><strong>新生兒／育兒</strong></div>
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.selectedService) {
+        sections.push(`
+          <div class="state-section">
+            <h3>目前處理的服務</h3>
+            <div class="facts">
+              <div class="fact"><span>服務名稱</span><strong>${state.selectedService.name}</strong></div>
+              <div class="fact"><span>主管機關</span><strong>${state.selectedService.agency}</strong></div>
+              <div class="fact"><span>預估補助</span><strong>${state.selectedService.estimatedAmount}</strong></div>
+              <div class="fact"><span>需要確認</span><strong>${state.selectedService.evidence.map(item => item.label).join("、")}</strong></div>
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.candidateServices.length && !state.selectedService) {
+        sections.push(`
+          <div class="state-section">
+            <h3>找到的服務</h3>
+            <div class="facts">
+              ${state.candidateServices.map(service => `
+                <div class="fact">
+                  <span>${escapeHtml(service.name)}</span>
+                  <strong>${escapeHtml(service.estimatedAmount)}</strong>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.consent !== "not_requested") {
+        sections.push(`
+          <div class="state-section">
+            <h3>資料授權</h3>
+            <div class="facts">
+              <div class="credential">
+                <span>本次授權狀態</span>
+                <span class="credential-status ${state.consent}">${statusLabel(state.consent)}</span>
+              </div>
+              <div class="fact"><span>使用目的</span><strong>${state.selectedService.name}資格檢查</strong></div>
+              <div class="fact"><span>資料範圍</span><strong>一次性、最小必要結果</strong></div>
+            </div>
+          </div>
+        `);
+
+        sections.push(`
+          <div class="state-section">
+            <h3>本次需要的證據</h3>
+            <div class="facts">
+              ${state.selectedService.evidence.map(item =>
+                credentialRow(item.label, evidenceStatus(state.credentials[item.id]))
+              ).join("")}
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.eligibility !== "not_checked") {
+        sections.push(`
+          <div class="state-section">
+            <h3>資格判斷</h3>
+            <div class="facts">
+              <div class="credential">
+                <span>判斷結果</span>
+                <span class="credential-status ${state.eligibility}">${statusLabel(state.eligibility)}</span>
+              </div>
+              ${state.eligibility === "eligible"
+                ? `<div class="fact"><span>規則版本</span><strong>2026.08</strong></div>
+                   <div class="fact"><span>判斷方式</span><strong>確定性規則引擎</strong></div>`
+                : ""}
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.draft) {
+        sections.push(`
+          <div class="state-section">
+            <h3>申請草稿</h3>
+            <div class="facts">
+              <div class="fact"><span>申請項目</span><strong>${state.draft.service}</strong></div>
+              <div class="fact"><span>證據數量</span><strong>${state.draft.evidenceCount} 項</strong></div>
+              <div class="fact"><span>入帳帳戶</span><strong>${state.draft.paymentAccount}</strong></div>
+              <div class="credential">
+                <span>民眾最後確認</span>
+                <span class="credential-status ${state.citizenConfirmed ? "granted" : "pending"}">
+                  ${state.citizenConfirmed ? "已確認" : "等待確認"}
+                </span>
+              </div>
+            </div>
+          </div>
+        `);
+      }
+
+      if (state.application) {
+        sections.push(`
+          <div class="state-section">
+            <h3>正式案件</h3>
+            <div class="facts">
+              <div class="fact"><span>案件編號</span><strong>${state.application.id}</strong></div>
+              <div class="credential">
+                <span>案件狀態</span>
+                <span class="credential-status submitted">${state.application.status}</span>
+              </div>
+              <div class="fact"><span>送件時間</span><strong>${state.application.submittedAt}</strong></div>
+            </div>
+          </div>
+        `);
+      }
+
+      stateBody.innerHTML = `
+        <div class="stage">
+          <div class="stage-index">${state.stage + 1}</div>
+          <div>
+            <div class="stage-name">${CitizenServiceFlow.stages[state.stage]}</div>
+            <div class="agent-subtitle">
+              ${isThinking ? escapeHtml(thinkingText) : `流程階段 ${state.stage + 1} / ${CitizenServiceFlow.stages.length}`}
+            </div>
+          </div>
+        </div>
+
+        ${sections.join("")}
+
+        <div class="last-change"><strong>剛剛發生：</strong><br>${escapeHtml(state.lastChange)}</div>
+      `;
+    }
+
+    function evidenceStatus(status) {
+      if (status === "available") return "available";
+      if (state.consent === "pending" || state.consent === "granted") return "pending";
+      if (state.consent === "denied" || state.consent === "revoked") return "blocked";
+      return status;
+    }
+
+    function credentialRow(name, status) {
+      return `
+        <div class="credential">
+          <span>${name}</span>
+          <span class="credential-status ${status}">${statusLabel(status)}</span>
+        </div>
+      `;
+    }
+
+    function renderFreePlay() {
+      const visibleActions = backendMode
+        ? actions.filter(action => backendRequest(action))
+        : actions;
+      freePlay.innerHTML = visibleActions.map(action => `
+        <button class="${action.style}" type="button" data-action="${action.type}" ${isThinking ? "disabled" : ""}>
+          ${action.label}
+        </button>
+      `).join("");
+
+      freePlay.querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => dispatch({ type: button.dataset.action }));
+      });
+    }
+
+    function renderWalkthrough() {
+      tabs.innerHTML = walkthroughs.map(walkthrough => `
+        <button
+          class="tab ${walkthrough.id === activeWalkthrough.id ? "active" : ""}"
+          type="button"
+          data-walkthrough="${walkthrough.id}"
+        >
+          ${walkthrough.title}
+        </button>
+      `).join("");
+
+      walkthroughDescription.textContent = activeWalkthrough.description;
+
+      steps.innerHTML = activeWalkthrough.steps.map((step, index) => `
+        <button
+          class="step ${index === walkthroughStep ? "current" : ""} ${index < walkthroughStep ? "complete" : ""}"
+          type="button"
+          data-step="${index}"
+          ${index !== walkthroughStep || isThinking ? "disabled" : ""}
+        >
+          <span class="step-number">步驟 ${index + 1}</span>
+          ${step.label}
+        </button>
+      `).join("");
+
+      tabs.querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => {
+          activeWalkthrough = walkthroughs.find(item => item.id === button.dataset.walkthrough);
+          walkthroughStep = 0;
+          state = CitizenServiceFlow.initialState();
+          render();
+        });
+      });
+
+      steps.querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => {
+          const step = activeWalkthrough.steps[Number(button.dataset.step)];
+          dispatch(step, true);
+        });
+      });
+    }
+
+    function renderAudit() {
+      if (!state.audit.length) {
+        auditList.innerHTML = `<div class="agent-subtitle">操作後會在這裡留下用途、授權與送件紀錄。</div>`;
+        return;
+      }
+
+      auditList.innerHTML = [...state.audit].reverse().map(entry => `
+        <div class="audit-entry">
+          <div class="audit-time">${entry.time}</div>
+          <div class="audit-actor">${entry.actor}</div>
+          <div><strong>${entry.action}</strong><br><span class="agent-subtitle">${escapeHtml(entry.detail)}</span></div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function reset() {
+      if (backendMode) {
+        initializeBackend();
+        return;
+      }
+      state = CitizenServiceFlow.initialState();
+      walkthroughStep = 0;
+      isThinking = false;
+      thinkingText = "";
+      render();
+    }
+
+    function render() {
+      renderChat();
+      renderState();
+      renderFreePlay();
+      renderWalkthrough();
+      renderAudit();
+      renderComposer();
+    }
+
+    function suggestedUtterance() {
+      if (isThinking) return "Agent 正在處理，請稍候…";
+      if (!state.question) return "我剛生小孩，有哪些補助可以申請？";
+      if (state.candidateServices.length && !state.selectedService) return "請先從上方選擇一項服務。";
+      if (state.selectedService && state.consent === "not_requested") return `我想申請${state.selectedService.name}。`;
+      if (state.consent === "pending") return "我同意這次資格檢查使用上述資料。";
+      if (state.consent === "granted" && Object.values(state.credentials).some(value => value !== "available")) return "好，請開始取得必要資料並檢查。";
+      if (state.stage === 4) return "資料都取得了，我符合資格嗎？";
+      if (state.eligibility === "eligible" && !state.draft) return "如果符合，請幫我準備申請草稿。";
+      if (state.draft && !state.selectedBankAccountId) return "請先從上方選擇入帳帳戶，或新增其他帳戶。";
+      const selectedAccount = state.bankAccounts.find(account => account.id === state.selectedBankAccountId);
+      if (selectedAccount && !selectedAccount.verified) return "請先完成新帳戶的持有人驗證。";
+      if (state.draft && !state.citizenConfirmed) return "確認，請使用這個帳戶並送出申請。";
+      if (state.citizenConfirmed && !state.application) return "正在送出申請…";
+      if (state.application) return "申請已送出，可以查詢案件進度。";
+      if (state.consent === "denied") return "請改成告訴我人工申請需要準備什麼。";
+      return "";
+    }
+
+    function composerAction(text) {
+      if (!state.question) return { type: "ASK_QUESTION", question: text };
+      if (state.candidateServices.length && !state.selectedService) return { type: "USER_MESSAGE", text };
+      if (state.selectedService && state.consent === "not_requested") {
+        return { type: "REQUEST_CONSENT", utterance: text };
+      }
+      if (state.consent === "pending") return { type: "GRANT_CONSENT", utterance: text };
+      if (state.consent === "granted" && Object.values(state.credentials).some(value => value !== "available")) {
+        return { type: "FETCH_CREDENTIALS", utterance: text };
+      }
+      if (state.stage === 4) return { type: "CHECK_ELIGIBILITY", utterance: text };
+      if (state.eligibility === "eligible" && !state.draft) {
+        return { type: "CREATE_DRAFT", utterance: text };
+      }
+      if (state.draft && !state.selectedBankAccountId) return { type: "USER_MESSAGE", text };
+      const selectedAccount = state.bankAccounts.find(account => account.id === state.selectedBankAccountId);
+      if (selectedAccount && !selectedAccount.verified) return { type: "USER_MESSAGE", text };
+      if (state.draft && !state.citizenConfirmed) {
+        return { type: "CONFIRM_APPLICATION", utterance: text };
+      }
+      if (state.citizenConfirmed && !state.application) {
+        return { type: "SUBMIT_APPLICATION", utterance: text };
+      }
+      return { type: "USER_MESSAGE", text };
+    }
+
+    function renderComposer() {
+      const selectedAccount = state.bankAccounts.find(account => account.id === state.selectedBankAccountId);
+      const waitingForAccount = Boolean(state.draft) && (!selectedAccount || !selectedAccount.verified);
+      const waitingForService = state.candidateServices.length > 0 && !state.selectedService;
+      if (backendMode) {
+        questionInput.disabled = isThinking;
+        composer.querySelector("button").disabled = isThinking;
+      } else {
+        questionInput.disabled = isThinking || Boolean(state.application) || waitingForAccount || waitingForService;
+        composer.querySelector("button").disabled = isThinking || Boolean(state.application) || waitingForAccount || waitingForService;
+      }
+      questionInput.value = suggestedUtterance();
+    }
+
+    composer.addEventListener("submit", event => {
+      event.preventDefault();
+      if (backendMode) {
+        dispatch({ type: "MODEL_MESSAGE", utterance: questionInput.value });
+      } else {
+        dispatch(composerAction(questionInput.value));
+      }
+    });
+
+    document.querySelector("#resetTop").addEventListener("click", reset);
+
+    async function initializeBackend() {
+      state = CitizenServiceFlow.initialState();
+      walkthroughStep = 0;
+      isThinking = false;
+      thinkingText = "";
+      render();
+
+      if (!location.protocol.startsWith("http")) {
+        backendBadge.textContent = "離線 Demo · 瀏覽器內狀態";
+        return;
+      }
+
+      try {
+        const healthResponse = await fetch("/api/health");
+        const health = await healthResponse.json();
+        const sessionResponse = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+        const session = await sessionResponse.json();
+        if (!healthResponse.ok || !sessionResponse.ok) throw new Error("Backend unavailable");
+        backendMode = true;
+        backendSessionId = session.id;
+        state = mapBackendState(session);
+        backendBadge.textContent = `後端已連線 · ${health.modelProvider} model`;
+      } catch (error) {
+        backendMode = false;
+        backendSessionId = null;
+        backendBadge.textContent = "後端未連線 · 使用離線 Demo";
+      }
+      render();
+    }
+
+    initializeBackend();
+  </script>
+</body>
+</html>

@@ -433,6 +433,17 @@
       font-size: 12px;
     }
 
+    .credential-create-form textarea {
+      grid-column: 1 / -1;
+      min-height: 180px;
+      padding: 11px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: 13px/1.65 ui-monospace, "Microsoft JhengHei", monospace;
+      resize: vertical;
+    }
+
     .document-upload-form input {
       min-width: 0;
       padding: 8px;
@@ -1992,9 +2003,16 @@
       chat.querySelectorAll("[data-credential-batch]").forEach(form => {
         form.addEventListener("submit", event => {
           event.preventDefault();
+          const fields = JSON.parse(form.dataset.credentialFields);
+          const lines = form.elements.applicationData.value.split(/\r?\n/);
           const applicationData = {};
-          form.querySelectorAll("[data-credential-field]").forEach(input => {
-            applicationData[input.dataset.credentialField] = input.value;
+          fields.forEach(field => {
+            const line = lines.find(item =>
+              item.startsWith(`${field.label}：`) || item.startsWith(`${field.label}:`)
+            );
+            applicationData[field.name] = line
+              ? line.slice(line.indexOf(line.includes("：") ? "：" : ":") + 1).trim()
+              : "";
           });
           dispatch({
             type: "CREATE_CREDENTIALS",
@@ -2110,19 +2128,14 @@
               }).join("")}
               ${missingGovernmentEvidence.length ? `
                 <div class="evidence-source-item">
-                  <strong>一次提供資料，申請 ${missingGovernmentEvidence.length} 張憑證</strong>
-                  <span>重複欄位只需填寫一次；送出後會分別呼叫對應的 Mock 政府發證 API。</span>
-                  <form class="credential-create-form" data-credential-batch>
-                    ${applicationFields.map(field => `
-                      <input
-                        name="${escapeHtml(field.name)}"
-                        data-credential-field="${escapeHtml(field.name)}"
-                        type="${escapeHtml(field.type || "text")}"
-                        required
-                        placeholder="${escapeHtml(field.placeholder || field.label)}"
-                        aria-label="${escapeHtml(field.label)}"
-                      >
-                    `).join("")}
+                  <strong>申請 ${missingGovernmentEvidence.length} 張憑證所需資料</strong>
+                  <span>所有資料已合併在同一個輸入框並填入 Demo 假資料；送出後會分別呼叫對應的 Mock 政府發證 API。</span>
+                  <form
+                    class="credential-create-form"
+                    data-credential-batch
+                    data-credential-fields="${escapeHtml(JSON.stringify(applicationFields.map(field => ({ name: field.name, label: field.label }))))}"
+                  >
+                    <textarea name="applicationData" required aria-label="申請政府憑證所需資料">${escapeHtml(applicationFields.map(field => `${field.label}：${demoCredentialValue(field.name)}`).join("\n"))}</textarea>
                     <button class="secondary" type="submit">一併申請所需憑證</button>
                   </form>
                 </div>
@@ -2434,6 +2447,29 @@
         "housing": "租屋／住宅",
         "unemployment": "失業／就業"
       }[value] || value;
+    }
+
+    function demoCredentialValue(fieldName) {
+      return {
+        nationalId: "A123456789",
+        birthDate: "1990-01-01",
+        mobile: "0912345678",
+        householdAddress: "臺北市中正區忠孝東路 1 號",
+        moveInDate: "2020-01-01",
+        childNationalId: "B223456789",
+        childBirthDate: "2026-08-20",
+        taxYear: "2025",
+        insuranceNumber: "INS-DEMO-001",
+        providerName: "安心托育中心",
+        enrollmentNumber: "CARE-DEMO-001",
+        healthCardNumber: "000012345678",
+        visitDate: "2026-08-28",
+        insuredUnit: "Demo 科技股份有限公司",
+        serviceStation: "臺北就業服務站",
+        registrationDate: "2026-08-29",
+        certificateNumber: "CERT-DEMO-001",
+        assessmentDate: "2026-08-01"
+      }[fieldName] || "Demo 資料";
     }
 
     function renderFreePlay() {

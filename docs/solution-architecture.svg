@@ -48,7 +48,7 @@
   <circle cx="1800" cy="940" r="260" fill="#E0E6F2" opacity=".65"/>
 
   <text x="110" y="92" class="title">可信政府服務 Agent｜Solution Architecture</text>
-  <text x="110" y="132" class="subtitle">民眾只需授權與確認；Agent 負責跨系統編排、最小揭露、送件與全程可追溯</text>
+  <text x="110" y="132" class="subtitle">民眾直接委託 Agent；Agent 依授權串接憑證皮夾、MyData、政府送件與全程稽核</text>
 
   <!-- Citizen -->
   <g filter="url(#shadow)">
@@ -155,23 +155,26 @@
   <text x="1348" y="970" text-anchor="middle" class="pill" fill="#FFFFFF">撤銷後立即停止後續行動</text>
 
   <!-- Flows -->
-  <path d="M390 350 C430 300 455 282 500 282" fill="none" stroke="#176B5B" stroke-width="6" marker-end="url(#arrowGreen)"/>
-  <text x="440" y="238" text-anchor="middle" class="flow-label" fill="#176B5B">① 出示憑證</text>
+  <path d="M390 465 H980" fill="none" stroke="#176B5B" stroke-width="7" marker-end="url(#arrowGreen)"/>
+  <text x="685" y="451" text-anchor="middle" class="flow-label" fill="#176B5B">① 提出需求・授權 Agent・確認送件</text>
 
-  <path d="M390 490 C437 554 455 600 500 612" fill="none" stroke="#326B9A" stroke-width="6" marker-end="url(#arrowBlue)"/>
-  <text x="445" y="568" text-anchor="middle" class="flow-label" fill="#326B9A">② 同意取用</text>
+  <path d="M980 335 C930 305 905 294 855 294" fill="none" stroke="#326B9A" stroke-width="6" marker-end="url(#arrowBlue)"/>
+  <text x="920" y="270" text-anchor="middle" class="flow-label" fill="#326B9A">② 請求憑證</text>
 
-  <path d="M855 302 C905 302 930 325 980 350" fill="none" stroke="#176B5B" stroke-width="6" marker-end="url(#arrowGreen)"/>
-  <text x="919" y="294" text-anchor="middle" class="flow-label" fill="#176B5B">驗證結果</text>
+  <path d="M855 348 C905 348 935 365 980 388" fill="none" stroke="#176B5B" stroke-width="6" marker-end="url(#arrowGreen)"/>
+  <text x="918" y="386" text-anchor="middle" class="flow-label" fill="#176B5B">驗證結果</text>
 
-  <path d="M855 615 C910 615 940 580 980 545" fill="none" stroke="#326B9A" stroke-width="6" marker-end="url(#arrowBlue)"/>
-  <text x="918" y="637" text-anchor="middle" class="flow-label" fill="#326B9A">最小必要資料</text>
+  <path d="M980 555 C935 585 905 610 855 610" fill="none" stroke="#326B9A" stroke-width="6" marker-end="url(#arrowBlue)"/>
+  <text x="915" y="565" text-anchor="middle" class="flow-label" fill="#326B9A">③ 授權調閱</text>
+
+  <path d="M855 665 C910 665 940 625 980 590" fill="none" stroke="#176B5B" stroke-width="6" marker-end="url(#arrowGreen)"/>
+  <text x="918" y="690" text-anchor="middle" class="flow-label" fill="#176B5B">最小必要資料</text>
 
   <path d="M1400 465 C1450 465 1480 465 1530 465" fill="none" stroke="#176B5B" stroke-width="7" marker-end="url(#arrowGreen)"/>
-  <text x="1465" y="438" text-anchor="middle" class="flow-label" fill="#176B5B">③ 本人確認後送件</text>
+  <text x="1465" y="438" text-anchor="middle" class="flow-label" fill="#176B5B">④ 本人確認後送件</text>
 
   <path d="M1190 725 L1190 835" fill="none" stroke="#7A4A91" stroke-width="7" marker-end="url(#arrowPurple)"/>
-  <text x="1210" y="792" class="flow-label" fill="#7A4A91">④ 全程留痕</text>
+  <text x="1210" y="792" class="flow-label" fill="#7A4A91">⑤ 全程留痕</text>
 
   <!-- Footer -->
   <text x="110" y="1035" class="small">

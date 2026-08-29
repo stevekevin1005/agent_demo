@@ -1217,15 +1217,38 @@ class CitizenAgent:
         self._require(session, "eligible")
         service = session.selected_service
         session.messages.append(Message("user", command.get("message") or "請幫我準備申請草稿。"))
+        review_evidence = []
+        for definition in service["evidence"]:
+            detail = session.evidence_details[definition["id"]]
+            review_evidence.append(
+                {
+                    "label": definition["label"],
+                    "source": (
+                        definition["department"]
+                        if definition["source"] == "government"
+                        else "民眾上傳"
+                    ),
+                    "value": detail["disclosedValue"],
+                }
+            )
         session.draft = {
             "service": service["name"],
+            "agency": service["agency"],
+            "applicant": session.display_name,
             "evidenceCount": len(service["evidence"]),
+            "reviewEvidence": review_evidence,
             "paymentAccount": "尚未選擇",
             "status": "等待確認",
         }
         session.state = "awaiting_account"
         session.messages.append(
-            Message("agent", "申請草稿已完成。請選擇已驗證的入帳帳戶，或新增其他帳戶。")
+            Message(
+                "agent",
+                (
+                    "申請草稿已完成。下方 Review 會列出準備送給政府的所有資料，"
+                    "目前尚未送件。確認內容後，請選擇入帳帳戶。"
+                ),
+            )
         )
         session.audit.append(AuditEntry("Agent", "建立申請草稿", "尚未送件"))
 

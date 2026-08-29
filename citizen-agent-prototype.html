@@ -20,6 +20,39 @@
       --shadow: 0 18px 45px rgba(23, 32, 51, 0.08);
     }
 
+    function renderApplicationReviewCard() {
+      if (!state.draft || state.application || isThinking) return "";
+      const reviewEvidence = state.draft.reviewEvidence || state.selectedService.evidence.map(item => ({
+        label: item.label,
+        source: item.source === "citizen_upload" ? "民眾上傳" : item.department || "政府發證機關",
+        value: state.evidenceDetails[item.id]?.disclosedValue || statusLabel(state.credentials[item.id])
+      }));
+      return `
+        <div class="account-card">
+          <h3>送件前 Review</h3>
+          <p>以下是準備送交政府的內容，目前仍是草稿，尚未正式送件。</p>
+          <div class="facts">
+            <div class="fact"><span>申請服務</span><strong>${escapeHtml(state.draft.service)}</strong></div>
+            <div class="fact"><span>受理機關</span><strong>${escapeHtml(state.draft.agency || state.selectedService.agency)}</strong></div>
+            <div class="fact"><span>申請人</span><strong>${escapeHtml(state.draft.applicant || "Demo 民眾")}</strong></div>
+            ${reviewEvidence.map(item => `
+              <div class="credential">
+                <div class="credential-detail">
+                  <strong>${escapeHtml(item.label)}</strong>
+                  <small>來源：${escapeHtml(item.source)}</small>
+                </div>
+                <span>${escapeHtml(item.value)}</span>
+              </div>
+            `).join("")}
+            <div class="credential">
+              <span>入帳帳戶</span>
+              <span class="credential-status pending">${escapeHtml(state.draft.paymentAccount)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -2032,7 +2065,7 @@
         </div>
       ` : "";
 
-      chat.innerHTML = messages + thinking + renderServiceCard() + renderEvidencePlanCard() + renderCaseResultsCard() + renderNoServiceCard() + renderBankAccountCard();
+      chat.innerHTML = messages + thinking + renderServiceCard() + renderEvidencePlanCard() + renderCaseResultsCard() + renderNoServiceCard() + renderApplicationReviewCard() + renderBankAccountCard();
       chat.scrollTop = chat.scrollHeight;
 
       chat.querySelectorAll("[data-service-id]").forEach(button => {
@@ -2208,7 +2241,7 @@
                     ${canCreate ? `
                       <span>${escapeHtml(credential?.applicationInstructions || "目前錢包沒有可用憑證，請提供申請資料。")}</span>
                     ` : ""}
-                  </details>
+                  </div>
                 `;
               }).join("")}
               ${missingGovernmentEvidence.length ? `
@@ -2264,7 +2297,7 @@
               }).join("")}
             </div>
           ` : ""}
-        </div>
+        </details>
       `;
     }
 
@@ -2678,7 +2711,7 @@
       if (state.stage === 4 && Object.values(state.credentials).includes("upload_required")) return "請使用上方欄位上傳缺少的文件。";
       if (state.consent === "granted" && Object.values(state.credentials).some(value => value !== "available")) return "好，請開始取得必要資料並檢查。";
       if (state.stage === 4) return "資料都取得了，我符合資格嗎？";
-      if (state.eligibility === "eligible" && !state.draft) return "如果符合，請幫我準備申請草稿。";
+      if (state.eligibility === "eligible" && !state.draft) return "幫我送出申請";
       if (state.draft && !state.selectedBankAccountId) return "請先從上方選擇入帳帳戶，或新增其他帳戶。";
       const selectedAccount = state.bankAccounts.find(account => account.id === state.selectedBankAccountId);
       if (selectedAccount && !selectedAccount.verified) return "請先完成新帳戶的持有人驗證。";
@@ -2698,16 +2731,24 @@
     ];
 
     function renderQuickPrompts() {
-      if (state.question || state.caseResults?.length || isThinking) {
+      const prompts = !state.question
+        ? demoPrompts
+        : state.eligibility === "eligible" && !state.draft
+          ? ["幫我送出申請"]
+          : [];
+      const title = state.eligibility === "eligible" && !state.draft
+        ? "建議下一步"
+        : "猜你想問";
+      if (!prompts.length || state.caseResults?.length || isThinking) {
         quickPrompts.hidden = true;
         quickPrompts.innerHTML = "";
         return;
       }
       quickPrompts.hidden = false;
       quickPrompts.innerHTML = `
-        <div class="quick-prompts-title">猜你想問</div>
+        <div class="quick-prompts-title">${title}</div>
         <div class="quick-prompts-list">
-          ${demoPrompts.map(prompt => `
+          ${prompts.map(prompt => `
             <button class="quick-prompt" type="button" data-demo-prompt="${escapeHtml(prompt)}">
               ${escapeHtml(prompt)}
             </button>

@@ -1,0 +1,9 @@
+.git
+.gitignore
+__pycache__
+*.py[cod]
+.env
+*.key
+local-secrets.ps1
+local-secrets.example.ps1
+README.md

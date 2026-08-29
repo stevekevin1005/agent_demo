@@ -76,6 +76,21 @@ inspection.
 }
 ```
 
+## Docker / Zeabur
+
+The repository includes a root `Dockerfile`. Zeabur can deploy it directly.
+Configure the model environment variables in the Zeabur service and let Zeabur
+provide `PORT`:
+
+```text
+AGENT_MODEL_PROVIDER=azure-foundry-responses
+MODEL_ENDPOINT=https://<resource>.services.ai.azure.com/openai/v1/responses
+MODEL_NAME=<deployment-name>
+MODEL_API_KEY=<secret>
+```
+
+The container listens on `0.0.0.0:$PORT` and exposes `/api/health`.
+
 For deterministic UI actions:
 
 ```json

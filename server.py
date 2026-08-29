@@ -843,7 +843,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     host = os.environ.get("AGENT_HOST", "127.0.0.1")
-    port = int(os.environ.get("AGENT_PORT", "8080"))
+    port = int(os.environ.get("PORT", os.environ.get("AGENT_PORT", "8080")))
     print(f"Citizen Agent prototype running at http://{host}:{port}")
     print(f"Model provider: {os.environ.get('AGENT_MODEL_PROVIDER', 'mock')}")
     ThreadingHTTPServer((host, port), Handler).serve_forever()

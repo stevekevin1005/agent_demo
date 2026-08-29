@@ -140,6 +140,9 @@ class FileUserProfileStore:
 
     def _migrate_profile(self, profile: dict[str, Any]) -> bool:
         changed = False
+        if profile.get("displayName") != self._fixture["displayName"]:
+            profile["displayName"] = self._fixture["displayName"]
+            changed = True
         if profile.get("profileVersion", 1) < 2:
             profile["credentials"] = {
                 evidence_id: credential
@@ -607,7 +610,7 @@ class AuditEntry:
 class Session:
     id: str
     username: str = "user"
-    display_name: str = "Demo 民眾"
+    display_name: str = "牛來"
     subject_id: str = "citizen-demo-001"
     state: str = "awaiting_question"
     question: str = ""

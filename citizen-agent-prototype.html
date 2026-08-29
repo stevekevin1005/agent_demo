@@ -1226,8 +1226,9 @@
     }
 
     .audit {
-      margin-top: 18px;
-      padding: 20px;
+      padding: 18px 20px 20px;
+      background: #fbfcfd;
+      border-top: 1px solid var(--line);
     }
 
     .audit-list {
@@ -1381,6 +1382,14 @@
           >
           <button class="primary" type="submit">送出問題</button>
         </form>
+
+        <section class="audit">
+          <div class="section-heading">
+            <h2>操作與授權紀錄</h2>
+            <p>即時顯示本次 Agent 操作</p>
+          </div>
+          <div id="auditList" class="audit-list"></div>
+        </section>
       </div>
 
       <aside class="panel state-panel">
@@ -1392,13 +1401,6 @@
       </aside>
     </section>
 
-    <section class="panel audit">
-      <div class="section-heading">
-        <h2>操作與授權紀錄</h2>
-        <p>讓民眾知道誰在什麼時候做了什麼。</p>
-      </div>
-      <div id="auditList" class="audit-list"></div>
-    </section>
   </main>
 
   <script>
@@ -1416,6 +1418,7 @@
       ];
 
       const initialState = () => ({
+        displayName: "牛來",
         stage: 0,
         workflowState: "awaiting_question",
         question: "",
@@ -1718,7 +1721,7 @@
               stage: 6,
               draft: {
                 service: state.selectedService.name,
-                applicant: "Demo 民眾",
+                applicant: "牛來",
                 child: "Demo 新生兒",
                 paymentAccount: "尚未選擇",
                 evidenceCount: state.selectedService.evidence.length,
@@ -2197,6 +2200,7 @@
       const latestAudit = payload.audit[payload.audit.length - 1];
       return {
         stage: stageByState[payload.state] ?? 0,
+        displayName: payload.display_name || "牛來",
         workflowState: payload.state,
         question: payload.question,
         lifeEvent: payload.life_event,
@@ -2565,7 +2569,7 @@
           <div class="facts">
             <div class="fact"><span>申請服務</span><strong>${escapeHtml(state.draft.service)}</strong></div>
             <div class="fact"><span>受理機關</span><strong>${escapeHtml(state.draft.agency || state.selectedService.agency)}</strong></div>
-            <div class="fact"><span>申請人</span><strong>${escapeHtml(state.draft.applicant || "Demo 民眾")}</strong></div>
+            <div class="fact"><span>申請人</span><strong>${escapeHtml(state.draft.applicant || state.displayName || "牛來")}</strong></div>
             ${reviewEvidence.map(item => `
               <div class="credential">
                 <div class="credential-detail">
@@ -3076,7 +3080,7 @@
         if (currentCredentials?.username !== "user" || currentCredentials?.password !== "password") {
           throw new Error("離線 Demo 請使用畫面提供的 user / password");
         }
-        backendBadge.textContent = "離線 Demo · 瀏覽器內狀態";
+        backendBadge.textContent = "已登入用戶 牛來";
         loginView.hidden = true;
         appView.hidden = false;
         return;
@@ -3095,7 +3099,8 @@
       backendMode = true;
       backendSessionId = session.id;
       state = mapBackendState(session);
-      backendBadge.textContent = `已登入 ${session.username} · ${health.modelProvider} model`;
+      backendBadge.textContent = `已登入用戶 ${session.display_name || "牛來"}`;
+      backendBadge.title = `模型服務：${health.modelProvider}`;
       loginView.hidden = true;
       appView.hidden = false;
       render();

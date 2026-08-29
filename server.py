@@ -126,6 +126,7 @@ class FileUserProfileStore:
             if not credential:
                 raise AgentError("Credential does not exist in this wallet")
             credential["authorizedForAgent"] = False
+            credential["revokedAt"] = datetime.now().isoformat(timespec="seconds")
             self._write(profile)
             return profile
 
@@ -686,7 +687,7 @@ class CitizenAgent:
         today = date.today().isoformat()
         for item in catalog:
             credential = profile["credentials"].get(item["id"])
-            if credential is None:
+            if credential is None or credential.get("revokedAt"):
                 status = "unavailable"
             elif credential["expiresAt"] < today:
                 status = "expired"
@@ -1012,8 +1013,8 @@ class CitizenAgent:
             Message(
                 "agent",
                 (
-                    f"已撤銷本 Agent 使用「{credential['credentialType']}」的持續授權。"
-                    "憑證仍保留在您的錢包；下次需要使用時會重新詢問。"
+                    f"已撤銷「{credential['credentialType']}」。此憑證目前不可供 Agent 使用，"
+                    "下次需要時必須重新提供資料並向發證機關申請。"
                 ),
             )
         )

@@ -1754,10 +1754,9 @@
           action: "deny_consent",
           message: action.utterance || ""
         },
-        CREATE_CREDENTIAL: {
-          action: "create_credential",
+        CREATE_CREDENTIALS: {
+          action: "create_credentials",
           payload: {
-            evidenceId: action.evidenceId,
             applicationData: action.applicationData
           }
         },
@@ -1806,7 +1805,7 @@
         ? { type: "USER_MESSAGE", text: action.utterance }
         : action.type === "REVOKE_CREDENTIAL"
           ? { type: "USER_MESSAGE", text: "撤銷 Agent 憑證授權" }
-        : action.type === "CREATE_CREDENTIAL"
+        : action.type === "CREATE_CREDENTIALS"
           ? { type: "USER_MESSAGE", text: "提供政府憑證資訊" }
         : action.type === "UPLOAD_DOCUMENT"
           ? { type: "USER_MESSAGE", text: `上傳文件：${action.fileName}` }
@@ -1819,7 +1818,7 @@
         ASK_QUESTION: "正在理解問題並查詢跨機關服務…",
         SELECT_SERVICE: "正在整理本次需要的最小資料範圍…",
         REVOKE_CREDENTIAL: "正在撤銷 Agent 憑證授權…",
-        CREATE_CREDENTIAL: "正在模擬驗證並建立政府憑證…",
+        CREATE_CREDENTIALS: "正在一次送出多個政府憑證申請…",
         GRANT_CONSENT: "正在取得必要證據並執行資格規則…",
         UPLOAD_DOCUMENT: "正在檢查檔案類型並登記文件…",
         CREATE_DRAFT: "正在建立申請草稿…",
@@ -1990,7 +1989,7 @@
         });
       });
 
-      chat.querySelectorAll("[data-credential-create]").forEach(form => {
+      chat.querySelectorAll("[data-credential-batch]").forEach(form => {
         form.addEventListener("submit", event => {
           event.preventDefault();
           const applicationData = {};
@@ -1998,8 +1997,7 @@
             applicationData[input.dataset.credentialField] = input.value;
           });
           dispatch({
-            type: "CREATE_CREDENTIAL",
-            evidenceId: form.dataset.credentialCreate,
+            type: "CREATE_CREDENTIALS",
             applicationData
           });
         });
@@ -2070,6 +2068,19 @@
       const evidence = state.selectedService.evidence || [];
       const governmentEvidence = evidence.filter(item => (item.source || "government") === "government");
       const citizenEvidence = evidence.filter(item => item.source === "citizen_upload");
+      const missingGovernmentEvidence = governmentEvidence.filter(item =>
+        ["unavailable", "expired"].includes(state.credentials[item.id])
+      );
+      const applicationFieldMap = new Map();
+      missingGovernmentEvidence.forEach(item => {
+        const credential = state.credentialInventory.find(entry => entry.id === item.id);
+        (credential?.applicationFields || []).forEach(field => {
+          if (!applicationFieldMap.has(field.name)) {
+            applicationFieldMap.set(field.name, field);
+          }
+        });
+      });
+      const applicationFields = [...applicationFieldMap.values()];
       if (!governmentEvidence.length && !citizenEvidence.length) return "";
 
       return `
@@ -2093,23 +2104,29 @@
                       : ""}
                     ${canCreate ? `
                       <span>${escapeHtml(credential?.applicationInstructions || "目前錢包沒有可用憑證，請提供申請資料。")}</span>
-                      <form class="credential-create-form" data-credential-create="${escapeHtml(item.id)}">
-                        ${(credential?.applicationFields || []).map(field => `
-                          <input
-                            name="${escapeHtml(field.name)}"
-                            data-credential-field="${escapeHtml(field.name)}"
-                            type="${escapeHtml(field.type || "text")}"
-                            required
-                            placeholder="${escapeHtml(field.placeholder || field.label)}"
-                            aria-label="${escapeHtml(field.label)}"
-                          >
-                        `).join("")}
-                        <button class="secondary" type="submit">${state.credentials[item.id] === "expired" ? "更新憑證" : "申請憑證"}</button>
-                      </form>
                     ` : ""}
                   </div>
                 `;
               }).join("")}
+              ${missingGovernmentEvidence.length ? `
+                <div class="evidence-source-item">
+                  <strong>一次提供資料，申請 ${missingGovernmentEvidence.length} 張憑證</strong>
+                  <span>重複欄位只需填寫一次；送出後會分別呼叫對應的 Mock 政府發證 API。</span>
+                  <form class="credential-create-form" data-credential-batch>
+                    ${applicationFields.map(field => `
+                      <input
+                        name="${escapeHtml(field.name)}"
+                        data-credential-field="${escapeHtml(field.name)}"
+                        type="${escapeHtml(field.type || "text")}"
+                        required
+                        placeholder="${escapeHtml(field.placeholder || field.label)}"
+                        aria-label="${escapeHtml(field.label)}"
+                      >
+                    `).join("")}
+                    <button class="secondary" type="submit">一併申請所需憑證</button>
+                  </form>
+                </div>
+              ` : ""}
             </div>
           ` : ""}
           ${citizenEvidence.length ? `

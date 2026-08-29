@@ -19,6 +19,8 @@ Any safe username can be used with the Demo password so multiple presenters can
 have separate local wallets. Each profile is stored at
 `data/users/<username>.json`; passwords are not stored. These files are ignored
 by Git and may be ephemeral on container hosting without a persistent volume.
+New profiles start with an empty credential wallet; mock government records are
+not treated as credentials until the citizen completes the issuance flow.
 Production authentication should replace this Demo login with mobile identity,
 a natural-person certificate, mobile natural-person certificate, or health-card
 credential verification.
@@ -122,8 +124,10 @@ When a required government credential is absent or expired, the workflow enters
 schema instead of a generic form. For example, a medical-event credential asks
 for health-card number and visit date, while a residency credential asks for
 household address and registration date. The Demo validates the required
-fields, simulates department issuance, generates a credential reference and
-expiry, and persists it before asking whether the citizen authorizes retrieval.
+fields, deduplicates shared fields such as national ID, then submits all missing
+credentials together to their simulated department APIs. It generates a
+credential reference and expiry for each credential and persists them before
+asking whether the citizen authorizes retrieval.
 Application field values remain in the local profile and are not included in
 the language-model context.
 

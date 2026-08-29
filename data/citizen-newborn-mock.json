@@ -56,7 +56,7 @@
       "applicationInstructions": "向戶政主管機關申請親屬關係憑證。",
       "validityDays": 90,
       "applicationFields": [
-        {"name": "guardianNationalId", "label": "申請人身分證字號", "type": "text", "placeholder": "例如 A123456789"},
+        {"name": "nationalId", "label": "申請人身分證字號", "type": "text", "placeholder": "例如 A123456789"},
         {"name": "childNationalId", "label": "子女身分證字號", "type": "text", "placeholder": "例如 B223456789"},
         {"name": "childBirthDate", "label": "子女出生日期", "type": "date"}
       ],

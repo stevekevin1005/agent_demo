@@ -36,14 +36,12 @@ class UserProfileStore(Protocol):
     def authenticate(self, username: str, password: str) -> dict[str, Any]:
         """Validate Demo credentials and return the username-scoped profile."""
 
-    def save_credential(
+    def issue_credentials(
         self,
         username: str,
-        evidence_id: str,
-        application_data: dict[str, str],
-        validity_days: int,
+        applications: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        """Persist one issued credential in the user's local wallet."""
+        """Persist credentials issued together from one consolidated request."""
 
     def record_usage(
         self, username: str, evidence_ids: list[str], service_id: str
@@ -78,25 +76,27 @@ class FileUserProfileStore:
                 self._write(profile)
             return profile
 
-    def save_credential(
+    def issue_credentials(
         self,
         username: str,
-        evidence_id: str,
-        application_data: dict[str, str],
-        validity_days: int,
+        applications: list[dict[str, Any]],
     ) -> dict[str, Any]:
         with self._lock:
             profile = self._require_profile(username)
             issued_at = date.today()
-            profile["credentials"][evidence_id] = {
-                "reference": f"CRED-{evidence_id.upper()}-{uuid.uuid4().hex[:8].upper()}",
-                "acquiredAt": issued_at.isoformat(),
-                "expiresAt": (issued_at + timedelta(days=validity_days)).isoformat(),
-                "lastUsedAt": None,
-                "usedForServices": [],
-                "authorizedForAgent": False,
-                "applicationData": application_data,
-            }
+            for application in applications:
+                evidence_id = application["evidenceId"]
+                profile["credentials"][evidence_id] = {
+                    "reference": f"CRED-{evidence_id.upper()}-{uuid.uuid4().hex[:8].upper()}",
+                    "acquiredAt": issued_at.isoformat(),
+                    "expiresAt": (
+                        issued_at + timedelta(days=application["validityDays"])
+                    ).isoformat(),
+                    "lastUsedAt": None,
+                    "usedForServices": [],
+                    "authorizedForAgent": False,
+                    "applicationData": application["applicationData"],
+                }
             self._write(profile)
             return profile
 
@@ -130,26 +130,23 @@ class FileUserProfileStore:
             return profile
 
     def _default_profile(self, username: str) -> dict[str, Any]:
-        credentials: dict[str, dict[str, Any]] = {}
-        for evidence_id, record in self._fixture["records"].items():
-            if evidence_id == "job_registration":
-                continue
-            credentials[evidence_id] = {
-                "reference": record["recordId"],
-                "acquiredAt": record["lastUpdated"],
-                "expiresAt": record["expiresAt"],
-                "lastUsedAt": None,
-                "usedForServices": [],
-                "authorizedForAgent": bool(record.get("authorizedForAgent", False)),
-            }
         return {
+            "profileVersion": 2,
             "username": username,
             "displayName": self._fixture["displayName"],
-            "credentials": credentials,
+            "credentials": {},
         }
 
     def _migrate_profile(self, profile: dict[str, Any]) -> bool:
         changed = False
+        if profile.get("profileVersion", 1) < 2:
+            profile["credentials"] = {
+                evidence_id: credential
+                for evidence_id, credential in profile.get("credentials", {}).items()
+                if str(credential.get("reference", "")).startswith("CRED-")
+            }
+            profile["profileVersion"] = 2
+            changed = True
         for evidence_id, credential in profile.get("credentials", {}).items():
             if "authorizedForAgent" in credential:
                 continue
@@ -888,83 +885,78 @@ class CitizenAgent:
             ]
         )
 
-    def _on_create_credential(self, session: Session, command: dict[str, Any]) -> None:
+    def _on_create_credentials(self, session: Session, command: dict[str, Any]) -> None:
         self._require(session, "awaiting_credentials")
-        evidence_id = str(command.get("evidenceId", ""))
-        definition = next(
-            (
-                item
-                for item in session.selected_service["evidence"]
-                if item["id"] == evidence_id and item["source"] == "government"
-            ),
-            None,
-        )
-        if not definition:
-            raise AgentError("Unknown government credential")
-        if self._credential_status(session, evidence_id) not in {"unavailable", "expired"}:
-            raise AgentError("Credential is already present in this wallet")
-        catalog_item = next(
-            item
-            for item in session.credential_inventory
-            if item["id"] == evidence_id
-        )
         raw_application_data = command.get("applicationData")
         if not isinstance(raw_application_data, dict):
             raise AgentError("Credential application data is required")
-        application_data: dict[str, str] = {}
-        for field_definition in catalog_item["applicationFields"]:
-            field_name = field_definition["name"]
-            value = str(raw_application_data.get(field_name, "")).strip()
-            if not value:
-                raise AgentError(f"{field_definition['label']} is required")
-            application_data[field_name] = value
-
-        profile = self._user_profiles.save_credential(
-            session.username,
-            evidence_id,
-            application_data,
-            int(catalog_item["validityDays"]),
-        )
-        catalog = self._government_data.credential_inventory(session.subject_id)
-        session.credential_inventory = self._inventory_for_profile(profile, catalog)
-        session.evidence[evidence_id] = "locked"
-        issued_credential = profile["credentials"][evidence_id]
-        session.messages.extend(
-            [
-                Message(
-                    "user",
-                    f"我提供了「{definition['label']}」的憑證資訊。",
-                ),
-                Message(
-                    "agent",
-                    (
-                        f"已建立由{definition['department']}核發的「{definition['label']}」憑證，"
-                        f"有效至 {issued_credential['expiresAt']}。"
-                        f"憑證已存入 {session.username} 的本機 Demo 錢包。"
-                    ),
-                ),
-            ]
-        )
-        session.audit.append(
-            AuditEntry(
-                "民眾",
-                "建立政府憑證",
-                (
-                    f"{definition['department']}：{definition['label']}；"
-                    f"有效至 {issued_credential['expiresAt']}"
-                ),
-            )
-        )
-        remaining = [
+        missing_definitions = [
             item
             for item in session.selected_service["evidence"]
             if item["source"] == "government"
             and self._credential_status(session, item["id"]) in {"unavailable", "expired"}
         ]
-        if remaining:
-            labels = "、".join(item["label"] for item in remaining)
-            session.messages.append(Message("agent", f"仍需建立或更新：{labels}。"))
-            return
+        if not missing_definitions:
+            raise AgentError("There are no missing credentials to issue")
+
+        applications: list[dict[str, Any]] = []
+        for definition in missing_definitions:
+            catalog_item = next(
+                item
+                for item in session.credential_inventory
+                if item["id"] == definition["id"]
+            )
+            application_data: dict[str, str] = {}
+            for field_definition in catalog_item["applicationFields"]:
+                field_name = field_definition["name"]
+                value = str(raw_application_data.get(field_name, "")).strip()
+                if not value:
+                    raise AgentError(f"{field_definition['label']} is required")
+                application_data[field_name] = value
+            applications.append(
+                {
+                    "evidenceId": definition["id"],
+                    "applicationData": application_data,
+                    "validityDays": int(catalog_item["validityDays"]),
+                }
+            )
+
+        profile = self._user_profiles.issue_credentials(
+            session.username, applications
+        )
+        catalog = self._government_data.credential_inventory(session.subject_id)
+        session.credential_inventory = self._inventory_for_profile(profile, catalog)
+        for definition in missing_definitions:
+            session.evidence[definition["id"]] = "locked"
+        issued_labels = "、".join(
+            f"{item['department']}的{item['label']}" for item in missing_definitions
+        )
+        session.messages.extend(
+            [
+                Message(
+                    "user",
+                    "我已提供申請這些政府憑證需要的資料。",
+                ),
+                Message(
+                    "agent",
+                    (
+                        f"已一次送出 {len(applications)} 筆 Mock 政府發證 API 請求，"
+                        f"並取得：{issued_labels}。憑證已存入 {session.username} 的本機 Demo 錢包。"
+                    ),
+                ),
+            ]
+        )
+        session.audit.extend(
+            AuditEntry(
+                item["department"],
+                "核發政府憑證",
+                (
+                    f"{item['label']}；有效至 "
+                    f"{profile['credentials'][item['id']]['expiresAt']}"
+                ),
+            )
+            for item in missing_definitions
+        )
         session.state = "awaiting_consent"
         session.consent = "pending"
         departments = "、".join(

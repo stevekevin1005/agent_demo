@@ -536,7 +536,7 @@
       color: #d7e7ff;
       background: #101938;
       box-shadow: var(--shadow);
-      font: 15px/1.75 Consolas, monospace;
+      font: 13px/1.55 Consolas, monospace;
       white-space: pre-wrap;
     }
 
@@ -1465,7 +1465,7 @@
             <div class="chain-arrow">↓</div>
             <div class="trust-node"><span class="trust-index">5</span><span><b>送件確認與 Execution Receipt</b><br><small>授權與實際行為鏈回同一案件</small></span><span class="trust-status">AUDITABLE</span></div>
           </div>
-          <div class="scope-note"><strong>落地範圍：</strong>政府資格資料對應目前 Demo；委託授權與 Execution Receipt 為目標資料模型示意。</div>
+          <div class="scope-note"><strong>落地範圍：</strong>資格 claims 與案件流程可由目前 Demo 產生；可信根、edge、內容摘要與 proof 為下一階段目標資料模型。</div>
           <div class="legal-note"><strong>概念來源：</strong>參考 KERI／ACDC／vLEI 的信任鏈、edge、可信根與逐層撤銷設計；自然人憑證並非 vLEI，本 Demo 不宣稱符合 ISO 17442-3。</div>
         </div>
       </div>
@@ -1625,11 +1625,6 @@
           <p class="eyebrow">Discussion</p>
           <h1 style="font-size:clamp(70px,10vw,150px)">Q&amp;A</h1>
           <p class="hero-subtitle">可信任的政府服務 Agent，<br>應該代表誰、能做什麼、如何被追責？</p>
-          <div class="authors">
-            <span class="author"><strong>Ali</strong> · 台灣大學</span>
-            <span class="author"><strong>慶霖</strong> · 全聯實業</span>
-            <span class="author"><strong>Steve</strong> · 台灣微軟</span>
-          </div>
         </div>
         <div class="qa-mark">?</div>
       </div>
@@ -1713,36 +1708,129 @@
 
     const credentialExamples = {
       fact: `{
-  "issuer": "Mock Identity Authority",
-  "recordId": "identity-user-001",
-  "lastUpdated": "2026-08-29",
-  "expiresAt": "2027-08-29",
-  "satisfied": true,
-  "disclosedValue": "身分有效"
+  "id": "govcred:identity:EJ7F32",
+  "type": "IdentityQualificationCredential",
+  "contentAddressedId": "EJ7F32...SAID",
+  "schema": {
+    "id": "gov:identity:v1",
+    "digest": "sha256:8a91..."
+  },
+  "issuer": {
+    "id": "did:gov:identity-authority",
+    "authorization": "govissuer:identity:v1"
+  },
+  "subject": "citizen:user_001",
+  "claims": { "identity_valid": true },
+  "validity": {
+    "from": "2026-08-29T10:00:00+08:00",
+    "until": "2027-08-29T23:59:59+08:00"
+  },
+  "status": {
+    "registry": "gov-status:identity",
+    "state": "ACTIVE",
+    "checkedAt": "2026-08-29T10:01:42+08:00"
+  },
+  "trustChain": {
+    "root": "did:gov:trust-root",
+    "issuerEdge": {
+      "credential": "govissuer:identity:v1",
+      "operator": "ISSUER_TO_ISSUER"
+    }
+  },
+  "proof": {
+    "type": "Ed25519Signature",
+    "verificationMethod": "did:gov:identity-authority#key-3",
+    "signature": "z4N8...demo"
+  }
 }`,
       delegation: `{
-  "principal": "citizen:user_001",
-  "agent": "zheng-hao",
-  "purpose": "childcare-benefit.check",
-  "action": "eligibility.evaluate",
-  "claims": ["identity_valid", "child_age"],
-  "expires_at": "2026-08-29T10:06:31+08:00",
-  "max_uses": 1
+  "id": "grant:childcare:EG91AD",
+  "type": "AgentDelegationCredential",
+  "contentAddressedId": "EG91AD...SAID",
+  "issuer": "wallet:citizen:user_001",
+  "subject": "agent:zheng-hao",
+  "grant": {
+    "principal": "citizen:user_001",
+    "audience": "service:childcare-benefit-2026",
+    "purpose": "eligibility.check",
+    "actions": ["credential.verify", "mydata.read"],
+    "claims": ["identity_valid", "parent_child_relation", "child_age"],
+    "caseId": "draft:childcare:20260829"
+  },
+  "validity": {
+    "from": "2026-08-29T10:01:31+08:00",
+    "until": "2026-08-29T10:06:31+08:00",
+    "maxUses": 1
+  },
+  "status": {
+    "registry": "wallet-grants:user_001",
+    "state": "ACTIVE",
+    "used": 0
+  },
+  "authorizationEdge": {
+    "credential": "govcred:identity:EJ7F32",
+    "operator": "SUBJECT_TO_ISSUER"
+  },
+  "proof": {
+    "type": "CitizenWalletSignature",
+    "verificationMethod": "wallet:user_001#device-key"
+  }
 }`,
       submission: `{
-  "principal_confirmation": true,
-  "purpose": "childcare-benefit.submit",
-  "action": "application.submit",
-  "case_draft": "draft_20260829_001",
-  "confirmed_at": "2026-08-29T10:02:11+08:00"
+  "id": "grant:submit:ES21BC",
+  "type": "SubmissionAuthorizationCredential",
+  "issuer": "wallet:citizen:user_001",
+  "subject": "agent:zheng-hao",
+  "authorization": {
+    "purpose": "childcare-benefit.submit",
+    "audience": "agency:social-welfare",
+    "action": "application.submit",
+    "caseId": "draft:childcare:20260829",
+    "draftDigest": "sha256:64be..."
+  },
+  "confirmation": {
+    "confirmedBy": "citizen:user_001",
+    "confirmedAt": "2026-08-29T10:02:11+08:00",
+    "channel": "authenticated-session"
+  },
+  "delegationEdge": {
+    "credential": "grant:childcare:EG91AD",
+    "operator": "SAME_PRINCIPAL"
+  },
+  "validity": { "maxUses": 1, "state": "ACTIVE" },
+  "proof": {
+    "type": "CitizenWalletSignature",
+    "signature": "z82K...demo"
+  }
 }`,
       receipt: `{
-  "case_id": "NLA-2026-0829-001",
-  "agent": "zheng-hao",
+  "id": "receipt:APP-20260829-9F21A0",
+  "type": "ExecutionReceipt",
+  "performedBy": "agent:zheng-hao",
+  "principal": "citizen:user_001",
   "action": "application.submit",
-  "decision": "ALLOW",
-  "submitted_at": "2026-08-29T10:02:15+08:00",
-  "trace_id": "evt_8f21a0"
+  "authorizationEdge": {
+    "credential": "grant:submit:ES21BC",
+    "operator": "ACTION_MATCH"
+  },
+  "input": {
+    "caseId": "draft:childcare:20260829",
+    "draftDigest": "sha256:64be..."
+  },
+  "result": {
+    "applicationId": "APP-20260829-9F21A0",
+    "agency": "agency:social-welfare",
+    "status": "SUBMITTED"
+  },
+  "executedAt": "2026-08-29T10:02:15+08:00",
+  "audit": {
+    "traceId": "evt_8f21a0",
+    "previousEventDigest": "sha256:24c1..."
+  },
+  "proof": {
+    "type": "AgentExecutionSignature",
+    "verificationMethod": "agent:zheng-hao#key-1"
+  }
 }`
     };
 

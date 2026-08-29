@@ -550,6 +550,83 @@
       gap: 12px;
     }
 
+    .credential-preview > .scope-note,
+    .credential-preview > .legal-note {
+      padding: 10px 13px;
+      font-size: 12px;
+    }
+
+    .credential-preview > .legal-note {
+      margin-right: 170px;
+    }
+
+    .trust-chain-view {
+      min-height: 0;
+      display: grid;
+      align-content: center;
+      gap: 7px;
+      padding: 20px;
+      overflow: hidden;
+      border-radius: 22px;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(19,199,163,.25), transparent 28%),
+        linear-gradient(145deg, #101938, #18255d);
+      box-shadow: var(--shadow);
+    }
+
+    .trust-chain-view[hidden] { display: none; }
+
+    .trust-node {
+      position: relative;
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 14px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 13px;
+      background: rgba(255,255,255,.08);
+      animation: verifyPulse 5s ease-in-out infinite;
+    }
+
+    .trust-node:nth-child(3) { animation-delay: 1s; }
+    .trust-node:nth-child(5) { animation-delay: 2s; }
+    .trust-node:nth-child(7) { animation-delay: 3s; }
+    .trust-node:nth-child(9) { animation-delay: 4s; }
+
+    .trust-node b { font-size: 15px; }
+    .trust-node small { color: #cbd5f4; }
+
+    .trust-index {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #092e2a;
+      background: #60e0c7;
+      font-weight: 900;
+    }
+
+    .trust-status {
+      color: #71ebd3;
+      font: 800 12px Consolas, monospace;
+    }
+
+    .chain-arrow {
+      height: 15px;
+      display: grid;
+      place-items: center;
+      color: #60e0c7;
+      font-weight: 900;
+    }
+
+    @keyframes verifyPulse {
+      0%, 16%, 100% { border-color: rgba(255,255,255,.15); background: rgba(255,255,255,.08); }
+      8% { border-color: #60e0c7; background: rgba(19,199,163,.2); box-shadow: 0 0 24px rgba(19,199,163,.2); }
+    }
+
     .match-layout {
       display: grid;
       grid-template-columns: 1.2fr .8fr;
@@ -1371,10 +1448,25 @@
           <button class="card credential" data-kind="receipt">
             <h3>Execution Receipt</h3><p>證明行為：Agent 最後做了什麼，寫入哪一個案件紀錄？</p>
           </button>
+          <button class="card credential" data-kind="trustchain">
+            <h3>信任鏈驗證</h3><p>不是看到 true 就相信，而是逐層驗證到可信發證者。</p>
+          </button>
         </div>
         <div class="credential-preview">
           <pre class="credential-code" id="credentialCode"></pre>
+          <div class="trust-chain-view" id="trustChainView" hidden>
+            <div class="trust-node"><span class="trust-index">1</span><span><b>政府信任根／可信發證者清單</b><br><small>先確認這是不是我們信任的生態系</small></span><span class="trust-status">ROOT PINNED</span></div>
+            <div class="chain-arrow">↓</div>
+            <div class="trust-node"><span class="trust-index">2</span><span><b>政府機關發證資格</b><br><small>誰有權簽發這一類資格憑證</small></span><span class="trust-status">ISSUER OK</span></div>
+            <div class="chain-arrow">↓</div>
+            <div class="trust-node"><span class="trust-index">3</span><span><b>牛來的資格憑證</b><br><small>內容、Schema、簽章、持有人、效期與撤銷</small></span><span class="trust-status">VALID</span></div>
+            <div class="chain-arrow">↓</div>
+            <div class="trust-node"><span class="trust-index">4</span><span><b>牛來 → 政好的限縮委託</b><br><small>目的、動作、資料範圍、期限與使用次數</small></span><span class="trust-status">SCOPED</span></div>
+            <div class="chain-arrow">↓</div>
+            <div class="trust-node"><span class="trust-index">5</span><span><b>送件確認與 Execution Receipt</b><br><small>授權與實際行為鏈回同一案件</small></span><span class="trust-status">AUDITABLE</span></div>
+          </div>
           <div class="scope-note"><strong>落地範圍：</strong>政府資格資料對應目前 Demo；委託授權與 Execution Receipt 為目標資料模型示意。</div>
+          <div class="legal-note"><strong>概念來源：</strong>參考 KERI／ACDC／vLEI 的信任鏈、edge、可信根與逐層撤銷設計；自然人憑證並非 vLEI，本 Demo 不宣稱符合 ISO 17442-3。</div>
         </div>
       </div>
     </section>
@@ -1655,7 +1747,12 @@
     };
 
     function renderCredential(kind) {
-      document.querySelector("#credentialCode").textContent = credentialExamples[kind];
+      const code = document.querySelector("#credentialCode");
+      const trustChain = document.querySelector("#trustChainView");
+      const showTrustChain = kind === "trustchain";
+      code.hidden = showTrustChain;
+      trustChain.hidden = !showTrustChain;
+      if (!showTrustChain) code.textContent = credentialExamples[kind];
     }
 
     document.querySelector("#credentialList").addEventListener("click", event => {
@@ -1664,7 +1761,12 @@
       document.querySelectorAll(".credential").forEach(item => item.classList.toggle("selected", item === card));
       renderCredential(card.dataset.kind);
     });
-    renderCredential("fact");
+    const initialCredential =
+      new URLSearchParams(location.search).get("credential") === "trustchain" ? "trustchain" : "fact";
+    document.querySelectorAll(".credential").forEach(item => {
+      item.classList.toggle("selected", item.dataset.kind === initialCredential);
+    });
+    renderCredential(initialCredential);
 
     const authMessages = [
       "民眾只授權本次資格查詢所需的最小資料。",

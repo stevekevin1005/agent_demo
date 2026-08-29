@@ -53,6 +53,12 @@ class UserProfileStore(Protocol):
     ) -> dict[str, Any]:
         """Revoke this Agent's persisted authorization for one credential."""
 
+    def record_case(self, username: str, case: dict[str, Any]) -> dict[str, Any]:
+        """Persist one submitted government-service case."""
+
+    def reset_profile(self, username: str) -> None:
+        """Delete all persisted Demo data for one username."""
+
 
 class FileUserProfileStore:
     USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
@@ -130,12 +136,26 @@ class FileUserProfileStore:
             self._write(profile)
             return profile
 
+    def record_case(self, username: str, case: dict[str, Any]) -> dict[str, Any]:
+        with self._lock:
+            profile = self._require_profile(username)
+            profile.setdefault("cases", []).insert(0, case)
+            self._write(profile)
+            return profile
+
+    def reset_profile(self, username: str) -> None:
+        with self._lock:
+            path = self._path(username)
+            if path.exists():
+                path.unlink()
+
     def _default_profile(self, username: str) -> dict[str, Any]:
         return {
-            "profileVersion": 2,
+            "profileVersion": 4,
             "username": username,
             "displayName": self._fixture["displayName"],
             "credentials": {},
+            "cases": [],
         }
 
     def _migrate_profile(self, profile: dict[str, Any]) -> bool:
@@ -143,14 +163,27 @@ class FileUserProfileStore:
         if profile.get("displayName") != self._fixture["displayName"]:
             profile["displayName"] = self._fixture["displayName"]
             changed = True
-        if profile.get("profileVersion", 1) < 2:
+        profile_version = int(profile.get("profileVersion", 1))
+        if profile_version < 2:
             profile["credentials"] = {
                 evidence_id: credential
                 for evidence_id, credential in profile.get("credentials", {}).items()
                 if str(credential.get("reference", "")).startswith("CRED-")
             }
-            profile["profileVersion"] = 2
             changed = True
+        if profile_version < 3:
+            profile["cases"] = self._fixture_cases()
+            changed = True
+        elif "cases" not in profile:
+            profile["cases"] = []
+            changed = True
+        for case in profile["cases"]:
+            if "auditTimeline" not in case:
+                case["auditTimeline"] = self._historical_case_timeline(case)
+                changed = True
+        if profile_version < 4:
+            changed = True
+        profile["profileVersion"] = 4
         for evidence_id, credential in profile.get("credentials", {}).items():
             if "authorizedForAgent" in credential:
                 continue
@@ -160,6 +193,42 @@ class FileUserProfileStore:
             )
             changed = True
         return changed
+
+    def _fixture_cases(self) -> list[dict[str, Any]]:
+        cases = [dict(item) for item in self._fixture.get("cases", [])]
+        for case in cases:
+            case["auditTimeline"] = self._historical_case_timeline(case)
+        return cases
+
+    @staticmethod
+    def _historical_case_timeline(case: dict[str, Any]) -> list[dict[str, str]]:
+        time = f"{case.get('submittedAt', date.today().isoformat())} 09:00:00"
+        return [
+            {
+                "time": time,
+                "actor": "民眾",
+                "action": "授予資料存取",
+                "detail": f"限「{case.get('serviceName', '本次服務')}」資格檢查",
+            },
+            {
+                "time": time,
+                "actor": "規則引擎",
+                "action": "資格判斷",
+                "detail": "依送件當時規則版本完成判斷",
+            },
+            {
+                "time": time,
+                "actor": "民眾",
+                "action": "確認申請內容",
+                "detail": "確認資料與送件範圍",
+            },
+            {
+                "time": time,
+                "actor": "政府服務介面",
+                "action": "受理申請",
+                "detail": case.get("id", ""),
+            },
+        ]
 
     def _path(self, username: str) -> Path:
         if not self.USERNAME_PATTERN.fullmatch(username):
@@ -628,6 +697,7 @@ class Session:
     bank_accounts: list[dict[str, Any]] = field(default_factory=list)
     selected_bank_account_id: str | None = None
     application: dict[str, Any] | None = None
+    case_history: list[dict[str, Any]] = field(default_factory=list)
     case_results: list[dict[str, Any]] = field(default_factory=list)
     messages: list[Message] = field(default_factory=list)
     audit: list[AuditEntry] = field(default_factory=list)
@@ -668,6 +738,7 @@ class CitizenAgent:
                 profile,
                 self._government_data.credential_inventory("citizen-demo-001"),
             ),
+            case_history=[dict(item) for item in profile.get("cases", [])],
         )
         session.messages.append(
             Message(
@@ -712,6 +783,20 @@ class CitizenAgent:
 
     def get(self, session_id: str) -> dict[str, Any]:
         return self._view(self._session(session_id))
+
+    def reset(self, session_id: str) -> dict[str, str]:
+        session = self._session(session_id)
+        username = session.username
+        self._user_profiles.reset_profile(username)
+        with self._lock:
+            stale_session_ids = [
+                current_id
+                for current_id, current_session in self._sessions.items()
+                if current_session.username == username
+            ]
+            for current_id in stale_session_ids:
+                self._sessions.pop(current_id, None)
+        return {"status": "reset", "username": username}
 
     def send(
         self,
@@ -1366,23 +1451,39 @@ class CitizenAgent:
         session.messages.append(
             Message("user", command.get("message") or "確認，請使用這個帳戶送出申請。")
         )
-        session.application = {
-            "id": "APP-2026-0829-001",
+        submitted_at = datetime.now()
+        case_id = f"APP-{submitted_at.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        final_audit_entries = [
+            AuditEntry("民眾", "確認申請內容", "允許送出此一申請"),
+            AuditEntry("政府服務介面", "受理申請", case_id),
+        ]
+        session.audit.extend(final_audit_entries)
+        case = {
+            "id": case_id,
+            "serviceId": session.selected_service["id"],
+            "serviceName": session.selected_service["name"],
             "status": "已收件",
+            "agency": session.selected_service["agency"],
+            "submittedAt": submitted_at.date().isoformat(),
+            "updatedAt": submitted_at.date().isoformat(),
+            "nextStep": "等待受理機關完成初步審查",
+            "estimatedCompletion": None,
+            "auditTimeline": [asdict(item) for item in session.audit],
+        }
+        profile = self._user_profiles.record_case(session.username, case)
+        session.case_history = [dict(item) for item in profile["cases"]]
+        session.application = {
+            "id": case_id,
+            "status": "已收件",
+            "submittedAt": submitted_at.isoformat(timespec="seconds"),
         }
         session.draft["status"] = "已送出"
         session.state = "submitted"
         session.messages.append(
             Message(
                 "agent",
-                "申請已成功送出。\n案件編號：APP-2026-0829-001\n目前狀態：已收件",
+                f"申請已成功送出。\n案件編號：{case_id}\n目前狀態：已收件",
             )
-        )
-        session.audit.extend(
-            [
-                AuditEntry("民眾", "確認申請內容", "允許送出此一申請"),
-                AuditEntry("政府服務介面", "受理申請", "APP-2026-0829-001"),
-            ]
         )
 
     def _on_message(self, session: Session, command: dict[str, Any]) -> None:
@@ -1410,9 +1511,11 @@ class CitizenAgent:
         if message:
             session.messages.append(Message("user", message))
         case_id = command.get("caseId")
-        session.case_results = self._government_data.cases(
-            session.subject_id, case_id
-        )
+        session.case_results = [
+            dict(item)
+            for item in session.case_history
+            if case_id is None or item["id"] == case_id
+        ]
         session.no_service_match = False
         if not session.case_results:
             session.messages.append(
@@ -1476,6 +1579,14 @@ class CitizenAgent:
                 else None
             ),
             "uploadedDocuments": list(session.uploaded_documents.values()),
+            "cases": [
+                {
+                    "id": item["id"],
+                    "serviceName": item["serviceName"],
+                    "status": item["status"],
+                }
+                for item in session.case_history
+            ],
             "bankAccounts": [
                 {
                     "id": account["id"],
@@ -1599,6 +1710,10 @@ class Handler(BaseHTTPRequestHandler):
                     payload=body.get("payload"),
                 )
             )
+            return
+        if path == "/api/reset":
+            body = self._read_json()
+            self._handle(lambda: AGENT.reset(str(body.get("sessionId", ""))))
             return
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
 

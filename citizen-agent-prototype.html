@@ -307,6 +307,7 @@
     }
 
     .account-card,
+    .credential-application-card,
     .evidence-plan-card {
       margin: 4px 0 18px;
       padding: 16px;
@@ -367,13 +368,57 @@
       line-height: 1.5;
     }
 
+    .case-audit {
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+    }
+
+    .case-audit summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .case-audit-timeline {
+      display: grid;
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .case-audit-entry {
+      display: grid;
+      grid-template-columns: 58px 86px 1fr;
+      gap: 7px;
+      padding: 8px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .case-audit-entry time,
+    .case-audit-entry span {
+      color: var(--muted);
+    }
+
+    .case-audit-empty {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
     .account-card h3,
+    .credential-application-card h3,
     .evidence-plan-card h3 {
       margin: 0 0 5px;
       font-size: 15px;
     }
 
     .account-card > p,
+    .credential-application-card > p,
     .evidence-plan-card > p {
       margin: 0 0 13px;
       color: var(--muted);
@@ -487,6 +532,15 @@
     .credential-reissue-prompt strong {
       display: block;
       margin-bottom: 2px;
+      color: #9a3412;
+    }
+
+    .credential-application-card {
+      border-color: #fed7aa;
+      box-shadow: 0 8px 18px rgba(154, 52, 18, 0.08);
+    }
+
+    .credential-application-card h3 {
       color: #9a3412;
     }
 
@@ -1131,6 +1185,76 @@
       line-height: 1.5;
     }
 
+    .case-history-panel {
+      padding: 12px;
+      background: #fbfcfd;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .case-history-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .case-history-heading h3 {
+      margin: 0;
+    }
+
+    .case-history-count {
+      padding: 4px 7px;
+      color: #344054;
+      background: #eaecf0;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .case-shortcuts {
+      display: grid;
+      gap: 7px;
+    }
+
+    .case-shortcut {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 9px;
+      width: 100%;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      text-align: left;
+    }
+
+    .case-shortcut:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .case-shortcut strong,
+    .case-shortcut small {
+      display: block;
+    }
+
+    .case-shortcut small {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .case-shortcut-status {
+      flex: 0 0 auto;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
     .facts {
       display: grid;
       gap: 8px;
@@ -1271,6 +1395,31 @@
     .audit-time,
     .audit-actor {
       color: var(--muted);
+    }
+
+    .demo-reset-zone {
+      margin-top: 18px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .demo-reset-zone p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .reset-all-button {
+      padding: 10px 16px;
+      color: white;
+      background: var(--danger);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      font-weight: 800;
+    }
+
+    .reset-all-button:hover {
+      background: #912018;
     }
 
     @media (max-width: 920px) {
@@ -1418,6 +1567,11 @@
       </aside>
     </section>
 
+    <section class="panel demo-reset-zone">
+      <p>Demo 專用：清除目前登入用戶的憑證、案件與流程資料。</p>
+      <button id="resetAllData" class="reset-all-button" type="button">還原所有資料並登出</button>
+    </section>
+
   </main>
 
   <script>
@@ -1477,6 +1631,7 @@
         draft: null,
         citizenConfirmed: false,
         application: null,
+        caseHistory: [],
         caseResults: [],
         bankAccounts: [
           {
@@ -2115,6 +2270,11 @@
         CONFIRM_APPLICATION: {
           action: "confirm_and_submit",
           message: action.utterance || ""
+        },
+        QUERY_CASE: {
+          action: "query_case",
+          message: action.utterance || "",
+          payload: { caseId: action.caseId }
         }
       };
       return mapping[action.type] || null;
@@ -2132,6 +2292,8 @@
           ? { type: "USER_MESSAGE", text: "提供政府憑證資訊" }
         : action.type === "UPLOAD_DOCUMENT"
           ? { type: "USER_MESSAGE", text: `上傳文件：${action.fileName}` }
+        : action.type === "QUERY_CASE"
+          ? { type: "USER_MESSAGE", text: action.utterance || `查詢案件 ${action.caseId}` }
         : action.type === "ASK_QUESTION"
           ? { type: "ASK_QUESTION", question: action.question || action.utterance }
           : action;
@@ -2149,6 +2311,7 @@
         ADD_BANK_ACCOUNT: "正在建立新帳戶驗證程序…",
         VERIFY_BANK_ACCOUNT: "正在驗證帳戶持有人…",
         CONFIRM_APPLICATION: "正在確認授權狀態並送出申請…",
+        QUERY_CASE: "正在查詢案件最新進度…",
         MODEL_MESSAGE: "正在理解您的意思並規劃下一步…"
       }[action.type] || "正在處理…";
       render();
@@ -2233,6 +2396,7 @@
         draft: payload.draft,
         citizenConfirmed: payload.state === "submitted",
         application: payload.application,
+        caseHistory: payload.case_history || [],
         caseResults: payload.case_results || [],
         bankAccounts: payload.bankAccounts,
         selectedBankAccountId: payload.selected_bank_account_id,
@@ -2297,11 +2461,12 @@
         </div>
       ` : "";
 
-      chat.innerHTML = messages + thinking + renderServiceCard() + renderEvidencePlanCard() + renderCaseResultsCard() + renderNoServiceCard() + renderApplicationReviewCard() + renderBankAccountCard();
+      chat.innerHTML = messages + thinking + renderServiceCard() + renderEvidencePlanCard() + renderCredentialApplicationCard() + renderCaseResultsCard() + renderNoServiceCard() + renderApplicationReviewCard() + renderBankAccountCard();
       chat.scrollTop = chat.scrollHeight;
 
       chat.querySelectorAll("[data-service-id]").forEach(button => {
         button.addEventListener("click", () => {
+          evidencePlanOpen = false;
           dispatch({
             type: "SELECT_SERVICE",
             serviceId: button.dataset.serviceId
@@ -2405,6 +2570,20 @@
                   更新日期：${escapeHtml(item.updatedAt)}
                   ${item.estimatedCompletion ? `<br>預計完成：${escapeHtml(item.estimatedCompletion)}` : ""}
                 </span>
+                <details class="case-audit" ${state.caseResults.length === 1 ? "open" : ""}>
+                  <summary>授權與操作 Audit Log（${(item.auditTimeline || []).length} 筆）</summary>
+                  ${(item.auditTimeline || []).length ? `
+                    <div class="case-audit-timeline">
+                      ${item.auditTimeline.map(entry => `
+                        <div class="case-audit-entry">
+                          <time>${escapeHtml(entry.time)}</time>
+                          <span>${escapeHtml(entry.actor)}</span>
+                          <div><strong>${escapeHtml(entry.action)}</strong><br>${escapeHtml(entry.detail)}</div>
+                        </div>
+                      `).join("")}
+                    </div>
+                  ` : `<div class="case-audit-empty">此案件沒有可用的 Audit Log。</div>`}
+                </details>
               </div>
             `).join("")}
           </div>
@@ -2436,31 +2615,12 @@
       const evidence = state.selectedService.evidence || [];
       const governmentEvidence = evidence.filter(item => (item.source || "government") === "government");
       const citizenEvidence = evidence.filter(item => item.source === "citizen_upload");
-      const missingGovernmentEvidence = governmentEvidence.filter(item =>
-        ["unavailable", "expired"].includes(state.credentials[item.id])
-      );
-      const applicationFieldMap = new Map();
-      missingGovernmentEvidence.forEach(item => {
-        const credential = state.credentialInventory.find(entry => entry.id === item.id);
-        (credential?.applicationFields || []).forEach(field => {
-          if (!applicationFieldMap.has(field.name)) {
-            applicationFieldMap.set(field.name, field);
-          }
-        });
-      });
-      const applicationFields = [...applicationFieldMap.values()];
       if (!governmentEvidence.length && !citizenEvidence.length) return "";
 
       return `
-        <details id="evidencePlan" class="evidence-plan-card" ${evidencePlanOpen || ["awaiting_credentials", "awaiting_documents"].includes(state.workflowState) ? "open" : ""}>
+        <details id="evidencePlan" class="evidence-plan-card" ${evidencePlanOpen ? "open" : ""}>
           <summary>本次資料來源與取得方式</summary>
           <p>政府調閱與民眾上傳分開處理；只有下列政府部門會收到本次最小必要授權。</p>
-          ${state.workflowState === "awaiting_credentials" ? `
-            <div class="credential-reissue-prompt">
-              <strong>需要申請或重新取得憑證</strong>
-              請確認下方預填資料，再按下申請按鈕。完成後 Agent 才能繼續資格檢查。
-            </div>
-          ` : ""}
           ${governmentEvidence.length ? `
             <div class="evidence-source-group">
               <h4>向政府部門取得</h4>
@@ -2482,28 +2642,6 @@
                   </div>
                 `;
               }).join("")}
-              ${missingGovernmentEvidence.length ? `
-                <div class="evidence-source-item">
-                  <strong>申請 ${missingGovernmentEvidence.length} 張憑證所需資料</strong>
-                  <span>每種資料各有一個輸入框；多張憑證共用的資料只需填寫一次。</span>
-                  <form class="credential-create-form" data-credential-batch>
-                    ${applicationFields.map(field => `
-                      <label>
-                        ${escapeHtml(field.label)}
-                        <input
-                          name="${escapeHtml(field.name)}"
-                          data-credential-field="${escapeHtml(field.name)}"
-                          type="${escapeHtml(field.type || "text")}"
-                          value="${escapeHtml(demoCredentialValue(field.name))}"
-                          required
-                          placeholder="${escapeHtml(field.placeholder || field.label)}"
-                        >
-                      </label>
-                    `).join("")}
-                    <button class="secondary" type="submit">申請／重新取得所需憑證</button>
-                  </form>
-                </div>
-              ` : ""}
             </div>
           ` : ""}
           ${citizenEvidence.length ? `
@@ -2536,6 +2674,57 @@
             </div>
           ` : ""}
         </details>
+      `;
+    }
+
+    function renderCredentialApplicationCard() {
+      if (
+        state.workflowState !== "awaiting_credentials"
+        || !state.selectedService
+        || isThinking
+      ) return "";
+      const missingCredentials = state.selectedService.evidence.filter(item =>
+        (item.source || "government") === "government"
+        && ["unavailable", "expired"].includes(state.credentials[item.id])
+      );
+      if (!missingCredentials.length) return "";
+      const applicationFieldMap = new Map();
+      missingCredentials.forEach(item => {
+        const credential = state.credentialInventory.find(entry => entry.id === item.id);
+        (credential?.applicationFields || []).forEach(field => {
+          if (!applicationFieldMap.has(field.name)) {
+            applicationFieldMap.set(field.name, field);
+          }
+        });
+      });
+      const applicationFields = [...applicationFieldMap.values()];
+      return `
+        <div class="credential-application-card">
+          <h3>申請／重新取得 ${missingCredentials.length} 張憑證</h3>
+          <p>
+            這是獨立的憑證申請區。重複資料只需填寫一次，送出後會分別呼叫對應的 Mock 發證 API。
+          </p>
+          <div class="credential-reissue-prompt">
+            <strong>完成後才能繼續資格檢查</strong>
+            待取得：${escapeHtml(missingCredentials.map(item => item.label).join("、"))}
+          </div>
+          <form class="credential-create-form" data-credential-batch>
+            ${applicationFields.map(field => `
+              <label>
+                ${escapeHtml(field.label)}
+                <input
+                  name="${escapeHtml(field.name)}"
+                  data-credential-field="${escapeHtml(field.name)}"
+                  type="${escapeHtml(field.type || "text")}"
+                  value="${escapeHtml(demoCredentialValue(field.name))}"
+                  required
+                  placeholder="${escapeHtml(field.placeholder || field.label)}"
+                >
+              </label>
+            `).join("")}
+            <button class="secondary" type="submit">申請／重新取得所需憑證</button>
+          </form>
+        </div>
       `;
     }
 
@@ -2699,6 +2888,31 @@
             </div>
           </div>
         </details>
+      `);
+
+      sections.push(`
+        <section class="state-section case-history-panel">
+          <div class="case-history-heading">
+            <h3>我的申請案件</h3>
+            <span class="case-history-count">${(state.caseHistory || []).length} 筆</span>
+          </div>
+          <div class="case-shortcuts">
+            ${(state.caseHistory || []).map(item => `
+              <button
+                class="case-shortcut"
+                type="button"
+                data-query-case="${escapeHtml(item.id)}"
+                aria-label="查詢${escapeHtml(item.serviceName)}案件進度"
+              >
+                <span>
+                  <strong>${escapeHtml(item.serviceName)}</strong>
+                  <small>${escapeHtml(item.id)}</small>
+                </span>
+                <span class="case-shortcut-status">${escapeHtml(item.status)} →</span>
+              </button>
+            `).join("") || `<div class="agent-subtitle">目前沒有已送出的申請案件。</div>`}
+          </div>
+        </section>
       `);
 
       if (state.question) {
@@ -2877,6 +3091,15 @@
           });
         });
       });
+      stateBody.querySelectorAll("[data-query-case]").forEach(button => {
+        button.addEventListener("click", () => {
+          dispatch({
+            type: "QUERY_CASE",
+            caseId: button.dataset.queryCase,
+            utterance: `查詢案件 ${button.dataset.queryCase} 的最新進度`
+          });
+        });
+      });
     }
 
     function evidenceStatus(status) {
@@ -2955,6 +3178,7 @@
     }
 
     function reset() {
+      evidencePlanOpen = false;
       if (backendMode) {
         initializeBackend();
         return;
@@ -2963,6 +3187,41 @@
       isThinking = false;
       thinkingText = "";
       render();
+    }
+
+    async function resetAllData() {
+      const button = document.querySelector("#resetAllData");
+      if (!window.confirm("確定要清除目前用戶的所有憑證、案件與流程資料並登出嗎？")) {
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "正在清除所有資料…";
+      try {
+        if (backendMode && backendSessionId) {
+          const response = await fetch("/api/reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: backendSessionId })
+          });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || "無法清除 Demo 資料");
+        }
+        backendMode = false;
+        backendSessionId = null;
+        currentCredentials = null;
+        credentialWalletOpen = false;
+        evidencePlanOpen = false;
+        state = CitizenServiceFlow.initialState();
+        loginForm.reset();
+        loginError.textContent = "已清除所有 Demo 資料，請重新登入。";
+        appView.hidden = true;
+        loginView.hidden = false;
+      } catch (error) {
+        window.alert(`清除失敗：${error.message}`);
+      } finally {
+        button.disabled = false;
+        button.textContent = "還原所有資料並登出";
+      }
     }
 
     function render() {
@@ -2983,7 +3242,7 @@
       if (state.stage === 4 && Object.values(state.credentials).includes("upload_required")) return "請使用上方欄位上傳缺少的文件。";
       if (state.consent === "granted" && Object.values(state.credentials).some(value => value !== "available")) return "好，請開始取得必要資料並檢查。";
       if (state.stage === 4) return "資料都取得了，我符合資格嗎？";
-      if (state.eligibility === "eligible" && !state.draft) return "幫我送出申請";
+      if (state.eligibility === "eligible" && !state.draft) return "幫我建立申請草稿";
       if (state.draft && !state.selectedBankAccountId) return "請先從上方選擇入帳帳戶，或新增其他帳戶。";
       const selectedAccount = state.bankAccounts.find(account => account.id === state.selectedBankAccountId);
       if (selectedAccount && !selectedAccount.verified) return "請先完成新帳戶的持有人驗證。";
@@ -3006,7 +3265,7 @@
       const prompts = !state.question
         ? demoPrompts
         : state.eligibility === "eligible" && !state.draft
-          ? ["幫我送出申請"]
+          ? ["幫我建立申請草稿"]
           : [];
       const title = state.eligibility === "eligible" && !state.draft
         ? "建議下一步"
@@ -3092,9 +3351,11 @@
     });
 
     document.querySelector("#resetTop").addEventListener("click", reset);
+    document.querySelector("#resetAllData").addEventListener("click", resetAllData);
 
     async function initializeBackend() {
       state = CitizenServiceFlow.initialState();
+      evidencePlanOpen = false;
       isThinking = false;
       thinkingText = "";
       render();

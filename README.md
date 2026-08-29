@@ -8,6 +8,11 @@ python .\server.py
 
 Then open <http://127.0.0.1:8080>.
 
+The interactive hackathon presentation is available at
+<http://127.0.0.1:8080/slides>. It includes keyboard navigation, fullscreen and
+overview modes, interactive trust-policy examples, a case Audit Log timeline,
+and an embedded view of the live Demo.
+
 The Demo login page displays the default credentials directly:
 
 ```text

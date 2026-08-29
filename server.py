@@ -18,6 +18,8 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 HTML_PATH = ROOT / "citizen-agent-prototype.html"
+SLIDES_PATH = ROOT / "interactive-slides.html"
+ARCHITECTURE_PATH = ROOT / "docs" / "solution-architecture.svg"
 SERVICES_PATH = ROOT / "data" / "services.json"
 MOCK_CITIZEN_PATH = ROOT / "data" / "citizen-newborn-mock.json"
 USER_PROFILES_DIR = ROOT / "data" / "users"
@@ -1670,6 +1672,16 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/":
             self._send_bytes(HTTPStatus.OK, HTML_PATH.read_bytes(), "text/html; charset=utf-8")
+            return
+        if path in {"/slides", "/slides/"}:
+            self._send_bytes(HTTPStatus.OK, SLIDES_PATH.read_bytes(), "text/html; charset=utf-8")
+            return
+        if path == "/docs/solution-architecture.svg":
+            self._send_bytes(
+                HTTPStatus.OK,
+                ARCHITECTURE_PATH.read_bytes(),
+                "image/svg+xml; charset=utf-8",
+            )
             return
         if path == "/api/health":
             self._send_json(

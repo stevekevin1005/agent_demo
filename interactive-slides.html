@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>牛來｜可信政府服務 AI Agent</title>
+  <style>
+    :root {
+      --navy: #17235f;
+      --navy-2: #243378;
+      --teal: #008c91;
+      --mint: #13c7a3;
+      --amber: #f2a93b;
+      --red: #e84d5b;
+      --ink: #182033;
+      --muted: #647089;
+      --paper: #f7f9fc;
+      --line: #dce4ef;
+      --shadow: 0 18px 50px rgba(24, 32, 51, .14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0d153f;
+      color: var(--ink);
+      font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    }
+
+    button, a { font: inherit; }
+
+    .deck {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: clamp(18px, 2.2vh, 28px);
+      padding: clamp(28px, 4vw, 72px);
+      background:
+        radial-gradient(circle at 92% 8%, rgba(19, 199, 163, .12), transparent 24%),
+        linear-gradient(145deg, #fff 0%, var(--paper) 100%);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(3%);
+      transition: opacity .35s ease, transform .35s ease, visibility .35s;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .slide.dark {
+      color: white;
+      background:
+        radial-gradient(circle at 88% 12%, rgba(0, 140, 145, .42), transparent 25%),
+        radial-gradient(circle at 82% 88%, rgba(126, 139, 219, .24), transparent 26%),
+        linear-gradient(135deg, #17235f, #0e173f);
+    }
+
+    .slide-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--teal);
+      font-size: clamp(12px, 1.2vw, 18px);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .dark .eyebrow { color: #4be1c6; }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 960px;
+      margin-bottom: 18px;
+      font-family: Georgia, "Noto Serif TC", serif;
+      font-size: clamp(46px, 7vw, 108px);
+      line-height: .98;
+      letter-spacing: -.03em;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: clamp(30px, 4vw, 62px);
+      line-height: 1.12;
+      letter-spacing: -.025em;
+    }
+
+    h3 {
+      font-size: clamp(18px, 1.7vw, 28px);
+      line-height: 1.3;
+    }
+
+    .lede {
+      max-width: 920px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(17px, 1.8vw, 29px);
+      line-height: 1.65;
+    }
+
+    .dark .lede { color: #c8d1ef; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 999px;
+      color: #dce5ff;
+      background: rgba(255, 255, 255, .08);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .content {
+      min-height: 0;
+      display: grid;
+      align-items: center;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: clamp(30px, 5vw, 80px);
+      align-items: center;
+    }
+
+    .hero-subtitle {
+      max-width: 850px;
+      color: #d4dcf6;
+      font-size: clamp(20px, 2.2vw, 34px);
+      line-height: 1.6;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: min(54vh, 540px);
+      display: grid;
+      place-items: center;
+    }
+
+    .agent-orb {
+      position: relative;
+      z-index: 2;
+      width: clamp(220px, 26vw, 390px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .25);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #2bcab5, #087578 48%, #173369 100%);
+      box-shadow: 0 0 0 22px rgba(19, 199, 163, .08), 0 30px 80px rgba(0, 0, 0, .3);
+    }
+
+    .agent-orb strong {
+      font-family: Georgia, serif;
+      font-size: clamp(64px, 9vw, 130px);
+    }
+
+    .orbit {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 110px;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255, 255, 255, .22);
+      border-radius: 28px;
+      color: white;
+      background: rgba(255, 255, 255, .1);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, .16);
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .orbit:nth-child(2) { left: 2%; top: 12%; }
+    .orbit:nth-child(3) { right: 0; top: 18%; }
+    .orbit:nth-child(4) { left: 8%; bottom: 3%; }
+    .orbit:nth-child(5) { right: 8%; bottom: 0; }
+
+    .cards-3, .cards-4 {
+      display: grid;
+      gap: clamp(14px, 2vw, 28px);
+    }
+
+    .cards-3 { grid-template-columns: repeat(3, 1fr); }
+    .cards-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .card {
+      position: relative;
+      min-height: 210px;
+      padding: clamp(20px, 2.4vw, 34px);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, .92);
+      box-shadow: 0 10px 30px rgba(31, 44, 76, .08);
+      transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+
+    button.card {
+      width: 100%;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    button.card:hover, button.card.selected {
+      transform: translateY(-5px);
+      border-color: var(--teal);
+      box-shadow: var(--shadow);
+    }
+
+    .card-number {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 28px;
+      border-radius: 50%;
+      color: white;
+      background: var(--navy);
+      font-weight: 900;
+    }
+
+    .card:nth-child(1) .card-number { background: var(--teal); }
+    .card:nth-child(3) .card-number { background: var(--red); }
+
+    .card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(14px, 1.25vw, 19px);
+      line-height: 1.55;
+    }
+
+    .answer-strip {
+      margin-top: 26px;
+      padding: 18px 26px;
+      border-radius: 16px;
+      color: white;
+      background: var(--navy);
+      font-size: clamp(16px, 1.55vw, 24px);
+      box-shadow: 0 12px 24px rgba(23, 35, 95, .16);
+    }
+
+    .answer-strip strong { color: #34e4c5; }
+
+    .architecture {
+      grid-template-columns: minmax(0, 1.5fr) minmax(270px, .5fr);
+      gap: clamp(20px, 3vw, 46px);
+    }
+
+    .architecture-frame {
+      min-height: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .architecture-frame img {
+      width: 100%;
+      height: min(64vh, 660px);
+      display: block;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+
+    .callout-stack {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    .callout {
+      padding: 18px;
+      border-left: 5px solid var(--teal);
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 8px 22px rgba(31, 44, 76, .08);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--navy);
+    }
+
+    .callout span { color: var(--muted); line-height: 1.45; }
+
+    .journey {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .journey-step {
+      position: relative;
+      min-height: 145px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 20px 16px;
+      border: 0;
+      border-radius: 18px;
+      color: white;
+      background: var(--navy);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .journey-step:hover, .journey-step.active {
+      transform: translateY(-6px);
+      background: var(--teal);
+      box-shadow: 0 15px 30px rgba(0, 140, 145, .25);
+    }
+
+    .journey-step b {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--navy);
+      background: #42e1c3;
+    }
+
+    .journey-detail {
+      min-height: 150px;
+      margin-top: 24px;
+      padding: 24px 28px;
+      border: 1px dashed var(--teal);
+      border-radius: 18px;
+      background: #f0fbfa;
+    }
+
+    .journey-detail h3 { color: var(--teal); }
+    .journey-detail p { max-width: 1050px; color: var(--muted); font-size: 18px; line-height: 1.7; }
+
+    .principle {
+      min-height: 250px;
+      border-top: 7px solid var(--teal);
+    }
+
+    .principle:nth-child(2) { border-top-color: var(--navy); }
+    .principle:nth-child(3) { border-top-color: var(--amber); }
+    .principle:nth-child(4) { border-top-color: var(--red); }
+
+    .principle .icon {
+      margin-bottom: 24px;
+      color: var(--navy);
+      font-family: Georgia, serif;
+      font-size: 42px;
+      font-weight: 900;
+    }
+
+    .credential-layout {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .credential-list { display: grid; gap: 12px; }
+
+    .credential {
+      min-height: auto;
+      padding: 18px 22px;
+      border-left: 7px solid var(--navy);
+    }
+
+    .credential:nth-child(2) { border-left-color: var(--teal); }
+    .credential:nth-child(3) { border-left-color: var(--amber); }
+    .credential:nth-child(4) { border-left-color: #159570; }
+
+    .credential h3 { margin-bottom: 5px; font-size: 20px; }
+    .credential p { font-size: 14px; }
+
+    .credential-code {
+      min-height: 0;
+      padding: 24px;
+      overflow: auto;
+      border-radius: 22px;
+      color: #d7e7ff;
+      background: #101938;
+      box-shadow: var(--shadow);
+      font: 15px/1.75 Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    .credential-code .key { color: #50dfc3; }
+    .credential-code .value { color: #ffd279; }
+
+    .match-layout {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 30px;
+    }
+
+    .requirements { display: grid; gap: 12px; }
+
+    .requirement {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+    }
+
+    .status {
+      min-width: 120px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #087358;
+      background: #dcf8ef;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .status.wait {
+      color: #8a5a00;
+      background: #fff0cf;
+    }
+
+    .score-panel {
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 22px;
+      border-radius: 24px;
+      color: white;
+      background: var(--navy);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .score-ring {
+      width: 190px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: conic-gradient(var(--mint) 0 75%, rgba(255,255,255,.15) 75%);
+    }
+
+    .score-ring::after {
+      content: "3 / 4";
+      width: 145px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--navy);
+      font: 800 40px Georgia, serif;
+    }
+
+    .authorization-flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      align-items: center;
+    }
+
+    .auth-node {
+      min-height: 140px;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      color: white;
+      background: var(--navy);
+      text-align: center;
+      transition: .2s ease;
+    }
+
+    .auth-node.highlight {
+      transform: scale(1.04);
+      border-color: #ffe5a5;
+      background: var(--amber);
+      color: #342000;
+      box-shadow: 0 14px 32px rgba(242, 169, 59, .32);
+    }
+
+    .auth-node:nth-child(4) { background: var(--teal); }
+
+    .auth-explain {
+      margin-top: 28px;
+      padding: 22px 26px;
+      border-radius: 16px;
+      background: #eef2f8;
+      font-size: 19px;
+      line-height: 1.7;
+    }
+
+    .policy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .policy {
+      min-height: 180px;
+      color: white;
+      border-color: rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .08);
+      backdrop-filter: blur(10px);
+    }
+
+    .policy:hover, .policy.selected {
+      border-color: var(--red);
+      background: rgba(232, 77, 91, .13);
+    }
+
+    .deny-code {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 15px;
+      border-radius: 7px;
+      color: white;
+      background: var(--red);
+      font: 800 14px Consolas, monospace;
+    }
+
+    .policy p { color: #cbd5f4; }
+    .policy-result { color: #3fe0c3; font-weight: 900; }
+
+    .audit-layout {
+      display: grid;
+      grid-template-columns: 1fr .7fr;
+      gap: 32px;
+    }
+
+    .timeline { position: relative; display: grid; gap: 14px; }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 19px;
+      top: 20px;
+      bottom: 20px;
+      width: 3px;
+      background: #c9d8e9;
+    }
+
+    .event {
+      position: relative;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 12px;
+      border: 0;
+      border-radius: 14px;
+      color: inherit;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .event:hover, .event.active { background: white; box-shadow: 0 8px 20px rgba(31,44,76,.08); }
+
+    .event-dot {
+      position: relative;
+      z-index: 1;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 4px solid var(--paper);
+      border-radius: 50%;
+      color: white;
+      background: var(--teal);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .event h3 { margin-bottom: 3px; font-size: 18px; }
+    .event p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+
+    .receipt {
+      padding: 26px;
+      border-radius: 22px;
+      color: white;
+      background: linear-gradient(155deg, #7b327c, #a14b88);
+      box-shadow: var(--shadow);
+    }
+
+    .receipt-label {
+      color: #f3c8ed;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+
+    .receipt dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px 18px;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+
+    .receipt dt { color: #e7bce1; }
+    .receipt dd { margin: 0; font-weight: 700; }
+
+    .live-layout {
+      grid-template-columns: .42fr .58fr;
+      gap: 30px;
+    }
+
+    .demo-script {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    .script-step {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px;
+      border-radius: 14px;
+      background: white;
+      box-shadow: 0 7px 18px rgba(31,44,76,.07);
+    }
+
+    .script-step b {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--teal);
+    }
+
+    .script-step p { margin: 3px 0 0; color: var(--muted); line-height: 1.5; }
+
+    .demo-frame {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      border: 1px solid #b9c7d9;
+      border-radius: 20px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #eaf0f6;
+    }
+
+    .browser-dot { width: 11px; height: 11px; border-radius: 50%; background: #ef6670; }
+    .browser-dot:nth-child(2) { background: #f2ba4a; }
+    .browser-dot:nth-child(3) { background: #3ec98f; }
+
+    .browser-url {
+      flex: 1;
+      margin-left: 8px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      color: #667187;
+      background: white;
+      font-size: 12px;
+    }
+
+    .demo-frame iframe {
+      width: 100%;
+      height: 100%;
+      min-height: 520px;
+      border: 0;
+      background: #f4f7fb;
+    }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+
+    .primary, .secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .primary { border: 0; color: white; background: var(--teal); }
+    .secondary { border: 1px solid var(--line); color: var(--navy); background: white; }
+
+    .scope-note {
+      padding: 14px 18px;
+      border-left: 5px solid var(--amber);
+      border-radius: 10px;
+      color: #62450c;
+      background: #fff4d9;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .closing {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 50px;
+      align-items: center;
+    }
+
+    .closing-points {
+      display: grid;
+      gap: 18px;
+    }
+
+    .closing-point {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #d9e1f8;
+      font-size: clamp(18px, 1.8vw, 28px);
+    }
+
+    .check {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: #062b2b;
+      background: #42e1c3;
+      font-weight: 900;
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 20;
+      right: 22px;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 15px;
+      background: rgba(9, 15, 45, .88);
+      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      backdrop-filter: blur(12px);
+    }
+
+    .control {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .control:hover { background: rgba(255,255,255,.14); }
+    .slide-count { min-width: 62px; color: white; font-size: 13px; text-align: center; }
+
+    .progress {
+      position: fixed;
+      z-index: 30;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 5px;
+      background: rgba(255,255,255,.12);
+    }
+
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--mint));
+      transition: width .3s ease;
+    }
+
+    .hint {
+      position: fixed;
+      z-index: 20;
+      left: 22px;
+      bottom: 24px;
+      color: rgba(255,255,255,.7);
+      font-size: 12px;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+
+    .overview .slide {
+      position: relative;
+      width: calc(33.333% - 18px);
+      height: 30vh;
+      min-height: 220px;
+      display: grid;
+      float: left;
+      margin: 9px;
+      padding: 22px;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      overflow: hidden;
+      cursor: pointer;
+      border: 3px solid transparent;
+    }
+
+    .overview { padding: 12px; overflow: auto; background: #0d153f; }
+    .overview .slide:hover { border-color: var(--mint); }
+    .overview .slide .content { transform: scale(.42); transform-origin: top left; width: 238%; height: 238%; }
+    .overview .slide-header { transform: scale(.65); transform-origin: top left; width: 154%; }
+    .overview .controls, .overview .hint, .overview .progress { display: none; }
+
+    @media (max-width: 1000px) {
+      .hero-grid, .architecture, .credential-layout, .match-layout, .audit-layout, .live-layout, .closing {
+        grid-template-columns: 1fr;
+      }
+      .cards-4 { grid-template-columns: repeat(2, 1fr); }
+      .journey { grid-template-columns: repeat(3, 1fr); }
+      .authorization-flow { grid-template-columns: 1fr; }
+      .auth-node { min-height: 75px; }
+      .hero-visual { display: none; }
+      .architecture-frame img { height: 44vh; }
+      .demo-frame iframe { min-height: 400px; }
+    }
+
+    @media (max-width: 700px) {
+      .slide { padding: 24px 20px 74px; overflow-y: auto; }
+      .cards-3, .cards-4, .policy-grid { grid-template-columns: 1fr; }
+      .journey { grid-template-columns: repeat(2, 1fr); }
+      .requirement { grid-template-columns: 1fr; }
+      .overview .slide { width: calc(50% - 18px); }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck">
+    <section class="slide dark active">
+      <div class="slide-header">
+        <span class="tag">Trusted AI Hackathon Demo · 2026</span>
+      </div>
+      <div class="content hero-grid">
+        <div>
+          <p class="eyebrow">GeovTrustAI presents</p>
+          <h1>牛來</h1>
+          <p class="hero-subtitle">可信任的政府服務 AI Agent<br>民眾一句話，Agent 協助完成跨機關申辦。</p>
+          <p class="lede">每一步可驗證、每次授權有範圍、每一件申請都能還原。</p>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="agent-orb"><strong>牛</strong></div>
+          <div class="orbit">數位憑證<br>皮夾</div>
+          <div class="orbit">MyData</div>
+          <div class="orbit">政府服務<br>探索</div>
+          <div class="orbit">案件<br>Audit Log</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">The problem</p>
+          <h2>申請一項給付，民眾要面對什麼？</h2>
+        </div>
+      </div>
+      <div class="content">
+        <div>
+          <div class="cards-3" id="painCards">
+            <button class="card selected" data-answer="牛來先理解生活事件，再從服務目錄找出可能適用的政府方案。">
+              <span class="card-number">1</span>
+              <h3>不知道有什麼服務</h3>
+              <p>方案散落各機關網站，看得懂公文的人才找得到。</p>
+            </button>
+            <button class="card" data-answer="民眾只面對單一 Agent；由 Agent 協調憑證皮夾、MyData 與受理機關。">
+              <span class="card-number">2</span>
+              <h3>要跑好幾個機關</h3>
+              <p>身分、就保、就服各驗各的，同一件事重複證明。</p>
+            </button>
+            <button class="card" data-answer="資料不集中搬到 Agent；每次只依目的取得最小必要的資格結果。">
+              <span class="card-number">3</span>
+              <h3>資料過於散亂</h3>
+              <p>資料分散於各部會，民眾難以知道缺了哪一份。</p>
+            </button>
+          </div>
+          <div class="answer-strip"><strong>牛來的回答：</strong> <span id="painAnswer">牛來先理解生活事件，再從服務目錄找出可能適用的政府方案。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Solution architecture</p>
+          <h2>民眾只需要面對 Agent</h2>
+        </div>
+      </div>
+      <div class="content architecture">
+        <figure class="architecture-frame">
+          <img src="/docs/solution-architecture.svg" alt="牛來串接數位憑證皮夾、MyData、政府受理機關與案件 Audit Log 的解決方案架構">
+        </figure>
+        <div class="callout-stack">
+          <div class="callout"><strong>1. 民眾 → Agent</strong><span>說明需求、授權必要資料、最後確認送件。</span></div>
+          <div class="callout"><strong>2. Agent → 信任來源</strong><span>向數位憑證皮夾驗證資格，經同意向 MyData 調閱資料。</span></div>
+          <div class="callout"><strong>3. Agent → 政府機關</strong><span>通過政策閘門後送件，並為每個案件保存完整時間線。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Agent journey</p>
+          <h2>一句話之後，Agent 做了什麼？</h2>
+        </div>
+        <span class="tag" style="color:#17235f;border-color:#dce4ef;background:white">點擊流程查看細節</span>
+      </div>
+      <div class="content">
+        <div>
+          <div class="journey" id="journey">
+            <button class="journey-step active" data-title="民眾提問" data-detail="民眾用自然語言描述生活事件，不需要先知道服務名稱或承辦機關。"><b>1</b><span>一句話需求</span></button>
+            <button class="journey-step" data-title="意圖與服務探索" data-detail="語言模型只把自然語言映射成允許的工作流程動作；服務選擇與後續規則由後端控制。"><b>2</b><span>Service Discovery</span></button>
+            <button class="journey-step" data-title="資料需求探索" data-detail="根據服務規格列出必要憑證、MyData 欄位與民眾自行提供的文件。"><b>3</b><span>Data Discovery</span></button>
+            <button class="journey-step" data-title="取得限縮授權" data-detail="授權綁定本次服務、資料範圍與動作；查詢授權不能直接拿去送件。"><b>4</b><span>Authorization</span></button>
+            <button class="journey-step" data-title="跨來源驗證" data-detail="Agent 協調數位憑證皮夾與 MyData，只取得本次判定所需的最小資料。"><b>5</b><span>Verify & Retrieve</span></button>
+            <button class="journey-step" data-title="判定、確認與留痕" data-detail="規則引擎判定資格；正式送件前要求本人確認，結果與依據寫入案件 Audit Log。"><b>6</b><span>Decide & Audit</span></button>
+          </div>
+          <div class="journey-detail">
+            <h3 id="journeyTitle">民眾提問</h3>
+            <p id="journeyDetail">民眾用自然語言描述生活事件，不需要先知道服務名稱或承辦機關。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Trust by design</p>
+          <h2>信任不是一句承諾，而是四個系統規則</h2>
+        </div>
+      </div>
+      <div class="content cards-4">
+        <article class="card principle">
+          <div class="icon">01</div>
+          <h3>資料最小化</h3>
+          <p>只取本次服務必要的資格結果，不把完整個資集中交給 Agent。</p>
+        </article>
+        <article class="card principle">
+          <div class="icon">02</div>
+          <h3>授權有邊界</h3>
+          <p>代查、建草稿、正式送件是不同動作，不能用同一層授權一路到底。</p>
+        </article>
+        <article class="card principle">
+          <div class="icon">03</div>
+          <h3>規則決策</h3>
+          <p>AI 負責理解與解釋；資格判定與送件條件由確定性規則控制。</p>
+        </article>
+        <article class="card principle">
+          <div class="icon">04</div>
+          <h3>疑則不放行</h3>
+          <p>憑證失效、資料不足或本人未確認就停止，不讓 Agent 自行猜測。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Credentials & receipts</p>
+          <h2>三種證明，各自回答不同問題</h2>
+        </div>
+      </div>
+      <div class="content credential-layout">
+        <div class="credential-list" id="credentialList">
+          <button class="card credential selected" data-kind="fact">
+            <h3>政府資格憑證</h3><p>證明事實：資格是真的嗎？誰核發？是否仍有效？</p>
+          </button>
+          <button class="card credential" data-kind="delegation">
+            <h3>Agent 委託授權</h3><p>證明權限：代表誰、為何使用、可做什麼、能取哪些資料？</p>
+          </button>
+          <button class="card credential" data-kind="submission">
+            <h3>送件二次確認</h3><p>代查不等於代送；正式送件前重新取得本人明確確認。</p>
+          </button>
+          <button class="card credential" data-kind="receipt">
+            <h3>Execution Receipt</h3><p>證明行為：Agent 最後做了什麼，寫入哪一個案件紀錄？</p>
+          </button>
+        </div>
+        <pre class="credential-code" id="credentialCode"></pre>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Evidence matching</p>
+          <h2>憑證可以自動比對，但缺資料不能亂猜</h2>
+        </div>
+      </div>
+      <div class="content match-layout">
+        <div class="requirements">
+          <div class="requirement"><strong>身分有效</strong><span>基本身分資格憑證</span><span class="status">✓ MATCH</span></div>
+          <div class="requirement"><strong>就業保險資格</strong><span>就業保險資格憑證</span><span class="status">✓ MATCH</span></div>
+          <div class="requirement"><strong>已完成求職登記</strong><span>求職登記資格憑證</span><span class="status">✓ MATCH</span></div>
+          <div class="requirement"><strong>非自願離職</strong><span>民眾自行提供文件</span><span class="status wait">等待補件</span></div>
+          <div class="answer-strip"><strong>判定：</strong>證據不足，不等於不符合資格。Agent 會說清楚還缺什麼。</div>
+        </div>
+        <div class="score-panel">
+          <div class="score-ring"></div>
+          <h3 style="margin:0">必要證據已備妥</h3>
+          <p style="color:#cbd5f4">補件完成後才繼續資格判定</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Authorization boundary</p>
+          <h2>代查 ≠ 代送</h2>
+        </div>
+        <button class="primary" id="playAuthorization">播放授權流程</button>
+      </div>
+      <div class="content">
+        <div>
+          <div class="authorization-flow" id="authorizationFlow">
+            <div class="auth-node">查詢授權<br><small>eligibility.evaluate</small></div>
+            <div class="auth-node">資格判定<br><small>規則引擎</small></div>
+            <div class="auth-node">本人二次確認<br><small>高風險攔截</small></div>
+            <div class="auth-node">送件授權<br><small>application.submit</small></div>
+            <div class="auth-node">送件＋收據<br><small>Execution Receipt</small></div>
+          </div>
+          <div class="auth-explain" id="authExplain">查詢授權只能評估資格，不能直接正式送件。點擊「播放授權流程」查看政策閘門如何逐步放行。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Policy gate simulator</p>
+          <h2>會說「不」的系統，才值得信任</h2>
+        </div>
+        <span class="tag">點擊任一攻擊情境</span>
+      </div>
+      <div class="content">
+        <div>
+          <div class="policy-grid" id="policyGrid">
+            <button class="card policy" data-message="授權的服務對象不符；機關端在讀取資料前即拒絕。">
+              <span class="deny-code">AUDIENCE_MISMATCH</span>
+              <h3>拿錯地方</h3><p>發給資格評估流程的授權，卻拿去另一個機關使用。</p><span class="policy-result">→ DENY</span>
+            </button>
+            <button class="card policy" data-message="要求超出授權欄位；Agent 無法取得完整原始紀錄。">
+              <span class="deny-code">DATA_SCOPE_VIOLATION</span>
+              <h3>拿太多資料</h3><p>只授權資格結果，卻要求完整投保或戶籍紀錄。</p><span class="policy-result">→ DENY</span>
+            </button>
+            <button class="card policy" data-message="一次性授權已使用；相同授權不能重複執行。">
+              <span class="deny-code">REPLAY_DENIED</span>
+              <h3>重複使用</h3><p>同一個一次性授權被拿來執行第二次。</p><span class="policy-result">→ DENY</span>
+            </button>
+            <button class="card policy" data-message="憑證已過期或撤銷；Agent 立即停止並引導使用者重新取得。">
+              <span class="deny-code">CREDENTIAL_EXPIRED</span>
+              <h3>失效或撤銷</h3><p>必要憑證超過有效期，或民眾已撤銷委託。</p><span class="policy-result">→ DENY</span>
+            </button>
+          </div>
+          <div class="answer-strip"><strong>Policy Gate：</strong> <span id="policyMessage">尚未選擇情境。任何驗證失敗，都不應該查資料或送件。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Case-level audit log</p>
+          <h2>申辦被駁回，也能還原 Agent 當時做了什麼</h2>
+        </div>
+      </div>
+      <div class="content audit-layout">
+        <div class="timeline" id="timeline">
+          <button class="event active" data-event="需求解析：民眾詢問育兒生活補助；Agent 對應至 childcare-benefit-2026。"><span class="event-dot">01</span><span><h3>理解需求</h3><p>10:01:12 · Service Discovery</p></span></button>
+          <button class="event" data-event="授權快照：僅允許讀取身分有效、家戶關係與兒童年齡等必要欄位。"><span class="event-dot">02</span><span><h3>取得授權</h3><p>10:01:31 · Authorization</p></span></button>
+          <button class="event" data-event="證據來源：數位憑證皮夾與 MyData；每項資料保留來源、時間與使用目的。"><span class="event-dot">03</span><span><h3>取得必要證據</h3><p>10:01:44 · Evidence retrieval</p></span></button>
+          <button class="event" data-event="資格規則：保存規則版本、輸入證據與符合／不符合／資料不足結果。"><span class="event-dot">04</span><span><h3>資格判定</h3><p>10:01:48 · Policy decision</p></span></button>
+          <button class="event" data-event="本人確認後才正式送件，並產生可對應本案件的 Execution Receipt。"><span class="event-dot">05</span><span><h3>確認與送件</h3><p>10:02:15 · Submission</p></span></button>
+        </div>
+        <aside class="receipt">
+          <span class="receipt-label">AUDIT EVENT DETAIL</span>
+          <h3 style="font-size:26px;margin-top:12px">案件 NLA-2026-0829-001</h3>
+          <p id="auditDetail" style="line-height:1.7">需求解析：民眾詢問育兒生活補助；Agent 對應至 childcare-benefit-2026。</p>
+          <dl>
+            <dt>Principal</dt><dd>已登入用戶 牛來</dd>
+            <dt>Action</dt><dd>service.discover</dd>
+            <dt>Decision</dt><dd>ALLOW</dd>
+            <dt>Trace ID</dt><dd>evt_8f21a0</dd>
+          </dl>
+          <span class="tag">授權、資料、規則、送件可串回同一案件</span>
+        </aside>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Live demo</p>
+          <h2>現在，讓牛來實際跑一次</h2>
+        </div>
+      </div>
+      <div class="content live-layout">
+        <div class="demo-script">
+          <div class="script-step"><b>1</b><div><strong>登入</strong><p>使用者：user　密碼：password</p></div></div>
+          <div class="script-step"><b>2</b><div><strong>提出需求</strong><p>「我想申請育兒生活補助」</p></div></div>
+          <div class="script-step"><b>3</b><div><strong>展示信任控制</strong><p>申請憑證 → 授權資料 → 規則判定 → 建立草稿。</p></div></div>
+          <div class="script-step"><b>4</b><div><strong>確認與稽核</strong><p>本人確認後送件，再從案件紀錄打開完整 Audit Log。</p></div></div>
+          <div class="button-row">
+            <a class="primary" href="/" target="_blank">另開完整 Demo</a>
+            <button class="secondary" id="reloadDemo">重新載入畫面</button>
+          </div>
+          <div class="scope-note"><strong>Demo 範圍揭露：</strong>目前數位憑證皮夾、MyData 與政府機關介接為概念架構及 Mock Adapter；介面用於展示可信代理流程。</div>
+        </div>
+        <div class="demo-frame">
+          <div class="browser-bar"><i class="browser-dot"></i><i class="browser-dot"></i><i class="browser-dot"></i><span class="browser-url">牛來｜政府服務 AI Agent</span></div>
+          <iframe id="demoIframe" src="/" title="牛來互動式 Demo"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark">
+      <div class="slide-header">
+        <span class="tag">GeovTrustAI · 牛來</span>
+      </div>
+      <div class="content closing">
+        <div>
+          <p class="eyebrow">The promise</p>
+          <h1 style="font-size:clamp(44px,6vw,92px)">讓政府 AI 服務<br>值得信任</h1>
+          <p class="hero-subtitle">不是讓 AI 擁有更多資料，<br>而是讓它在更清楚的邊界內替民眾完成事情。</p>
+        </div>
+        <div class="closing-points">
+          <div class="closing-point"><span class="check">✓</span><span>AI 輔助理解，規則負責決策</span></div>
+          <div class="closing-point"><span class="check">✓</span><span>憑證證明資格，授權限制用途</span></div>
+          <div class="closing-point"><span class="check">✓</span><span>本人掌握送件，每案完整留痕</span></div>
+          <div class="answer-strip"><strong>牛來：</strong>民眾的一個入口，政府服務的一條可信代理鏈。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="hint">← → 換頁 · F 全螢幕 · O 總覽 · Home / End</div>
+  <nav class="controls" aria-label="簡報控制">
+    <button class="control" id="prev" aria-label="上一頁">←</button>
+    <span class="slide-count" id="slideCount">1 / 12</span>
+    <button class="control" id="next" aria-label="下一頁">→</button>
+    <button class="control" id="overview" aria-label="總覽">▦</button>
+    <button class="control" id="fullscreen" aria-label="全螢幕">⛶</button>
+  </nav>
+  <div class="progress"><span id="progressBar"></span></div>
+
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    const deck = document.querySelector("#deck");
+    const slideCount = document.querySelector("#slideCount");
+    const progressBar = document.querySelector("#progressBar");
+    let current = Math.max(0, Math.min(slides.length - 1, Number(location.hash.slice(1)) - 1 || 0));
+    let overviewMode = false;
+
+    function showSlide(index) {
+      current = (index + slides.length) % slides.length;
+      slides.forEach((slide, i) => slide.classList.toggle("active", i === current));
+      slideCount.textContent = `${current + 1} / ${slides.length}`;
+      progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+      history.replaceState(null, "", `#${current + 1}`);
+    }
+
+    function toggleOverview(force) {
+      overviewMode = typeof force === "boolean" ? force : !overviewMode;
+      document.body.classList.toggle("overview", overviewMode);
+    }
+
+    document.querySelector("#prev").addEventListener("click", () => showSlide(current - 1));
+    document.querySelector("#next").addEventListener("click", () => showSlide(current + 1));
+    document.querySelector("#overview").addEventListener("click", () => toggleOverview());
+    document.querySelector("#fullscreen").addEventListener("click", () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    });
+
+    slides.forEach((slide, i) => slide.addEventListener("click", event => {
+      if (overviewMode && !event.target.closest("button, a")) {
+        toggleOverview(false);
+        showSlide(i);
+      }
+    }));
+
+    document.addEventListener("keydown", event => {
+      if (event.target.matches("input, textarea")) return;
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") showSlide(current + 1);
+      if (event.key === "ArrowLeft" || event.key === "PageUp") showSlide(current - 1);
+      if (event.key === "Home") showSlide(0);
+      if (event.key === "End") showSlide(slides.length - 1);
+      if (event.key.toLowerCase() === "f") document.querySelector("#fullscreen").click();
+      if (event.key.toLowerCase() === "o" || event.key === "Escape" && overviewMode) toggleOverview();
+    });
+
+    document.querySelector("#painCards").addEventListener("click", event => {
+      const card = event.target.closest(".card");
+      if (!card) return;
+      document.querySelectorAll("#painCards .card").forEach(item => item.classList.toggle("selected", item === card));
+      document.querySelector("#painAnswer").textContent = card.dataset.answer;
+    });
+
+    document.querySelector("#journey").addEventListener("click", event => {
+      const step = event.target.closest(".journey-step");
+      if (!step) return;
+      document.querySelectorAll(".journey-step").forEach(item => item.classList.toggle("active", item === step));
+      document.querySelector("#journeyTitle").textContent = step.dataset.title;
+      document.querySelector("#journeyDetail").textContent = step.dataset.detail;
+    });
+
+    const credentialExamples = {
+      fact: `{
+  "type": "IdentityQualificationCredential",
+  "issuer": "Mock Identity Authority",
+  "subject": "citizen:user_001",
+  "claims": { "identity_valid": true },
+  "valid_until": "2027-08-29",
+  "credential_status": { "state": "ACTIVE" },
+  "proof": { "type": "DemoMockProof" }
+}`,
+      delegation: `{
+  "principal": "citizen:user_001",
+  "agent": "niu-lai",
+  "purpose": "childcare-benefit.check",
+  "action": "eligibility.evaluate",
+  "claims": ["identity_valid", "child_age"],
+  "expires_at": "2026-08-29T10:06:31+08:00",
+  "max_uses": 1
+}`,
+      submission: `{
+  "principal_confirmation": true,
+  "purpose": "childcare-benefit.submit",
+  "action": "application.submit",
+  "case_draft": "draft_20260829_001",
+  "confirmed_at": "2026-08-29T10:02:11+08:00"
+}`,
+      receipt: `{
+  "case_id": "NLA-2026-0829-001",
+  "agent": "niu-lai",
+  "action": "application.submit",
+  "decision": "ALLOW",
+  "submitted_at": "2026-08-29T10:02:15+08:00",
+  "trace_id": "evt_8f21a0"
+}`
+    };
+
+    function renderCredential(kind) {
+      document.querySelector("#credentialCode").textContent = credentialExamples[kind];
+    }
+
+    document.querySelector("#credentialList").addEventListener("click", event => {
+      const card = event.target.closest(".credential");
+      if (!card) return;
+      document.querySelectorAll(".credential").forEach(item => item.classList.toggle("selected", item === card));
+      renderCredential(card.dataset.kind);
+    });
+    renderCredential("fact");
+
+    const authMessages = [
+      "民眾只授權本次資格查詢所需的最小資料。",
+      "規則引擎完成資格判定，查詢授權在此結束。",
+      "正式送件具有法律與權益影響，必須由本人再次確認。",
+      "確認後才產生用途為 application.submit 的新授權。",
+      "送件完成，Execution Receipt 與整段時間線寫入案件 Audit Log。"
+    ];
+    let authPlaying = false;
+    document.querySelector("#playAuthorization").addEventListener("click", async () => {
+      if (authPlaying) return;
+      authPlaying = true;
+      const nodes = [...document.querySelectorAll(".auth-node")];
+      for (let i = 0; i < nodes.length; i += 1) {
+        nodes.forEach((node, index) => node.classList.toggle("highlight", index === i));
+        document.querySelector("#authExplain").textContent = authMessages[i];
+        await new Promise(resolve => setTimeout(resolve, 900));
+      }
+      await new Promise(resolve => setTimeout(resolve, 600));
+      nodes.forEach(node => node.classList.remove("highlight"));
+      authPlaying = false;
+    });
+
+    document.querySelector("#policyGrid").addEventListener("click", event => {
+      const policy = event.target.closest(".policy");
+      if (!policy) return;
+      document.querySelectorAll(".policy").forEach(item => item.classList.toggle("selected", item === policy));
+      document.querySelector("#policyMessage").textContent = policy.dataset.message;
+    });
+
+    document.querySelector("#timeline").addEventListener("click", event => {
+      const item = event.target.closest(".event");
+      if (!item) return;
+      document.querySelectorAll(".event").forEach(entry => entry.classList.toggle("active", entry === item));
+      document.querySelector("#auditDetail").textContent = item.dataset.event;
+    });
+
+    document.querySelector("#reloadDemo").addEventListener("click", () => {
+      const iframe = document.querySelector("#demoIframe");
+      iframe.src = iframe.src;
+    });
+
+    showSlide(current);
+  </script>
+</body>
+</html>

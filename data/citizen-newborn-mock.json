@@ -9,11 +9,11 @@
       "endpoint": "/mock/identity/citizen-demo-001",
       "recordId": "ID-DEMO-001",
       "lastUpdated": "2026-08-20",
-      "credentialType": "自然人身分憑證",
+      "credentialType": "基本身分資格憑證",
       "expiresAt": "2027-08-20",
       "recordStatus": "valid",
       "authorizedForAgent": true,
-      "applicationInstructions": "向身分識別主管機關申請自然人身分憑證。",
+      "applicationInstructions": "向 Demo 身分識別主管機關申請基本身分資格憑證。",
       "validityDays": 365,
       "applicationFields": [
         {"name": "nationalId", "label": "身分證字號", "type": "text", "placeholder": "例如 A123456789"},

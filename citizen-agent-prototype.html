@@ -875,6 +875,105 @@
       gap: 10px;
     }
 
+    .wallet-section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 14px 0 8px;
+    }
+
+    .wallet-section-heading strong {
+      font-size: 12px;
+    }
+
+    .wallet-section-heading span {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .public-credential-example {
+      padding: 12px;
+      color: white;
+      background:
+        radial-gradient(circle at 100% 0, rgba(117, 230, 189, 0.28), transparent 115px),
+        linear-gradient(135deg, #174f67, #176b5b);
+      border-radius: 13px;
+      box-shadow: 0 8px 18px rgba(23, 79, 103, 0.18);
+    }
+
+    .public-credential-top,
+    .public-credential-title {
+      display: flex;
+      align-items: center;
+    }
+
+    .public-credential-top {
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .public-credential-title {
+      gap: 9px;
+    }
+
+    .public-credential-icon {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      color: #174f67;
+      background: #d1fadf;
+      border-radius: 9px;
+      font-weight: 900;
+    }
+
+    .public-credential-title strong,
+    .public-credential-title small {
+      display: block;
+    }
+
+    .public-credential-title strong {
+      font-size: 13px;
+    }
+
+    .public-credential-title small {
+      margin-top: 2px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 10px;
+    }
+
+    .public-trial-badge,
+    .concept-badge {
+      padding: 4px 7px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .public-trial-badge {
+      color: #174f67;
+      background: #d1fadf;
+    }
+
+    .public-credential-usage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 9px;
+    }
+
+    .public-credential-usage strong {
+      display: block;
+      margin-top: 2px;
+      color: white;
+      font-size: 10px;
+    }
+
     .wallet-pass {
       position: relative;
       overflow: hidden;
@@ -937,6 +1036,13 @@
       margin-top: 2px;
       color: var(--muted);
       font-size: 10px;
+    }
+
+    .concept-badge {
+      display: inline-block;
+      margin-top: 5px;
+      color: #6941c6;
+      background: #f4ebff;
     }
 
     .wallet-pass-state {
@@ -2667,6 +2773,30 @@
               <span class="connection-line">安全連線</span>
               <span class="connection-node">憑證皮夾</span>
             </div>
+            <div class="wallet-section-heading">
+              <strong>官方已公開試營運案例</strong>
+              <span>生態系參考，不供本流程使用</span>
+            </div>
+            <article class="public-credential-example">
+              <div class="public-credential-top">
+                <div class="public-credential-title">
+                  <div class="public-credential-icon" aria-hidden="true">電</div>
+                  <div>
+                    <strong>電信卡／電信門號電子卡</strong>
+                    <small>三大電信業者</small>
+                  </div>
+                </div>
+                <span class="public-trial-badge">公開試營運</span>
+              </div>
+              <div class="public-credential-usage">
+                <span>公開應用<strong>超商取貨身分核對</strong></span>
+                <span>服務場域<strong>全家、7-ELEVEN</strong></span>
+              </div>
+            </article>
+            <div class="wallet-section-heading">
+              <strong>本 Demo 政府服務概念憑證</strong>
+              <span>非現行 TW DIW 正式卡片</span>
+            </div>
             <div class="wallet-passes">
               ${credentialInventory.map(item => `
                 <article class="wallet-pass ${escapeHtml(item.status)}">
@@ -2676,6 +2806,7 @@
                       <div class="wallet-pass-title">
                         <strong>${escapeHtml(item.credentialType || item.label)}</strong>
                         <small>${escapeHtml(item.issuer)}</small>
+                        <span class="concept-badge">Demo Mock</span>
                       </div>
                     </div>
                     <span class="wallet-pass-state ${escapeHtml(item.status)}">${escapeHtml(walletCredentialLabel(item.status))}</span>
@@ -2697,7 +2828,7 @@
               `).join("") || `<div class="agent-subtitle">皮夾內目前沒有數位憑證。</div>`}
             </div>
             <div class="wallet-demo-note">
-              此區為外部數位憑證皮夾的 Demo 連接介面，未串接正式 TW DIW；憑證由 Mock 發證機關提供。
+              此區模擬外部數位憑證皮夾連線。除上方公開案例外，下列政府服務憑證皆由 Mock 發證機關產生，未串接正式 TW DIW。
             </div>
           </div>
         </details>

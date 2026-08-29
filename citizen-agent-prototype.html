@@ -620,6 +620,42 @@
       font-size: 14px;
     }
 
+    .credential-wallet {
+      padding: 12px;
+      background: #fbfcfd;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .credential-wallet summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    .credential-wallet summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .credential-wallet summary::after {
+      content: "展開";
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .credential-wallet[open] summary::after {
+      content: "收合";
+    }
+
+    .credential-wallet .facts {
+      margin-top: 12px;
+    }
+
     .facts {
       display: grid;
       gap: 8px;
@@ -1531,6 +1567,7 @@
     let backendMode = false;
     let backendSessionId = null;
     let currentCredentials = null;
+    let credentialWalletOpen = true;
 
     const loginView = document.querySelector("#loginView");
     const appView = document.querySelector("#appView");
@@ -2119,8 +2156,8 @@
       const sections = [];
 
       sections.push(`
-        <div class="state-section">
-          <h3>我的政府憑證</h3>
+        <details id="credentialWallet" class="state-section credential-wallet" ${credentialWalletOpen ? "open" : ""}>
+          <summary>我的政府憑證（${(state.credentialInventory || []).length}）</summary>
           <div class="facts">
             ${(state.credentialInventory || []).map(item => `
               <div class="credential">
@@ -2138,7 +2175,7 @@
           <div class="last-change">
             「未授權」代表錢包已有憑證，但本次尚未同意 Agent 使用；同意後才會變成「可使用」。
           </div>
-        </div>
+        </details>
       `);
 
       if (state.question) {
@@ -2303,6 +2340,12 @@
 
         <div class="last-change"><strong>剛剛發生：</strong><br>${escapeHtml(state.lastChange)}</div>
       `;
+      const credentialWallet = stateBody.querySelector("#credentialWallet");
+      if (credentialWallet) {
+        credentialWallet.addEventListener("toggle", () => {
+          credentialWalletOpen = credentialWallet.open;
+        });
+      }
     }
 
     function evidenceStatus(status) {

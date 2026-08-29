@@ -151,7 +151,7 @@ class FileUserProfileStore:
 
     def _default_profile(self, username: str) -> dict[str, Any]:
         return {
-            "profileVersion": 4,
+            "profileVersion": 5,
             "username": username,
             "displayName": self._fixture["displayName"],
             "credentials": {},
@@ -172,18 +172,28 @@ class FileUserProfileStore:
             }
             changed = True
         if profile_version < 3:
-            profile["cases"] = self._fixture_cases()
+            profile["cases"] = []
             changed = True
         elif "cases" not in profile:
             profile["cases"] = []
+            changed = True
+        if profile_version < 5:
+            fixture_case_ids = {
+                item["id"] for item in self._fixture.get("cases", [])
+            }
+            profile["cases"] = [
+                case
+                for case in profile["cases"]
+                if case.get("id") not in fixture_case_ids
+            ]
             changed = True
         for case in profile["cases"]:
             if "auditTimeline" not in case:
                 case["auditTimeline"] = self._historical_case_timeline(case)
                 changed = True
-        if profile_version < 4:
+        if profile_version < 5:
             changed = True
-        profile["profileVersion"] = 4
+        profile["profileVersion"] = 5
         for evidence_id, credential in profile.get("credentials", {}).items():
             if "authorizedForAgent" in credential:
                 continue
@@ -193,12 +203,6 @@ class FileUserProfileStore:
             )
             changed = True
         return changed
-
-    def _fixture_cases(self) -> list[dict[str, Any]]:
-        cases = [dict(item) for item in self._fixture.get("cases", [])]
-        for case in cases:
-            case["auditTimeline"] = self._historical_case_timeline(case)
-        return cases
 
     @staticmethod
     def _historical_case_timeline(case: dict[str, Any]) -> list[dict[str, str]]:

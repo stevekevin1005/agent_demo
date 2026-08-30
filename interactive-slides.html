@@ -309,6 +309,15 @@
       gap: clamp(20px, 3vw, 46px);
     }
 
+    .slide:nth-child(3) {
+      gap: clamp(24px, 3vh, 36px);
+    }
+
+    .slide:nth-child(3) .slide-header {
+      position: relative;
+      z-index: 3;
+    }
+
     .architecture-frame {
       min-height: 0;
       padding: 14px;
@@ -1159,7 +1168,7 @@
     }
 
     .video-placeholder {
-      width: min(80vw, calc((100vh - 220px) * 16 / 9), 1280px);
+      width: min(calc(100vw - 96px), calc((100vh - 100px) * 16 / 9), 1700px);
       aspect-ratio: 16 / 9;
       margin: auto;
       position: relative;
@@ -1179,7 +1188,7 @@
 
     .video-fallback {
       position: absolute;
-      right: 14px;
+      left: 14px;
       bottom: 14px;
       z-index: 2;
       padding: 8px 12px;
@@ -1190,6 +1199,18 @@
       font-weight: 800;
       text-decoration: none;
       backdrop-filter: blur(8px);
+    }
+
+    .video-slide {
+      grid-template-rows: auto 1fr;
+      gap: 6px;
+      padding: 16px 24px 56px;
+    }
+
+    .video-slide .slide-header .eyebrow { margin-bottom: 2px; }
+
+    .video-slide .slide-header h2 {
+      font-size: clamp(26px, 2.5vw, 40px);
     }
 
     .slide.active .card,
@@ -1234,6 +1255,18 @@
       box-shadow: 0 0 0 25px rgba(19,199,163,.08), 0 30px 80px rgba(0,0,0,.3);
       font: 900 clamp(62px,9vw,130px) Georgia, serif;
     }
+
+    .github-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: #8ff5df;
+      font-size: clamp(15px, 1.35vw, 21px);
+      font-weight: 700;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+
+    .github-link:hover { text-decoration: underline; }
 
     .closing {
       display: grid;
@@ -1332,9 +1365,9 @@
       z-index: 24;
       right: 18px;
       bottom: 16px;
-      width: 164px;
+      width: 112px;
       display: grid;
-      grid-template-columns: 110px 1fr;
+      grid-template-columns: 76px 1fr;
       gap: 8px;
       align-items: center;
       padding: 7px;
@@ -1347,8 +1380,8 @@
     }
 
     .qr-badge img {
-      width: 110px;
-      height: 110px;
+      width: 76px;
+      height: 76px;
       display: block;
     }
 
@@ -1481,7 +1514,7 @@
             </button>
           </div>
           <div class="answer-strip"><strong>政好的回答：</strong> <span id="painAnswer">政好先理解生活事件，再從服務目錄找出可能適用的政府方案。</span></div>
-          <div class="impact-proof"><b>15 日</b><span>幼兒送托後若未及時完成申請，補助起算日可能順延——政府服務的難，不只是找不到，而是錯過就影響權益。</span></div>
+          <div class="impact-proof"><b>14 日</b><span>完成求職登記後，若 14 日內仍無法推介就業或安排職訓，才進入失業給付認定——政府服務的難，是程序、證據與時點缺一不可。</span></div>
         </div>
       </div>
     </section>
@@ -1679,13 +1712,13 @@
               <h3>政好只知道兩種訊號</h3>
               <div class="signal">
                 <strong>已申請的服務類型</strong>
-                <span>生育一次性給付 · 已收件</span>
+                <span>失業給付 · 已收件</span>
               </div>
               <div class="signal">
                 <strong>皮夾已有的憑證種類</strong>
-                <span>基本身分、親子關係、社會保險</span>
+                <span>基本身分、非自願離職、就業保險</span>
               </div>
-              <div class="scope-note"><strong>不知道：</strong>實際所得、地址、家庭狀況與憑證內文。</div>
+              <div class="scope-note"><strong>不知道：</strong>實際所得、目前就業狀態、離職細節與憑證內文。</div>
             </div>
             <div class="recommendation-engine">
               <div class="engine-icon">政</div>
@@ -1697,15 +1730,15 @@
               <h3>因此只推薦「值得了解」</h3>
               <div class="suggested-service">
                 <span class="not-eligible-yet">尚未判定資格</span>
-                <strong>育兒生活補助</strong>
-                <span>每月 5,000 元</span>
-                <small>一次性生育給付之外，可能還有定期育兒支持。</small>
+                <strong>提早就業獎助津貼</strong>
+                <span>找到工作後可再檢查</span>
+                <small>若在失業給付期限屆滿前重新就業，可能還有後續就業獎助。</small>
               </div>
               <div class="suggested-service">
                 <span class="not-eligible-yet">尚未判定資格</span>
-                <strong>托育服務補助</strong>
-                <span>每月最高 7,000 元</span>
-                <small>若後續使用合格托育服務，可再主動檢查條件。</small>
+                <strong>職業訓練生活津貼</strong>
+                <span>參訓前可再檢查</span>
+                <small>若參加全日制職業訓練，可另行確認適用條件與給付限制。</small>
               </div>
             </div>
           </div>
@@ -1760,8 +1793,8 @@
       </div>
       <div class="content audit-layout">
         <div class="timeline" id="timeline">
-          <button class="event active" data-event="需求解析：民眾詢問育兒生活補助；Agent 對應至 childcare-benefit-2026。"><span class="event-dot">01</span><span><h3>理解需求</h3><p>10:01:12 · Service Discovery</p></span></button>
-          <button class="event" data-event="授權快照：僅允許讀取身分有效、家戶關係與兒童年齡等必要欄位。"><span class="event-dot">02</span><span><h3>取得授權</h3><p>10:01:31 · Authorization</p></span></button>
+          <button class="event active" data-event="需求解析：民眾詢問失業給付；Agent 對應至 unemployment-benefit-2026。"><span class="event-dot">01</span><span><h3>理解需求</h3><p>10:01:12 · Service Discovery</p></span></button>
+          <button class="event" data-event="授權快照：僅允許讀取身分有效、就業保險、非自願離職與求職登記等必要證據。"><span class="event-dot">02</span><span><h3>取得授權</h3><p>10:01:31 · Authorization</p></span></button>
           <button class="event" data-event="證據來源：數位憑證皮夾與 MyData；每項資料保留來源、時間與使用目的。"><span class="event-dot">03</span><span><h3>取得必要證據</h3><p>10:01:44 · Evidence retrieval</p></span></button>
           <button class="event" data-event="資格規則：保存規則版本、輸入證據與符合／不符合／資料不足結果。"><span class="event-dot">04</span><span><h3>資格判定</h3><p>10:01:48 · Policy decision</p></span></button>
           <button class="event" data-event="本人確認後才正式送件，並產生可對應本案件的 Execution Receipt。"><span class="event-dot">05</span><span><h3>確認與送件</h3><p>10:02:15 · Submission</p></span></button>
@@ -1769,7 +1802,7 @@
         <aside class="receipt">
           <span class="receipt-label">AUDIT EVENT DETAIL · 示意畫面</span>
           <h3 style="font-size:26px;margin-top:12px">案件 APP-20260829-9F21A0</h3>
-          <p id="auditDetail" style="line-height:1.7">需求解析：民眾詢問育兒生活補助；Agent 對應至 childcare-benefit-2026。</p>
+          <p id="auditDetail" style="line-height:1.7">需求解析：民眾詢問失業給付；Agent 對應至 unemployment-benefit-2026。</p>
           <dl>
             <dt>Principal</dt><dd>已登入用戶 老王</dd>
             <dt>Action</dt><dd>service.discover</dd>
@@ -1782,7 +1815,7 @@
       </div>
     </section>
 
-    <section class="slide dark">
+    <section class="slide dark video-slide">
       <div class="slide-header">
         <div>
           <p class="eyebrow">Live demo</p>
@@ -1833,6 +1866,7 @@
           <p class="eyebrow">Discussion</p>
           <h1 style="font-size:clamp(70px,10vw,150px)">Q&amp;A</h1>
           <p class="hero-subtitle">可信任的政府服務 Agent，<br>應該代表誰、能做什麼、如何被追責？</p>
+          <a class="github-link" href="https://github.com/stevekevin1005/agent_demo" target="_blank" rel="noopener">GitHub：github.com/stevekevin1005/agent_demo</a>
         </div>
         <div class="qa-mark">?</div>
       </div>
@@ -1956,18 +1990,18 @@
   }
 }`,
       delegation: `{
-  "id": "grant:childcare:EG91AD",
+  "id": "grant:unemployment:EG91AD",
   "type": "AgentDelegationCredential",
   "contentAddressedId": "EG91AD...SAID",
   "issuer": "wallet:citizen:user_001",
   "subject": "agent:zheng-hao",
   "grant": {
     "principal": "citizen:user_001",
-    "audience": "service:childcare-benefit-2026",
+    "audience": "service:unemployment-benefit-2026",
     "purpose": "eligibility.check",
     "actions": ["credential.verify", "mydata.read"],
-    "claims": ["identity_valid", "parent_child_relation", "child_age"],
-    "caseId": "draft:childcare:20260829"
+    "claims": ["identity_valid", "employment_insurance", "involuntary_separation", "job_registration"],
+    "caseId": "draft:unemployment:20260829"
   },
   "validity": {
     "from": "2026-08-29T10:01:31+08:00",
@@ -1994,10 +2028,10 @@
   "issuer": "wallet:citizen:user_001",
   "subject": "agent:zheng-hao",
   "authorization": {
-    "purpose": "childcare-benefit.submit",
-    "audience": "agency:social-welfare",
+    "purpose": "unemployment-benefit.submit",
+    "audience": "agency:employment-insurance",
     "action": "正式送件",
-    "caseId": "draft:childcare:20260829",
+    "caseId": "draft:unemployment:20260829",
     "draftDigest": "sha256:64be..."
   },
   "confirmation": {
@@ -2006,7 +2040,7 @@
     "channel": "authenticated-session"
   },
   "delegationEdge": {
-    "credential": "grant:childcare:EG91AD",
+    "credential": "grant:unemployment:EG91AD",
     "operator": "SAME_PRINCIPAL"
   },
   "validity": { "maxUses": 1, "state": "ACTIVE" },
@@ -2026,12 +2060,12 @@
     "operator": "ACTION_MATCH"
   },
   "input": {
-    "caseId": "draft:childcare:20260829",
+    "caseId": "draft:unemployment:20260829",
     "draftDigest": "sha256:64be..."
   },
   "result": {
     "applicationId": "APP-20260829-9F21A0",
-    "agency": "agency:social-welfare",
+    "agency": "agency:employment-insurance",
     "status": "SUBMITTED"
   },
   "executedAt": "2026-08-29T10:02:15+08:00",

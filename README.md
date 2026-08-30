@@ -8,12 +8,12 @@ python .\server.py
 
 Then open <http://127.0.0.1:8080>.
 
-The interactive hackathon presentation uses `interactive-slides.html` and the
-adjacent `agentdemo-qr.svg` asset. Double-click the HTML file to present without
-starting the backend or connecting to the internet. It includes keyboard navigation,
+The interactive hackathon presentation is a standalone `interactive-slides.html`
+file with its QR Code embedded. Double-click the HTML file to present without
+starting the backend. It includes keyboard navigation,
 fullscreen and overview modes, animated solution architecture, interactive
-trust-policy examples, a case Audit Log timeline, and a blank 16:9 video area
-reserved for the final Demo recording. When the backend is running, the same file is also available at
+trust-policy examples, a case Audit Log timeline, and an embedded YouTube Demo
+video that requires an internet connection. When the backend is running, the same file is also available at
 <http://127.0.0.1:8080/slides>.
 
 The Demo login page displays the default credentials directly:

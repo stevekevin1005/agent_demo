@@ -1,7 +1,7 @@
 {
   "subjectId": "citizen-demo-001",
   "scenario": "multi-life-event-demo",
-  "displayName": "牛來",
+  "displayName": "老王",
   "records": {
     "identity": {
       "label": "身分有效",

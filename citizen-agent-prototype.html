@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>政府服務 AI Agent 流程原型</title>
+  <title>政好｜可信政府服務 AI Agent</title>
   <style>
     :root {
       --ink: #172033;
@@ -1255,6 +1255,102 @@
       font-weight: 800;
     }
 
+    .recommendation-panel {
+      padding: 12px;
+      background: linear-gradient(145deg, #f0faf7, #f8fbfd);
+      border: 1px solid #b7e4d7;
+      border-radius: 12px;
+    }
+
+    .recommendation-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .recommendation-heading h3 {
+      margin: 0;
+    }
+
+    .recommendation-badge {
+      padding: 4px 7px;
+      color: #0b6b58;
+      background: #d7f4eb;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .recommendation-intro {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .recommendation-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .recommendation-card {
+      width: 100%;
+      padding: 10px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #cae7df;
+      border-radius: 10px;
+      text-align: left;
+    }
+
+    .recommendation-card:hover {
+      background: #f4fcf9;
+      border-color: var(--accent);
+    }
+
+    .recommendation-card strong,
+    .recommendation-card small {
+      display: block;
+    }
+
+    .recommendation-card strong {
+      padding-right: 74px;
+      font-size: 12px;
+    }
+
+    .recommendation-card small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .recommendation-amount {
+      float: right;
+      margin-top: -18px;
+      color: #0b6b58;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .recommendation-reason {
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid #edf2f0;
+      color: #245e52;
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .recommendation-privacy {
+      margin-top: 8px;
+      color: #667085;
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
     .facts {
       display: grid;
       gap: 8px;
@@ -1529,7 +1625,7 @@
           <div class="agent-identity">
             <div class="seal">政</div>
             <div>
-              <h2 class="agent-title">政府服務小幫手</h2>
+              <h2 class="agent-title">政好</h2>
               <p class="agent-subtitle">整合服務說明、資格檢查與申請草稿</p>
             </div>
           </div>
@@ -1588,8 +1684,49 @@
         "申請已送出"
       ];
 
+      const relatedBenefitCatalog = {
+        "birth-payment-2026": [
+          {
+            id: "childcare-benefit-2026",
+            name: "育兒生活補助",
+            agency: "社會福利主管機關",
+            estimatedAmount: "每月 5,000 元",
+            summary: "依家庭與設籍條件提供定期育兒支持。",
+            reason: "您已申請生育一次性給付，同一個新生兒人生事件可能還有定期育兒支持。",
+            signals: ["曾申請同類型服務：生育一次性給付", "皮夾已有相關憑證種類：親子關係"],
+            privacyNote: "尚未檢查資格。只使用服務類型與憑證種類推薦，不讀取憑證內容。",
+            evidence: [
+              { id: "identity", label: "身分有效", source: "government", department: "身分識別主管機關" },
+              { id: "residency", label: "設籍地", source: "government", department: "戶政主管機關" },
+              { id: "relationship", label: "親子關係", source: "government", department: "戶政主管機關" },
+              { id: "income", label: "所得級距", source: "government", department: "稅務主管機關" }
+            ]
+          },
+          {
+            id: "care-service-2026",
+            name: "托育服務補助",
+            agency: "托育服務主管機關",
+            estimatedAmount: "每月最高 7,000 元",
+            summary: "使用合格托育服務時提供費用補助。",
+            reason: "新生兒家庭後續若使用合格托育服務，可能還有按月補助可以了解。",
+            signals: ["曾申請同類型服務：生育一次性給付", "皮夾已有相關憑證種類：親子關係"],
+            privacyNote: "尚未檢查資格。只使用服務類型與憑證種類推薦，不讀取憑證內容。",
+            evidence: [
+              { id: "identity", label: "身分有效", source: "government", department: "身分識別主管機關" },
+              { id: "residency", label: "設籍地", source: "government", department: "戶政主管機關" },
+              { id: "relationship", label: "親子關係", source: "government", department: "戶政主管機關" },
+              { id: "enrollment", label: "托育服務登記", source: "government", department: "托育服務主管機關" }
+            ]
+          }
+        ]
+      };
+
+      function recommendationsFor(serviceId) {
+        return (relatedBenefitCatalog[serviceId] || []).map(item => ({ ...item }));
+      }
+
       const initialState = () => ({
-        displayName: "牛來",
+        displayName: "老王",
         stage: 0,
         workflowState: "awaiting_question",
         question: "",
@@ -1633,6 +1770,7 @@
         application: null,
         caseHistory: [],
         caseResults: [],
+        recommendations: [],
         bankAccounts: [
           {
             id: "bank-labor",
@@ -1803,6 +1941,34 @@
             return appendAudit(next, "民眾", "選擇政府服務", service.name);
           }
 
+          case "EXPLORE_RECOMMENDATION": {
+            const service = state.recommendations.find(item => item.id === action.serviceId);
+            if (!service) return reject(state, "這項服務目前不在推薦清單中。");
+            let next = {
+              ...initialState(),
+              displayName: state.displayName,
+              credentialInventory: state.credentialInventory,
+              caseHistory: state.caseHistory,
+              recommendations: state.recommendations,
+              bankAccounts: state.bankAccounts,
+              audit: state.audit,
+              stage: 2,
+              workflowState: "awaiting_service",
+              question: `了解推薦服務「${service.name}」`,
+              candidateServices: [service],
+              messages: [
+                ...state.messages,
+                { actor: "user", text: `我想了解推薦的「${service.name}」。` },
+                {
+                  actor: "agent",
+                  text: "這項推薦只根據您曾申請的服務類型與皮夾中的憑證種類，不代表您已符合資格。我會從申請條件開始檢查。"
+                }
+              ],
+              lastChange: `已開啟「${service.name}」，尚未讀取任何憑證內容。`
+            };
+            return appendAudit(next, "Agent", "開啟相關服務", `${service.name}；尚未讀取憑證內容`);
+          }
+
           case "REQUEST_CONSENT": {
             if (state.stage < 2) return reject(state, "需要先選定要檢查的政府服務。");
             if (!state.selectedService) return reject(state, "請先選擇一項政府服務。");
@@ -1893,7 +2059,7 @@
               stage: 6,
               draft: {
                 service: state.selectedService.name,
-                applicant: "牛來",
+                applicant: "老王",
                 child: "Demo 新生兒",
                 paymentAccount: "尚未選擇",
                 evidenceCount: state.selectedService.evidence.length,
@@ -2009,6 +2175,18 @@
           case "SUBMIT_APPLICATION": {
             if (!state.draft) return reject(state, "必須先建立申請草稿。");
             if (!state.citizenConfirmed) return reject(state, "Agent 不得在民眾確認前送件。");
+            const submittedCase = {
+              id: "APP-2026-0829-001",
+              serviceId: state.selectedService.id,
+              serviceName: state.selectedService.name,
+              status: "已收件",
+              agency: state.selectedService.agency,
+              submittedAt: now(),
+              updatedAt: now(),
+              nextStep: "等待主管機關審核",
+              estimatedCompletion: null,
+              auditTimeline: state.audit
+            };
             let next = {
               ...state,
               stage: 7,
@@ -2021,6 +2199,8 @@
                 ...state.draft,
                 status: "已送出"
               },
+              caseHistory: [submittedCase, ...state.caseHistory],
+              recommendations: recommendationsFor(state.selectedService.id),
               lastChange: "申請已送出，並產生可追蹤的案件編號。"
             };
             next = addMessage(
@@ -2224,6 +2404,10 @@
           message: action.utterance || "",
           payload: { serviceId: action.serviceId }
         },
+        EXPLORE_RECOMMENDATION: {
+          action: "explore_recommendation",
+          payload: { serviceId: action.serviceId }
+        },
         GRANT_CONSENT: {
           action: "grant_consent",
           message: action.utterance || ""
@@ -2294,6 +2478,8 @@
           ? { type: "USER_MESSAGE", text: `上傳文件：${action.fileName}` }
         : action.type === "QUERY_CASE"
           ? { type: "USER_MESSAGE", text: action.utterance || `查詢案件 ${action.caseId}` }
+        : action.type === "EXPLORE_RECOMMENDATION"
+          ? { type: "USER_MESSAGE", text: `我想了解推薦的「${action.serviceName}」。` }
         : action.type === "ASK_QUESTION"
           ? { type: "ASK_QUESTION", question: action.question || action.utterance }
           : action;
@@ -2312,6 +2498,7 @@
         VERIFY_BANK_ACCOUNT: "正在驗證帳戶持有人…",
         CONFIRM_APPLICATION: "正在確認授權狀態並送出申請…",
         QUERY_CASE: "正在查詢案件最新進度…",
+        EXPLORE_RECOMMENDATION: "正在開啟相關服務，尚未讀取憑證內容…",
         MODEL_MESSAGE: "正在理解您的意思並規劃下一步…"
       }[action.type] || "正在處理…";
       render();
@@ -2380,7 +2567,7 @@
       const latestAudit = payload.audit[payload.audit.length - 1];
       return {
         stage: stageByState[payload.state] ?? 0,
-        displayName: payload.display_name || "牛來",
+        displayName: payload.display_name || "老王",
         workflowState: payload.state,
         question: payload.question,
         lifeEvent: payload.life_event,
@@ -2398,6 +2585,7 @@
         application: payload.application,
         caseHistory: payload.case_history || [],
         caseResults: payload.case_results || [],
+        recommendations: payload.recommendations || [],
         bankAccounts: payload.bankAccounts,
         selectedBankAccountId: payload.selected_bank_account_id,
         messages: payload.messages,
@@ -2781,7 +2969,7 @@
           <div class="facts">
             <div class="fact"><span>申請服務</span><strong>${escapeHtml(state.draft.service)}</strong></div>
             <div class="fact"><span>受理機關</span><strong>${escapeHtml(state.draft.agency || state.selectedService.agency)}</strong></div>
-            <div class="fact"><span>申請人</span><strong>${escapeHtml(state.draft.applicant || state.displayName || "牛來")}</strong></div>
+            <div class="fact"><span>申請人</span><strong>${escapeHtml(state.draft.applicant || state.displayName || "老王")}</strong></div>
             ${reviewEvidence.map(item => `
               <div class="credential">
                 <div class="credential-detail">
@@ -2914,6 +3102,41 @@
           </div>
         </section>
       `);
+
+      if (
+        state.recommendations?.length
+        && ["awaiting_question", "submitted"].includes(state.workflowState)
+      ) {
+        sections.push(`
+          <section class="state-section recommendation-panel">
+            <div class="recommendation-heading">
+              <h3>政好主動提醒</h3>
+              <span class="recommendation-badge">尚未判定資格</span>
+            </div>
+            <p class="recommendation-intro">
+              根據您已申請的服務類型與皮夾中已有的憑證種類，以下相關方案可能值得了解。
+            </p>
+            <div class="recommendation-list">
+              ${state.recommendations.map(item => `
+                <button
+                  class="recommendation-card"
+                  type="button"
+                  data-recommended-service="${escapeHtml(item.id)}"
+                  data-recommended-name="${escapeHtml(item.name)}"
+                >
+                  <strong>${escapeHtml(item.name)}</strong>
+                  <span class="recommendation-amount">${escapeHtml(item.estimatedAmount)}</span>
+                  <small>${escapeHtml(item.summary)}</small>
+                  <div class="recommendation-reason">${escapeHtml(item.reason)}</div>
+                </button>
+              `).join("")}
+            </div>
+            <div class="recommendation-privacy">
+              政好不保存或讀取額外的個人狀況來做推薦，也不會直接宣稱您符合資格。選擇後才會說明條件並請求必要授權。
+            </div>
+          </section>
+        `);
+      }
 
       if (state.question) {
         sections.push(`
@@ -3097,6 +3320,15 @@
             type: "QUERY_CASE",
             caseId: button.dataset.queryCase,
             utterance: `查詢案件 ${button.dataset.queryCase} 的最新進度`
+          });
+        });
+      });
+      stateBody.querySelectorAll("[data-recommended-service]").forEach(button => {
+        button.addEventListener("click", () => {
+          dispatch({
+            type: "EXPLORE_RECOMMENDATION",
+            serviceId: button.dataset.recommendedService,
+            serviceName: button.dataset.recommendedName
           });
         });
       });
@@ -3364,7 +3596,7 @@
         if (currentCredentials?.username !== "user" || currentCredentials?.password !== "password") {
           throw new Error("離線 Demo 請使用畫面提供的 user / password");
         }
-        backendBadge.textContent = "已登入用戶 牛來";
+        backendBadge.textContent = "已登入用戶 老王";
         loginView.hidden = true;
         appView.hidden = false;
         return;
@@ -3383,7 +3615,7 @@
       backendMode = true;
       backendSessionId = session.id;
       state = mapBackendState(session);
-      backendBadge.textContent = `已登入用戶 ${session.display_name || "牛來"}`;
+      backendBadge.textContent = `已登入用戶 ${session.display_name || "老王"}`;
       backendBadge.title = `模型服務：${health.modelProvider}`;
       loginView.hidden = true;
       appView.hidden = false;

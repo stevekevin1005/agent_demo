@@ -104,7 +104,7 @@ class FileUserProfileStore:
                     "lastUsedAt": None,
                     "usedForServices": [],
                     "authorizedForAgent": False,
-                    "applicationData": application["applicationData"],
+                    "verifiedFields": sorted(application["applicationData"]),
                 }
             self._write(profile)
             return profile
@@ -154,7 +154,7 @@ class FileUserProfileStore:
 
     def _default_profile(self, username: str) -> dict[str, Any]:
         return {
-            "profileVersion": 5,
+            "profileVersion": 6,
             "username": username,
             "displayName": self._fixture["displayName"],
             "credentials": {},
@@ -194,9 +194,15 @@ class FileUserProfileStore:
             if "auditTimeline" not in case:
                 case["auditTimeline"] = self._historical_case_timeline(case)
                 changed = True
-        if profile_version < 5:
+        if profile_version < 6:
+            for credential in profile.get("credentials", {}).values():
+                application_data = credential.pop("applicationData", None)
+                if isinstance(application_data, dict):
+                    credential["verifiedFields"] = sorted(application_data)
+                    changed = True
+        if profile_version < 6:
             changed = True
-        profile["profileVersion"] = 5
+        profile["profileVersion"] = 6
         for evidence_id, credential in profile.get("credentials", {}).items():
             if "authorizedForAgent" in credential:
                 continue
@@ -686,7 +692,7 @@ class AuditEntry:
 class Session:
     id: str
     username: str = "user"
-    display_name: str = "牛來"
+    display_name: str = "老王"
     subject_id: str = "citizen-demo-001"
     state: str = "awaiting_question"
     question: str = ""
@@ -787,6 +793,77 @@ class CitizenAgent:
                 }
             )
         return inventory
+
+    def _recommendations(self, session: Session) -> list[dict[str, Any]]:
+        service_by_id = {service["id"]: service for service in self._services}
+        applied_service_ids = {
+            str(case.get("serviceId", "")) for case in session.case_history
+        }
+        usable_credential_ids = {
+            credential["id"]
+            for credential in session.credential_inventory
+            if credential["status"] in {"available", "unauthorized"}
+        }
+        recommendations: list[dict[str, Any]] = []
+
+        for service in self._services:
+            if service["id"] in applied_service_ids:
+                continue
+
+            related_cases = [
+                case
+                for case in session.case_history
+                if service.get("serviceGroup")
+                and service_by_id.get(str(case.get("serviceId", "")), {}).get(
+                    "serviceGroup"
+                )
+                == service["serviceGroup"]
+            ]
+            matching_credentials = [
+                evidence["label"]
+                for evidence in service["evidence"]
+                if evidence["source"] == "government"
+                and evidence["id"] != "identity"
+                and evidence["id"] in usable_credential_ids
+            ]
+            if not related_cases and len(matching_credentials) < 2:
+                continue
+
+            signals: list[str] = []
+            if related_cases:
+                source_names = "、".join(
+                    dict.fromkeys(
+                        str(case.get("serviceName", "")) for case in related_cases
+                    )
+                )
+                signals.append(f"曾申請同類型服務：{source_names}")
+            if matching_credentials:
+                signals.append(
+                    f"皮夾已有相關憑證種類：{'、'.join(matching_credentials)}"
+                )
+
+            recommendations.append(
+                {
+                    "id": service["id"],
+                    "name": service["name"],
+                    "agency": service["agency"],
+                    "estimatedAmount": service["estimatedAmount"],
+                    "summary": service["summary"],
+                    "reason": (
+                        f"您曾處理「{service.get('serviceGroupLabel', '相關')}」服務，"
+                        "這項方案可能也值得了解。"
+                        if related_cases
+                        else "您的皮夾已有多項此服務會使用的憑證種類，可以先了解申請條件。"
+                    ),
+                    "signals": signals,
+                    "privacyNote": (
+                        "尚未檢查資格。此推薦只使用已申請服務類型與憑證種類，"
+                        "不讀取憑證內容或其他個人狀況。"
+                    ),
+                }
+            )
+
+        return recommendations[:3]
 
     def get(self, session_id: str) -> dict[str, Any]:
         return self._view(self._session(session_id))
@@ -1555,6 +1632,53 @@ class CitizenAgent:
             )
         )
 
+    def _on_explore_recommendation(
+        self, session: Session, command: dict[str, Any]
+    ) -> None:
+        service_id = str(command.get("serviceId", ""))
+        recommended_ids = {item["id"] for item in self._recommendations(session)}
+        if service_id not in recommended_ids:
+            raise AgentError("This service is not currently recommended")
+        service = next(
+            item for item in self._services if item["id"] == service_id
+        )
+
+        session.state = "awaiting_service"
+        session.question = f"了解推薦服務「{service['name']}」"
+        session.life_event = service.get("serviceGroupLabel", "related-service")
+        session.no_service_match = False
+        session.candidate_services = [service]
+        session.selected_service = None
+        session.consent = "not_requested"
+        session.evidence = {}
+        session.evidence_details = {}
+        session.uploaded_documents = {}
+        session.eligibility = "not_checked"
+        session.draft = None
+        session.selected_bank_account_id = None
+        session.application = None
+        session.case_results = []
+        session.messages.extend(
+            [
+                Message("user", f"我想了解推薦的「{service['name']}」。"),
+                Message(
+                    "agent",
+                    (
+                        "這項推薦只根據您曾申請的服務類型與皮夾中的憑證種類，"
+                        "不代表您已符合資格。我會從申請條件開始檢查。"
+                    ),
+                ),
+            ]
+        )
+        session.audit.append(
+            AuditEntry(
+                "Agent",
+                "開啟相關服務",
+                f"{service['name']}；尚未讀取憑證內容",
+            )
+        )
+        self._on_select_service(session, {"serviceId": service_id})
+
     def _model_context(self, session: Session) -> dict[str, Any]:
         visible_services = (
             self._services
@@ -1639,6 +1763,7 @@ class CitizenAgent:
     def _view(self, session: Session) -> dict[str, Any]:
         data = asdict(session)
         data["bankAccounts"] = session.bank_accounts if session.draft else []
+        data["recommendations"] = self._recommendations(session)
         return data
 
 

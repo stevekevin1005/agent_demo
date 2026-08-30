@@ -136,8 +136,17 @@ fields, deduplicates shared fields such as national ID, then submits all missing
 credentials together to their simulated department APIs. It generates a
 credential reference and expiry for each credential and persists them before
 asking whether the citizen authorizes retrieval.
-Application field values remain in the local profile and are not included in
-the language-model context.
+Application field values are used only to complete the simulated issuance
+request and are not persisted in the Agent profile or included in the
+language-model context. The profile retains only the credential reference,
+validity, verified field names, authorization status, usage history, and
+submitted cases.
+
+After a case is submitted, the Agent may suggest related services using only
+the submitted service category and the types of usable credentials already in
+the wallet. Recommendations never inspect credential values and never claim
+that the citizen is eligible. Selecting a recommendation starts a separate
+qualification flow with its own consent request.
 
 ## Docker / Zeabur
 

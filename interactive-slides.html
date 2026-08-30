@@ -860,6 +860,124 @@
     .receipt dt { color: #e7bce1; }
     .receipt dd { margin: 0; font-weight: 700; }
 
+    .recommendation-story {
+      display: grid;
+      grid-template-columns: 1fr .72fr 1.25fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .recommendation-input,
+    .recommendation-engine,
+    .recommendation-output {
+      min-height: 430px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 12px 30px rgba(31,44,76,.09);
+    }
+
+    .recommendation-input,
+    .recommendation-output {
+      display: grid;
+      align-content: center;
+      gap: 14px;
+    }
+
+    .recommendation-engine {
+      position: relative;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 18px;
+      color: white;
+      border: 0;
+      background: linear-gradient(145deg,#176b5b,#174f67);
+      text-align: center;
+    }
+
+    .recommendation-engine::before,
+    .recommendation-engine::after {
+      content: "→";
+      position: absolute;
+      top: 46%;
+      color: var(--teal);
+      font-size: 34px;
+      animation: arrowPulse 1.5s ease-in-out infinite;
+    }
+
+    .recommendation-engine::before { left: -35px; }
+    .recommendation-engine::after { right: -35px; }
+
+    @keyframes arrowPulse {
+      50% { transform: translateX(7px); opacity: .55; }
+    }
+
+    .signal {
+      padding: 14px 16px;
+      border-left: 5px solid var(--teal);
+      border-radius: 11px;
+      background: #f3f8fb;
+    }
+
+    .signal strong { display: block; color: var(--navy); }
+    .signal span { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    .engine-icon {
+      width: 86px;
+      height: 86px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #0b554b;
+      background: #75e6bd;
+      font: 900 34px Georgia, serif;
+    }
+
+    .engine-rule {
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: #0c5d50;
+      background: #d9f8ef;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .suggested-service {
+      position: relative;
+      padding: 18px;
+      border: 1px solid #cae7df;
+      border-radius: 14px;
+      background: #f8fcfb;
+    }
+
+    .suggested-service strong { display: block; color: var(--navy); font-size: 18px; }
+    .suggested-service span { display: block; margin-top: 5px; color: var(--teal); font-weight: 900; }
+    .suggested-service small { display: block; margin-top: 7px; color: var(--muted); line-height: 1.45; }
+
+    .not-eligible-yet {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: #7a5200;
+      background: #ffedbd;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .privacy-formula {
+      margin-top: 20px;
+      padding: 16px 22px;
+      border-radius: 14px;
+      color: white;
+      background: var(--navy);
+      font-size: 17px;
+      text-align: center;
+    }
+
     .live-layout {
       grid-template-columns: .42fr .58fr;
       gap: 30px;
@@ -1041,13 +1159,37 @@
     }
 
     .video-placeholder {
-      width: min(86vw, 1420px);
+      width: min(80vw, calc((100vh - 220px) * 16 / 9), 1280px);
       aspect-ratio: 16 / 9;
       margin: auto;
+      position: relative;
+      overflow: hidden;
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 24px;
       background: #080d20;
       box-shadow: 0 28px 80px rgba(0,0,0,.32);
+    }
+
+    .video-placeholder iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 0;
+    }
+
+    .video-fallback {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 2;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: white;
+      background: rgba(9,15,45,.86);
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      backdrop-filter: blur(8px);
     }
 
     .slide.active .card,
@@ -1252,7 +1394,7 @@
     .overview .controls, .overview .hint, .overview .progress, .overview .qr-badge { display: none; }
 
     @media (max-width: 1000px) {
-      .hero-grid, .architecture, .credential-layout, .match-layout, .audit-layout, .live-layout, .closing {
+      .hero-grid, .architecture, .credential-layout, .match-layout, .audit-layout, .live-layout, .closing, .recommendation-story {
         grid-template-columns: 1fr;
       }
       .cards-4 { grid-template-columns: repeat(2, 1fr); }
@@ -1275,6 +1417,12 @@
       .hint { display: none; }
       .qr-badge { width: 112px; grid-template-columns: 76px 1fr; }
       .qr-badge img { width: 76px; height: 76px; }
+    }
+
+    body.export-mode .controls,
+    body.export-mode .hint,
+    body.export-mode .progress {
+      display: none;
     }
   </style>
 </head>
@@ -1353,7 +1501,7 @@
             <span class="map-flow flow-mydata"></span>
             <span class="map-flow flow-government"></span>
             <span class="map-flow flow-audit"></span>
-            <div class="map-node map-citizen"><span class="map-icon">👤</span><b>民眾 牛來</b><small>提出需求 · 決定授權 · 本人確認</small></div>
+            <div class="map-node map-citizen"><span class="map-icon">👤</span><b>民眾 老王</b><small>提出需求 · 決定授權 · 本人確認</small></div>
             <div class="map-node map-wallet"><span class="map-icon">▣</span><b>數位憑證皮夾</b><small>出示可驗證資格 · Mock Adapter</small></div>
             <div class="map-node map-mydata"><span class="map-icon">◉</span><b>MyData</b><small>目的限定 · 最小必要資料 · Mock Adapter</small></div>
             <div class="map-node map-agent"><span class="map-icon">↔</span><b>政好 Agent</b><small>理解需求、編排工具、執行政策閘門</small><span class="map-pill">AI 理解需求｜後端決定行動</span></div>
@@ -1459,9 +1607,9 @@
             <div class="chain-arrow">↓</div>
             <div class="trust-node"><span class="trust-index">2</span><span><b>政府機關發證資格</b><br><small>誰有權簽發這一類資格憑證</small></span><span class="trust-status">ISSUER OK</span></div>
             <div class="chain-arrow">↓</div>
-            <div class="trust-node"><span class="trust-index">3</span><span><b>牛來的資格憑證</b><br><small>內容、Schema、簽章、持有人、效期與撤銷</small></span><span class="trust-status">VALID</span></div>
+            <div class="trust-node"><span class="trust-index">3</span><span><b>老王的資格憑證</b><br><small>內容、Schema、簽章、持有人、效期與撤銷</small></span><span class="trust-status">VALID</span></div>
             <div class="chain-arrow">↓</div>
-            <div class="trust-node"><span class="trust-index">4</span><span><b>牛來 → 政好的限縮委託</b><br><small>目的、動作、資料範圍、期限與使用次數</small></span><span class="trust-status">SCOPED</span></div>
+            <div class="trust-node"><span class="trust-index">4</span><span><b>老王 → 政好的限縮委託</b><br><small>目的、動作、資料範圍、期限與使用次數</small></span><span class="trust-status">SCOPED</span></div>
             <div class="chain-arrow">↓</div>
             <div class="trust-node"><span class="trust-index">5</span><span><b>送件確認與 Execution Receipt</b><br><small>授權與實際行為鏈回同一案件</small></span><span class="trust-status">AUDITABLE</span></div>
           </div>
@@ -1505,13 +1653,63 @@
       <div class="content">
         <div>
           <div class="authorization-flow" id="authorizationFlow">
-            <div class="auth-node">查詢授權<br><small>eligibility.evaluate</small></div>
+            <div class="auth-node">查詢授權<br><small>資格評估</small></div>
             <div class="auth-node">資格判定<br><small>規則引擎</small></div>
             <div class="auth-node">本人二次確認<br><small>高風險攔截</small></div>
-            <div class="auth-node">送件授權<br><small>application.submit</small></div>
+            <div class="auth-node">送件授權<br><small>正式送件</small></div>
             <div class="auth-node">送件＋收據<br><small>Execution Receipt</small></div>
           </div>
           <div class="auth-explain" id="authExplain">查詢授權只能評估資格，不能直接正式送件。點擊「播放授權流程」查看政策閘門如何逐步放行。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Privacy-preserving proactive service</p>
+          <h2>主動提醒，不等於監控民眾</h2>
+        </div>
+        <span class="tag" style="color:#17235f;border-color:#dce4ef;background:white">尚未檢查資格</span>
+      </div>
+      <div class="content">
+        <div>
+          <div class="recommendation-story">
+            <div class="recommendation-input">
+              <h3>政好只知道兩種訊號</h3>
+              <div class="signal">
+                <strong>已申請的服務類型</strong>
+                <span>生育一次性給付 · 已收件</span>
+              </div>
+              <div class="signal">
+                <strong>皮夾已有的憑證種類</strong>
+                <span>基本身分、親子關係、社會保險</span>
+              </div>
+              <div class="scope-note"><strong>不知道：</strong>實際所得、地址、家庭狀況與憑證內文。</div>
+            </div>
+            <div class="recommendation-engine">
+              <div class="engine-icon">政</div>
+              <h3 style="margin:0;color:white">關聯服務規則</h3>
+              <small style="color:#d4f3eb;line-height:1.6">同一人生事件<br>＋服務目錄關聯<br>＋憑證種類重疊</small>
+              <span class="engine-rule">LLM 推薦服務｜規則確認資格</span>
+            </div>
+            <div class="recommendation-output">
+              <h3>因此只推薦「值得了解」</h3>
+              <div class="suggested-service">
+                <span class="not-eligible-yet">尚未判定資格</span>
+                <strong>育兒生活補助</strong>
+                <span>每月 5,000 元</span>
+                <small>一次性生育給付之外，可能還有定期育兒支持。</small>
+              </div>
+              <div class="suggested-service">
+                <span class="not-eligible-yet">尚未判定資格</span>
+                <strong>托育服務補助</strong>
+                <span>每月最高 7,000 元</span>
+                <small>若後續使用合格托育服務，可再主動檢查條件。</small>
+              </div>
+            </div>
+          </div>
+          <div class="privacy-formula">案件服務類型＋憑證種類 → 推薦相關方案　≠　讀取個資 → 推論民眾資格</div>
         </div>
       </div>
     </section>
@@ -1573,7 +1771,7 @@
           <h3 style="font-size:26px;margin-top:12px">案件 APP-20260829-9F21A0</h3>
           <p id="auditDetail" style="line-height:1.7">需求解析：民眾詢問育兒生活補助；Agent 對應至 childcare-benefit-2026。</p>
           <dl>
-            <dt>Principal</dt><dd>已登入用戶 牛來</dd>
+            <dt>Principal</dt><dd>已登入用戶 老王</dd>
             <dt>Action</dt><dd>service.discover</dd>
             <dt>Decision*</dt><dd>ALLOW</dd>
             <dt>Trace ID*</dt><dd>evt_8f21a0</dd>
@@ -1592,7 +1790,17 @@
         </div>
       </div>
       <div class="content">
-        <div class="video-placeholder" aria-label="預留 Demo 影片版位"></div>
+        <div class="video-placeholder">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/UCq5-USUQ2I?rel=0"
+            title="GovTrustAI 1min Demo"
+            loading="eager"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+          <a class="video-fallback" href="https://www.youtube.com/watch?v=UCq5-USUQ2I" target="_blank" rel="noopener">無法播放？在 YouTube 開啟</a>
+        </div>
       </div>
     </section>
 
@@ -1632,13 +1840,13 @@
   </main>
 
   <a class="qr-badge" href="https://agentdemo.zeabur.app/" target="_blank" rel="noopener" aria-label="掃描 QR Code 試用政好 Agent">
-    <img src="agentdemo-qr.svg" alt="https://agentdemo.zeabur.app/ QR Code">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAACQ0lEQVR42u2bQYrkMAxFnyaGWjrQB6ijJDdr5kh9g+QodYABe1mQ8GchJ9VNM4veDDgoi8Ikf/U/svQllYmfPOsvfvYEPvCBD3zgAx/4f+GtPQmoZlATwG5Qj29z8NkvfpIkFbA5S6z3DVZLAIMkScFn1/jaIlS/zczey25M2rDZozsFn33i07c3+U/SOhbZ9DEiavB5JX1tetyOuzhvKfi8iL5ZQAWt9w2mhx1yf4CCz97xq5mZjWDvj4TNDIJ6E7B7+Rx8dhy/rwhtCTc/Tev9afoavcFnp/53rsl/WEfcFdlcb/L6eWaP+O0Tj7tbFWDSBmRJS97cEzOVQVqy5BZ5CT571NdlVBnOE4fSDKf6oW/X+kLe0HKoCrmFM5O2Fuehb8/3c4F2F58nGD5d16Fvn/Wzuf9lS1Dte9eKQRZ8dh2/g8fqq6A63nknK+K3a30XP21IZZCfFg6llxz5t2//+14G+dR3vW+H/83PcxIMMf/tun9V20DBwHyIBPV2ZN3XKfjss3/lbeabV9LSI3k5DezGpGf0r7rPv83rluH0v2fXKvJv9/0NaE0OL6LBXS+c2zuhb8/zI/e/QC7Ht5pgWsCoo5+Cz07j92xjSOeQQa+YDv/LRfYnoSaksltzSrnZpZaig8/e82/WuRB79K9ivnAZvC9B29j2Y9tMuN5i//ka+CZtAdZxN7+V1/sW/auL7E96rNY3GTVh08ebgD0p+LxC/fyplmr9q0HHTR35tz+8ifh/d+ADH/jABz7w/xn/F9fzygtuldsMAAAAAElFTkSuQmCC" alt="https://agentdemo.zeabur.app/ QR Code">
     <span>掃碼試用</span>
   </a>
   <div class="hint">← → 換頁 · F 全螢幕 · O 總覽 · Home / End</div>
   <nav class="controls" aria-label="簡報控制">
     <button class="control" id="prev" aria-label="上一頁">←</button>
-    <span class="slide-count" id="slideCount">1 / 13</span>
+    <span class="slide-count" id="slideCount">1 / 14</span>
     <button class="control" id="next" aria-label="下一頁">→</button>
     <button class="control" id="overview" aria-label="總覽">▦</button>
     <button class="control" id="fullscreen" aria-label="全螢幕">⛶</button>
@@ -1646,6 +1854,10 @@
   <div class="progress"><span id="progressBar"></span></div>
 
   <script>
+    if (new URLSearchParams(location.search).has("export")) {
+      document.body.classList.add("export-mode");
+    }
+
     const slides = [...document.querySelectorAll(".slide")];
     const deck = document.querySelector("#deck");
     const slideCount = document.querySelector("#slideCount");
@@ -1784,7 +1996,7 @@
   "authorization": {
     "purpose": "childcare-benefit.submit",
     "audience": "agency:social-welfare",
-    "action": "application.submit",
+    "action": "正式送件",
     "caseId": "draft:childcare:20260829",
     "draftDigest": "sha256:64be..."
   },
@@ -1808,7 +2020,7 @@
   "type": "ExecutionReceipt",
   "performedBy": "agent:zheng-hao",
   "principal": "citizen:user_001",
-  "action": "application.submit",
+  "action": "正式送件",
   "authorizationEdge": {
     "credential": "grant:submit:ES21BC",
     "operator": "ACTION_MATCH"
@@ -1860,7 +2072,7 @@
       "民眾只授權本次資格查詢所需的最小資料。",
       "規則引擎完成資格判定，查詢授權在此結束。",
       "正式送件具有法律與權益影響，必須由本人再次確認。",
-      "確認後才產生用途為 application.submit 的新授權。",
+      "確認後才產生用途為「正式送件」的新授權。",
       "送件完成，Execution Receipt 與整段時間線寫入案件 Audit Log。"
     ];
     let authPlaying = false;

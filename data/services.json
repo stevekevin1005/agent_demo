@@ -5,6 +5,8 @@
     "agency": "社會福利主管機關",
     "estimatedAmount": "每月 5,000 元",
     "summary": "依家庭與設籍條件提供定期育兒支持。",
+    "serviceGroup": "newborn-family",
+    "serviceGroupLabel": "新生兒與育兒支持",
     "evidence": [
       {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
       {"id": "residency", "label": "設籍地", "source": "government", "department": "戶政主管機關"},
@@ -18,6 +20,8 @@
     "agency": "社會保險主管機關",
     "estimatedAmount": "一次性 30,000 元",
     "summary": "依投保與生育事實提供一次性給付。",
+    "serviceGroup": "newborn-family",
+    "serviceGroupLabel": "新生兒與育兒支持",
     "evidence": [
       {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
       {"id": "relationship", "label": "親子關係", "source": "government", "department": "戶政主管機關"},
@@ -30,6 +34,8 @@
     "agency": "托育服務主管機關",
     "estimatedAmount": "每月最高 7,000 元",
     "summary": "使用合格托育服務時提供費用補助。",
+    "serviceGroup": "newborn-family",
+    "serviceGroupLabel": "新生兒與育兒支持",
     "evidence": [
       {"id": "identity", "label": "身分有效", "source": "government", "department": "身分識別主管機關"},
       {"id": "residency", "label": "設籍地", "source": "government", "department": "戶政主管機關"},
